@@ -1,0 +1,191 @@
+:host { display: block; height: 100%; }
+
+.ob-shell {
+  display: flex;
+  height: 100vh;
+  background: var(--color-bg);
+}
+
+/* ─── Left rail ──────────────────────────────────────────────────────── */
+.ob-rail {
+  width: 300px;
+  flex-shrink: 0;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 1.25rem;
+  overflow-y: auto;
+}
+
+.ob-rail-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-bottom: 1.5rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.ob-rail-logo {
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  background: var(--brand-primary-light);
+  color: var(--brand-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.125rem;
+}
+
+.ob-rail-brand-text { display: flex; flex-direction: column; gap: 0.125rem; min-width: 0; }
+.ob-rail-title { font-size: 0.9375rem; font-weight: 700; color: var(--color-text); }
+.ob-rail-sub { font-size: 0.75rem; color: var(--color-text-3); }
+
+/* ─── Rail steps (vertical checklist) ────────────────────────────────── */
+.ob-rail-steps {
+  display: flex;
+  flex-direction: column;
+  padding-top: 0.75rem;
+}
+
+.ob-step {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: var(--color-text-2);
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+a.ob-step:hover { background: var(--color-surface-2); color: var(--color-text); }
+
+.ob-step-track {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+}
+
+/* Connector line between markers */
+.ob-step:not(.is-last) .ob-step-track::after {
+  content: '';
+  position: absolute;
+  top: 1.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: calc(100% + 0.25rem);
+  background: var(--color-border);
+}
+
+.ob-step-marker {
+  position: relative;
+  z-index: 1;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.ob-step-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.ob-step-hint { margin-left: auto; color: var(--color-text-3); font-size: 0.875rem; letter-spacing: 0.1em; }
+
+/* Current step */
+.ob-step.is-current { background: var(--brand-primary-light); }
+.ob-step.is-current .ob-step-label { color: var(--brand-primary); font-weight: 600; }
+.ob-step.is-current .ob-step-marker {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: var(--color-text-inverse);
+}
+
+/* Completed step */
+.ob-step.is-complete .ob-step-marker {
+  background: var(--color-success-bg);
+  border-color: var(--color-success-border);
+  color: var(--color-success);
+}
+.ob-step.is-complete:not(.is-current) .ob-step-label { color: var(--color-text); }
+.ob-step.is-complete:not(.is-last) .ob-step-track::after { background: var(--color-success-border); }
+
+/* Greyed placeholder tail */
+.ob-step.is-placeholder { color: var(--color-text-3); cursor: default; }
+.ob-step.is-placeholder .ob-step-marker {
+  background: var(--color-surface);
+  border-style: dashed;
+  color: var(--color-text-3);
+}
+.ob-step.is-placeholder .ob-step-label { color: var(--color-text-3); }
+
+/* ─── Workspace: form column + map region ────────────────────────────── */
+/* Fills the space beside the rail and splits it between the content column and
+   the map region. */
+.ob-workspace {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: row;
+}
+
+/* Content column (~58%): forms render here, top-aligned. Weighted toward the
+   form so the wider ones (Create Service) don't cramp/wrap. */
+.ob-content {
+  flex: 58 1 0;
+  min-width: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Map region (~42%, tall): a calm, supporting canvas — muted background, a
+   single hairline divider. The map only needs to be legible (same size every
+   step), so it yields width to the form. Left padding is trimmed so the map
+   isn't pushed right with dead space on its left. */
+.ob-map-region {
+  flex: 42 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface-2);
+  border-left: 1px solid var(--color-border);
+  padding: 1.5rem 1.5rem 1.5rem 0.75rem;
+  overflow-y: auto;
+}
+
+/* Narrow viewports: stack the map region BELOW the content rather than crush it
+   horizontally. The workspace becomes the scroll container; both regions size to
+   content. The map stays mounted throughout (never hidden), so its state holds. */
+@media (max-width: 1024px) {
+  .ob-workspace {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .ob-content {
+    flex: 0 0 auto;
+    overflow-y: visible;
+  }
+  .ob-map-region {
+    flex: 0 0 auto;
+    min-height: 360px;
+    border-left: none;
+    border-top: 1px solid var(--color-border);
+  }
+}

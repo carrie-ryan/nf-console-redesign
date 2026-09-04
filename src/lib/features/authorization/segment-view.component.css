@@ -1,0 +1,450 @@
+:host { display: block; }
+
+.seg-body {
+  padding: 1.5rem;
+  max-width: 90rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ─── intro ──────────────────────────────────────────────────────────── */
+.seg-intro {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.intro-text { flex: 1; min-width: 22rem; }
+.intro-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--brand-accent);
+}
+.seg-intro h2 {
+  margin: 0.4rem 0 0.35rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+}
+.seg-intro p {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--color-text-2);
+  max-width: 44rem;
+}
+
+.intro-stats { display: flex; gap: 0.75rem; flex-shrink: 0; }
+.stat {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 0.625rem 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 6.5rem;
+}
+.stat-value { font-size: 1.375rem; font-weight: 700; color: var(--color-text); line-height: 1; }
+.stat-label { font-size: 0.6875rem; color: var(--color-text-3); text-transform: uppercase; letter-spacing: 0.04em; }
+.stat-ok { background: var(--color-success-bg); border-color: var(--color-success-border); }
+.stat-ok .stat-value { color: var(--color-success); }
+.stat-bad { background: var(--color-danger-bg); border-color: var(--color-danger-border); }
+.stat-bad .stat-value { color: var(--color-danger); }
+
+/* ─── segmented control (Graph | Matrix) — the only interactive element ── */
+.seg-toggle {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 3px;
+  gap: 3px;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+.seg-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 1rem;
+  border: none;
+  background: none;
+  border-radius: calc(var(--radius-md) - 3px);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-2);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.seg-toggle-btn:hover { color: var(--color-text); }
+.seg-toggle-btn.active {
+  background: var(--color-surface);
+  color: var(--brand-primary);
+  box-shadow: var(--shadow-sm);
+}
+.seg-toggle-btn:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+
+/* ─── controls row: primary surface toggle + secondary fixture toggle ─── */
+.seg-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+}
+
+/* Fixture toggle — deliberately SECONDARY: smaller, muted, a dev/demo affordance. */
+.fixture-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+}
+.fixture-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--color-text-3, var(--color-text-2));
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.6875rem;
+}
+.fixture-btn {
+  padding: 0.2rem 0.6rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+  border-radius: var(--radius-sm, 6px);
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-2);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+.fixture-btn:hover { color: var(--color-text); }
+.fixture-btn.active {
+  background: var(--color-surface);
+  color: var(--brand-primary);
+  border-color: var(--brand-primary);
+}
+.fixture-btn:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+.fixture-dims {
+  color: var(--color-text-3, var(--color-text-2));
+  font-variant-numeric: tabular-nums;
+  margin-left: 0.15rem;
+}
+
+/* ─── surface panel (each takes the FULL content width) ──────────────── */
+.surface { padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; }
+.surface-head h3 { margin: 0 0 0.2rem; font-size: 1rem; font-weight: 700; color: var(--color-text); }
+.surface-head p { margin: 0; font-size: 0.78125rem; line-height: 1.5; color: var(--color-text-2); }
+.surface-head em { font-style: normal; font-weight: 600; color: var(--color-text-2); }
+
+/* ─── A. graph ───────────────────────────────────────────────────────── */
+/* The container grows to the graph's natural height (no fixed cap) so rows can be
+   generously spaced for readability; the page scrolls if it runs tall. The SVG
+   renders at its natural content size — max-width:100% + height:auto only ever
+   scale it DOWN on a narrow viewport, never UP, so the compact nodes stay compact. */
+.graph-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+.seg-svg { display: block; max-width: 100%; height: auto; font-family: var(--font-sans); }
+
+/* full-canvas background: catches empty-space clicks to clear selection.
+   transparent fill still receives pointer events (fill is "painted", not none). */
+.graph-bg { fill: transparent; pointer-events: all; cursor: default; }
+
+/* edges */
+.edge { fill: none; stroke-linecap: round; pointer-events: none; }
+.edge-full { stroke: var(--brand-primary); stroke-width: 2.5; }
+.edge-partial {
+  stroke: var(--color-warning);
+  stroke-width: 2;
+  stroke-dasharray: 6 5;
+}
+/* selected visible edge: thicker + solid emphasis */
+.edge-selected { stroke-width: 4; stroke-dasharray: none; }
+/* hover-isolate: fade edges NOT incident to the hovered node. The template omits
+   this class when the edge is selected, so a selected edge is never dimmed —
+   selection wins over hover (audit precedence flag). */
+.edge-dim { opacity: 0.12; transition: opacity 0.1s ease; }
+
+/* invisible wide hit target — the interactive element (clickable + focusable) */
+.edge-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 14;
+  stroke-linecap: round;
+  cursor: pointer;
+  outline: none;
+}
+/* hover / keyboard-focus halo behind the visible edge */
+.edge-hit:hover,
+.edge-hit:focus-visible { stroke: var(--color-focus-ring); }
+.edge-hit-selected { stroke: var(--color-focus-ring); }
+.edge-none-demo { stroke: var(--color-text-3); stroke-width: 1.5; stroke-dasharray: 2 3; opacity: 0.6; }
+
+.edge-badge { pointer-events: none; }
+.edge-badge rect { fill: var(--color-warning-bg); stroke: var(--color-warning-border); stroke-width: 1; }
+.edge-badge text { fill: var(--color-warning); font-size: 11px; font-weight: 700; }
+
+/* nodes (compact 120×28) */
+.node { cursor: pointer; }
+.node:focus-visible { outline: none; }
+.node:focus-visible .node-box { stroke: var(--color-focus-ring); stroke-width: 2.5; }
+/* hover-isolate: fade nodes not connected to the hovered one (transient) */
+.node-dim { opacity: 0.28; transition: opacity 0.1s ease; }
+/* persistent node selection ring (separate from edge selection) */
+.node-selected .node-box { stroke: var(--brand-primary); stroke-width: 2.5; }
+
+.node-box { fill: var(--color-surface); stroke: var(--color-border-strong); stroke-width: 1.25; }
+.node-rail { fill: var(--color-border-strong); }
+/* single-line label via foreignObject — real CSS ellipsis; height matches NODE_H (28).
+   pointer-events:none so the HTML label never intercepts hover/click: the whole
+   node <g> is one uniform target (no enter/leave flicker crossing the label). */
+.node-label-fo {
+  pointer-events: none;
+  height: 28px;
+  line-height: 28px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* compact corner state marker (replaces the old glyph badge + text tag) */
+.node-dot { stroke: var(--color-surface); stroke-width: 1; }
+
+/* --- normal --- */
+.node-normal .node-box { stroke: var(--color-border-strong); }
+.node-normal .node-rail { fill: var(--brand-accent); }
+
+/* --- ungrouped catch-all: muted, dashed border --- */
+.node-ungrouped .node-box {
+  fill: var(--color-surface-2);
+  stroke: var(--color-text-3);
+  stroke-dasharray: 4 3;
+}
+.node-ungrouped .node-label-fo { color: var(--color-text-2); }
+.node-ungrouped .node-rail { fill: var(--color-text-3); }
+.dot-ungrouped { fill: var(--color-text-3); }
+
+/* --- isolated: affirmative sealed style --- */
+.node-isolated .node-box {
+  fill: var(--color-surface-2);
+  stroke: var(--color-text);
+  stroke-width: 1.75;
+}
+.node-isolated .node-rail { fill: var(--color-text); }
+.dot-isolated { fill: var(--color-text); }
+
+/* --- unresolvable: warning style --- */
+.node-unresolvable .node-box {
+  fill: var(--color-warning-bg);
+  stroke: var(--color-warning);
+  stroke-width: 1.75;
+  stroke-dasharray: 4 2.5;
+}
+.node-unresolvable .node-label-fo { color: var(--color-text); }
+.node-unresolvable .node-rail { fill: var(--color-warning); }
+.dot-unresolvable { fill: var(--color-warning); }
+
+/* ─── legends (shared) ───────────────────────────────────────────────── */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border);
+}
+.legend-group { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; }
+.legend-title {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-3);
+}
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: var(--color-text-2);
+}
+.legend-muted { opacity: 0.75; }
+.lg-svg { overflow: visible; }
+
+.lg-chip { width: 22px; height: 14px; border-radius: 3px; display: inline-block; }
+.chip-normal { background: var(--color-surface); border: 1.5px solid var(--color-border-strong); }
+.chip-ungrouped { background: var(--color-surface-2); border: 1.5px dashed var(--color-text-3); }
+.chip-isolated { background: var(--color-surface-2); border: 2px solid var(--color-text); }
+.chip-unresolvable { background: var(--color-warning-bg); border: 2px dashed var(--color-warning); }
+
+.lg-cell {
+  width: 22px; height: 18px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 3px;
+  font-size: 11px;
+}
+
+/* ─── B. matrix ──────────────────────────────────────────────────────── */
+/* Full-width, self-scrolling in both axes so a future large matrix degrades
+   gracefully: the header row sticks to the top, the label column to the left. */
+.matrix-scroll {
+  overflow: auto;
+  max-height: 70vh;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+.seg-matrix {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  font-size: 0.8125rem;
+}
+.seg-matrix th, .seg-matrix td {
+  border-bottom: 1px solid var(--color-border);
+  border-right: 1px solid var(--color-border);
+}
+.seg-matrix thead th {
+  padding: 0.5rem 0.625rem;
+  text-align: center;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-2);
+  background: var(--color-surface-2);
+  vertical-align: bottom;
+  white-space: nowrap;
+  /* stick the column header row to the top on vertical scroll */
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+.seg-matrix .corner {
+  text-align: left;
+  color: var(--color-text-3);
+  /* the corner pins on BOTH axes, so it must out-stack every other header */
+  left: 0;
+  z-index: 3;
+}
+.row-head {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--color-text);
+  background: var(--color-surface);
+  white-space: nowrap;
+  /* stick the label column to the left on horizontal scroll */
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+
+/* catch-all / reason marks in headers */
+.col-ungrouped, .row-ungrouped .row-head {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--color-surface-2),
+    var(--color-surface-2) 6px,
+    var(--color-surface-3) 6px,
+    var(--color-surface-3) 12px
+  );
+}
+.catch-tag, .reason-tag {
+  display: inline-block;
+  margin-left: 0.35rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: var(--radius-full);
+  font-size: 0.5625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  vertical-align: middle;
+}
+.catch-tag { background: var(--color-surface-3); color: var(--color-text-2); }
+.reason-isolated { background: var(--color-text); color: var(--color-text-inverse); }
+.reason-unresolvable { background: var(--color-warning-bg); color: var(--color-warning); border: 1px solid var(--color-warning-border); }
+
+.row-head-isolated { border-left: 3px solid var(--color-text); }
+.row-head-unresolvable { border-left: 3px solid var(--color-warning); }
+
+/* cells */
+.cell {
+  padding: 0.4rem 0.5rem;
+  text-align: center;
+  vertical-align: middle;
+  cursor: pointer;
+  position: relative;
+  outline: none;
+}
+.cell:hover { filter: brightness(0.96); }
+.cell:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: -2px;
+  z-index: 1;
+}
+/* selected cell: solid brand ring so the drawer's subject is anchored */
+.cell-selected {
+  box-shadow: inset 0 0 0 2px var(--brand-primary);
+  z-index: 1;
+}
+.cell-glyph { font-size: 0.875rem; line-height: 1; display: block; }
+.cell-count { font-size: 0.6875rem; font-weight: 600; display: block; margin-top: 0.1rem; }
+
+/* colorblind-safe: color + glyph + count, never color alone */
+.cell-full {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+.cell-full .cell-count { color: var(--color-success); }
+
+.cell-partial {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 4px,
+    rgba(202, 138, 4, 0.12) 4px,
+    rgba(202, 138, 4, 0.12) 8px
+  );
+}
+.cell-partial .cell-count { color: var(--color-warning); }
+
+.cell-none {
+  background: var(--color-surface);
+  color: var(--color-text-3);
+}
+.cell-none .cell-glyph { opacity: 0.55; }
+.cell-count-none { color: var(--color-text-3); font-weight: 500; }
+
+/* a catch-all cell keeps its state fill but gets a dotted outline to read as leftover */
+.cell-catchall { outline: 1px dashed var(--color-border-strong); outline-offset: -3px; }
+
+/* legend cell swatches reuse the cell classes */
+.lg-cell.cell-none { border: 1px solid var(--color-border); }
+.lg-cell.cell-catchall { background: var(--color-surface-2); outline: 1px dashed var(--color-border-strong); outline-offset: -2px; }
+
+/* legend ribbon swatches */
+.lg-ribbon { width: 22px; height: 8px; border-radius: 2px; display: inline-block; }
+.ribbon-full { background: var(--brand-primary); opacity: 0.6; }
+.ribbon-partial { background: var(--color-warning); opacity: 0.6; }
+.ribbon-catchall { background: var(--color-text-3); opacity: 0.4; }

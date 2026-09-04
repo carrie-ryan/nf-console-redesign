@@ -1,0 +1,32 @@
+.metrics-tab-bar {
+  display: flex;
+  border-bottom: 1px solid var(--color-border);
+  padding: 0 1.5rem;
+  background: var(--color-surface);
+}
+
+.tab-btn {
+  display: block;
+  padding: 0.625rem 1rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-3);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  text-decoration: none;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+  font-family: var(--font-sans);
+  white-space: nowrap;
+}
+
+.tab-btn.active {
+  color: var(--brand-primary);
+  border-bottom-color: var(--brand-primary);
+}
+
+.tab-btn:hover:not(.active) {
+  color: var(--color-text-2);
+}

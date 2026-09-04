@@ -1,0 +1,57 @@
+/* Canonical modal frame — the shared version of the .dialog-* skeleton the
+   feature modals used to paste inline. Based on the discovery role-policy-modal
+   dialog styling so new alerts modals look consistent with the rest.
+   confirm-dialog and the discovery modals keep their own local copies. */
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.dialog-panel {
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  width: 100%;
+  max-width: 32rem;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  outline: none;
+}
+
+.dialog-header {
+  padding: 1.25rem 1.5rem 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dialog-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.dialog-body {
+  padding: 1.125rem 1.5rem 1.25rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.dialog-footer {
+  padding: 0.875rem 1.5rem;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}

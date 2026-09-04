@@ -1,0 +1,191 @@
+<div class="section-card ob-form-card">
+
+  <!-- Policy Name -->
+  <div class="ob-field">
+    <label class="form-label" for="pf-name">Policy Name <span class="ob-required">Required</span></label>
+    <input
+      id="pf-name"
+      class="form-control"
+      [class.is-error]="showError('name')"
+      type="text"
+      [(ngModel)]="name"
+      (blur)="markTouched('name')"
+      [placeholder]="config.namePlaceholder"
+      autocomplete="off" />
+  </div>
+
+  <!-- Attribute selector A -->
+  <div class="ob-field">
+    <label class="form-label" for="pf-attr-a">
+      {{ config.attrALabel }}
+      @if (attributesRequired) {
+        <span class="ob-required">Required</span>
+      } @else {
+        <span class="ob-optional">Optional</span>
+      }
+    </label>
+    <div class="tag-input-wrap" [class.is-error]="showError('attrA')">
+      @for (attr of attrA(); track attr) {
+        <span class="tag-chip">
+          {{ attr }}
+          <button class="tag-chip-x" type="button" (click)="removeAttrA(attr)" aria-label="Remove attribute">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </span>
+      }
+      <input
+        id="pf-attr-a"
+        class="tag-bare-input"
+        [(ngModel)]="attrAInput"
+        (keydown)="onAttrAKeydown($event)"
+        (blur)="markTouched('attrA')"
+        [placeholder]="attrA().length === 0 ? config.attrAPlaceholder : ''"
+        autocomplete="off" />
+    </div>
+    <p class="field-hint">{{ config.attrAHint }}</p>
+  </div>
+
+  <!-- Attribute selector B -->
+  <div class="ob-field">
+    <label class="form-label" for="pf-attr-b">
+      {{ config.attrBLabel }}
+      @if (attributesRequired) {
+        <span class="ob-required">Required</span>
+      } @else {
+        <span class="ob-optional">Optional</span>
+      }
+    </label>
+    <div class="tag-input-wrap" [class.is-error]="showError('attrB')">
+      @for (attr of attrB(); track attr) {
+        <span class="tag-chip">
+          {{ attr }}
+          <button class="tag-chip-x" type="button" (click)="removeAttrB(attr)" aria-label="Remove attribute">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </span>
+      }
+      <input
+        id="pf-attr-b"
+        class="tag-bare-input"
+        [(ngModel)]="attrBInput"
+        (keydown)="onAttrBKeydown($event)"
+        (blur)="markTouched('attrB')"
+        [placeholder]="attrB().length === 0 ? config.attrBPlaceholder : ''"
+        autocomplete="off" />
+    </div>
+    <p class="field-hint">{{ config.attrBHint }}</p>
+  </div>
+
+  <!-- Type (config-driven extra field, e.g. Service Policy Dial | Bind) beside
+       Semantic — mirrors the console's Service Policy form, which places Type and
+       Semantic side by side. When there's no extra field (Router / SERP),
+       Semantic spans the row alone. -->
+  <div class="pf-inline" [class.pf-inline--single]="!config.extraField">
+    @if (config.extraField; as ef) {
+      <div class="ob-field">
+        <label class="form-label" for="pf-extra">
+          {{ ef.label }}
+          @if (ef.required) {
+            <span class="ob-required">Required</span>
+          } @else {
+            <span class="ob-optional">Optional</span>
+          }
+        </label>
+        <select
+          id="pf-extra"
+          class="form-control"
+          [class.is-error]="showError('extra')"
+          [(ngModel)]="extra"
+          (blur)="markTouched('extra')">
+          @if (!ef.default) {
+            <option value="" disabled>Select…</option>
+          }
+          @for (o of ef.options; track o.value) {
+            <option [value]="o.value">{{ o.label }}</option>
+          }
+        </select>
+        @if (ef.hint) {
+          <p class="field-hint">{{ ef.hint }}</p>
+        }
+      </div>
+    }
+
+    <!-- Semantic -->
+    <div class="ob-field">
+      <label class="form-label" for="pf-semantic">Semantic <span class="ob-optional">Optional</span></label>
+      <select id="pf-semantic" class="form-control" [(ngModel)]="semantic">
+        <option value="AnyOf">AnyOf</option>
+        <option value="AllOf">AllOf</option>
+      </select>
+      <p class="field-hint">
+        AnyOf grants a match on any listed attribute; AllOf requires every listed attribute to match.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Show More Options — collapsed, OPTIONAL -->
+<div class="ob-accordion">
+  <button type="button" class="ob-accordion-hdr" (click)="toggleShowMore()" [attr.aria-expanded]="showMore()">
+    <span class="ob-accordion-title">Show More Options <span class="ob-optional">Optional</span></span>
+    <i class="fa-solid" [class.fa-chevron-down]="!showMore()" [class.fa-chevron-up]="showMore()"></i>
+  </button>
+  @if (showMore()) {
+    <div class="ob-accordion-body">
+      <div class="ob-field">
+        <span class="form-label">Tags <span class="ob-optional">Optional</span></span>
+        <p class="field-hint pol-tags-hint">Attach name/value metadata to this policy.</p>
+
+        @if (tags().length) {
+          <ul class="pol-tag-list">
+            @for (tag of tags(); track $index) {
+              <li class="pol-tag-item">
+                <span class="pol-tag-name">{{ tag.name }}</span>
+                <span class="pol-tag-eq">=</span>
+                <span class="pol-tag-value">{{ tag.value || '—' }}</span>
+                <button type="button" class="pol-tag-remove" (click)="removeTag($index)" aria-label="Remove tag">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </li>
+            }
+          </ul>
+        }
+
+        <div class="pol-tag-add">
+          <input
+            class="form-control"
+            type="text"
+            [(ngModel)]="tagName"
+            placeholder="Name"
+            autocomplete="off" />
+          <input
+            class="form-control"
+            type="text"
+            [(ngModel)]="tagValue"
+            (keydown.enter)="addTag()"
+            placeholder="Value"
+            autocomplete="off" />
+          <button type="button" class="btn btn-secondary" [disabled]="!tagName.trim()" (click)="addTag()">
+            <i class="fa-solid fa-plus"></i> Add
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Emits the authored policy to the host step (create) or the edit (save) -->
+<div class="ob-form-actions">
+  @if (editing) {
+    <button type="button" class="btn btn-primary" (click)="submit()">
+      <i class="fa-solid fa-check"></i> Save Changes
+    </button>
+    <button type="button" class="btn btn-secondary" (click)="cancel()">
+      Cancel
+    </button>
+  } @else {
+    <button type="button" class="btn btn-primary" (click)="submit()">
+      <i class="fa-solid fa-plus"></i> Add Policy
+    </button>
+  }
+</div>

@@ -1,0 +1,132 @@
+<div class="raw-body">
+
+  <!-- ─── Intro + action bar ─────────────────────────────────────────── -->
+  <header class="raw-intro">
+    <div class="intro-text">
+      <span class="intro-eyebrow"><i class="fa-solid fa-table-list"></i> Raw traffic</span>
+      <h2>Observed flows by identity</h2>
+      <p>
+        Every wildcard-intercepted identity and the destinations it dialed. Expand an identity, then
+        select the destinations to carve into a service + dial policy.
+      </p>
+    </div>
+
+    <div class="raw-actions" role="status" aria-live="polite">
+      <span class="sel-count">{{ selectedCount() }} selected</span>
+      <button class="btn btn-primary" type="button" [disabled]="!selectedCount()" (click)="openModal()">
+        <i class="fa-solid fa-shield-halved"></i> Create service policy
+      </button>
+    </div>
+  </header>
+
+  <!-- ─── Identity-grouped table (sole view) ──────────────────────────── -->
+  <div class="section-card table-card">
+    <table class="data-table id-table">
+      <colgroup>
+        <col class="idc-chevron" />
+        <col class="idc-entity" />
+        <col class="idc-ingress" />
+        <col class="idc-dests" />
+        <col class="idc-circuits" />
+        <col class="idc-spacer" />
+      </colgroup>
+      <thead>
+        <tr>
+          <th class="idc-chevron"></th>
+          <th>Identity</th>
+          <th>Ingress IP</th>
+          <th>Destinations</th>
+          <th>Circuits</th>
+          <th class="idc-spacer"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (g of identityGroups(); track g.identityId) {
+          <!-- ── identity group row ── -->
+          <tr class="group-row" (click)="toggleExpand(g.identityId)">
+            <td class="idc-chevron">
+              <i class="fa-solid fa-chevron-right chevron" [class.chevron--open]="isExpanded(g.identityId)"></i>
+            </td>
+            <td class="rc-strong" [class.src-unenrolled]="!g.enrolled">
+              @if (g.enrolled) {
+                {{ g.displayName }}
+              } @else {
+                <span aria-label="No managed entity">—</span>
+              }
+            </td>
+            <td><code class="rc-mono">{{ g.ingressIp }}</code></td>
+            <td><span class="rc-num">{{ g.destinationCount }}</span></td>
+            <td><span class="rc-num">{{ g.totalCircuits }}</span></td>
+            <td></td>
+          </tr>
+
+          <!-- ── expanded per-destination sub-table ── -->
+          @if (isExpanded(g.identityId)) {
+            <tr class="detail-row">
+              <td></td>
+              <td colspan="5">
+                <div class="id-detail">
+                  <table class="data-table subdest-table">
+                    <colgroup>
+                      <col class="sd-check" />
+                      <col class="sd-dest" />
+                      <col class="sd-egress" />
+                      <col class="sd-proto" />
+                      <col class="sd-egressip" />
+                      <col class="sd-port" />
+                      <col class="sd-circuits" />
+                      <col class="sd-spacer" />
+                    </colgroup>
+                    <thead>
+                      <tr>
+                        <th class="sd-check"></th>
+                        <th>Destination</th>
+                        <th>Service</th>
+                        <th>App Protocol</th>
+                        <th>Egress IP</th>
+                        <th>Egress Port</th>
+                        <th>Circuits</th>
+                        <th class="sd-spacer"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (d of destinationRows(g); track d.hostPort) {
+                        <tr class="subdest-row" [class.is-selected]="isPairSelected(g.identityId, d.hostPort)"
+                          (click)="togglePair(g.identityId, d.hostPort)">
+                          <td class="sd-check">
+                            <label class="row-check" (click)="$event.stopPropagation()">
+                              <input type="checkbox" [checked]="isPairSelected(g.identityId, d.hostPort)"
+                                (change)="togglePair(g.identityId, d.hostPort)"
+                                [attr.aria-label]="'Select ' + g.displayName + ' → ' + d.hostPort" />
+                              <span class="check-box" aria-hidden="true"><i class="fa-solid fa-check"></i></span>
+                            </label>
+                          </td>
+                          <td><code class="rc-mono">{{ d.hostPort }}</code></td>
+                          <td class="rc-soft">{{ d.egressEntityName }}</td>
+                          <td class="rc-soft">{{ d.appProtocol }}</td>
+                          <td><code class="rc-mono">{{ d.egressIp }}</code></td>
+                          <td><span class="rc-num">{{ d.egressPort }}</span></td>
+                          <td><span class="rc-num">{{ d.circuits }}</span></td>
+                          <td></td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ─── Construct-from-selection modal (service-first) ─────────────────── -->
+@if (modalOpen()) {
+  <app-construct-policy-modal
+    [destinations]="selectedDestinations()"
+    [flowCount]="selectedFlowCount()"
+    (created)="onCreated()"
+    (cancelled)="onCancelled()" />
+}

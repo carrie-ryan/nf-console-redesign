@@ -1,0 +1,294 @@
+<!-- Wizard header -->
+<div class="wiz-header">
+  <div class="wiz-header-left">
+    <a routerLink="/identities" class="btn-back" title="Back to Identities">
+      <i class="fa-solid fa-arrow-left"></i>
+    </a>
+    <h1>Create New Identity</h1>
+  </div>
+</div>
+
+<!-- Wizard body -->
+<div class="wiz-body">
+
+  <!-- Left sidebar: numbered steps -->
+  <aside class="wiz-sidebar">
+    <p class="step-progress">Step {{ currentStep }} of {{ totalSteps }}</p>
+    <div class="step-list">
+      @for (step of steps; track step.id) {
+        <div
+          class="step-item"
+          [class.step-item--active]="step.id === currentStep"
+          [class.step-item--done]="step.id < currentStep"
+          (click)="goToStep(step.id)"
+          role="button"
+          [attr.aria-current]="step.id === currentStep ? 'step' : null">
+          <div class="step-num">
+            @if (step.id < currentStep) {
+              <i class="fa-solid fa-check"></i>
+            } @else {
+              {{ step.id }}
+            }
+          </div>
+          <div class="step-info">
+            <span class="step-name">{{ step.label }}</span>
+            @if (step.optional) {
+              <span class="step-opt-badge">Optional</span>
+            }
+          </div>
+        </div>
+        @if (!$last) {
+          <div class="step-connector" [class.step-connector--done]="step.id < currentStep"></div>
+        }
+      }
+    </div>
+  </aside>
+
+  <!-- Center: step content + nav footer -->
+  <main class="wiz-main">
+    <div class="step-panel">
+
+      <!-- ── Step 1: Identity Details ─────────────────────────────── -->
+      @if (currentStep === 1) {
+        <h2 class="step-heading">Identity Details</h2>
+
+        <div class="form-group">
+          <div class="field-hdr">
+            <label class="form-label" for="id-name">IDENTITY NAME</label>
+            <span class="field-tag">REQUIRED</span>
+          </div>
+          <input
+            id="id-name"
+            class="form-control"
+            [(ngModel)]="name"
+            placeholder="Name this identity"
+            autocomplete="off" />
+        </div>
+
+        <div class="form-group">
+          <div class="field-hdr">
+            <label class="form-label" for="id-type">TYPE</label>
+            <span class="field-tag">OPTIONAL</span>
+          </div>
+          <select id="id-type" class="form-control" [(ngModel)]="identityType">
+            <option value="device">Device</option>
+            <option value="router">Router</option>
+            <option value="service">Service</option>
+          </select>
+          <p class="type-desc">{{ typeDescriptions[identityType] }}</p>
+        </div>
+
+        <div class="form-group">
+          <div class="field-hdr">
+            <label class="form-label" for="id-attrs">SELECT OR CREATE IDENTITY ATTRIBUTES</label>
+            <span class="field-tag">OPTIONAL</span>
+          </div>
+          <div class="tag-input-wrap">
+            @for (attr of attributes(); track attr) {
+              <span class="tag-chip">
+                {{ attr }}
+                <button class="tag-chip-x" type="button" (click)="removeAttribute(attr)" aria-label="Remove attribute">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </span>
+            }
+            <input
+              id="id-attrs"
+              class="tag-bare-input"
+              [(ngModel)]="attributeInput"
+              (keydown)="onAttributeKeydown($event)"
+              [placeholder]="attributes().length === 0 ? 'Add attributes to group Identities' : ''"
+              autocomplete="off" />
+          </div>
+          <p class="field-hint">Press Enter or comma to add. Prefix with # for role attributes (e.g. #users).</p>
+        </div>
+      }
+
+      <!-- ── Step 2: Auth & Access ────────────────────────────────── -->
+      @if (currentStep === 2) {
+        <h2 class="step-heading">Auth & Access</h2>
+
+        <div class="form-group">
+          <div class="field-hdr">
+            <div class="field-hdr-label">
+              <label class="form-label" for="auth-policy">AUTH POLICY</label>
+              <span
+                class="info-tip"
+                title="Authentication Policies restrict the authentication methods available to identities."
+                aria-label="Auth Policy info">
+                <i class="fa-solid fa-circle-info"></i>
+              </span>
+            </div>
+            <span class="field-tag">OPTIONAL</span>
+          </div>
+          <select id="auth-policy" class="form-control" [(ngModel)]="authPolicy">
+            <option value="default">Default</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <div class="field-hdr">
+            <label class="form-label" for="external-id">EXTERNAL ID</label>
+            <span class="field-tag">OPTIONAL</span>
+          </div>
+          <input
+            id="external-id"
+            class="form-control"
+            [(ngModel)]="externalId"
+            placeholder="Optional External ID"
+            autocomplete="off" />
+        </div>
+      }
+
+      <!-- ── Step 3: Advanced Options ────────────────────────────── -->
+      @if (currentStep === 3) {
+        <h2 class="step-heading">
+          Advanced Options
+          <span class="heading-badge">Optional</span>
+        </h2>
+
+        <!-- Enrollment Type -->
+        <div class="adv-block">
+          <div class="form-group">
+            <label class="form-label" for="enrollment-type">ENROLLMENT TYPE</label>
+            <select id="enrollment-type" class="form-control" [(ngModel)]="enrollmentType">
+              <option value="ott">One Time Token</option>
+              <option value="ottca">One Time Token CA</option>
+              <option value="updb">Username / Password</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Is Admin -->
+        <div class="adv-block">
+          <div class="field-hdr" style="margin-bottom: 0.625rem;">
+            <div class="field-hdr-label">
+              <span class="form-label" style="margin-bottom:0">IS ADMIN</span>
+              <span
+                class="warn-tip"
+                title="Admin identities have full management access to the network. Grant this permission carefully."
+                aria-label="Admin warning">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+              </span>
+            </div>
+          </div>
+          <div class="toggle-row">
+            <label class="toggle-switch">
+              <input type="checkbox" [(ngModel)]="isAdmin">
+              <span class="toggle-track">
+                <span class="toggle-knob"></span>
+              </span>
+            </label>
+            <span class="toggle-label">{{ isAdmin ? 'YES' : 'NO' }}</span>
+          </div>
+        </div>
+
+        <!-- Hosting Cost + Precedence -->
+        <div class="adv-block adv-block--row">
+          <div class="form-group" style="flex:1">
+            <label class="form-label" for="hosting-cost">HOSTING COST</label>
+            <input
+              id="hosting-cost"
+              type="number"
+              class="form-control"
+              [(ngModel)]="hostingCost"
+              min="0" />
+          </div>
+          <div class="form-group" style="flex:1">
+            <label class="form-label" for="hosting-prec">PRECEDENCE</label>
+            <select id="hosting-prec" class="form-control" [(ngModel)]="hostingPrecedence">
+              <option value="default">Default</option>
+              <option value="required">Required</option>
+              <option value="failed">Failed</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Custom Tags -->
+        <div class="adv-block">
+          <div class="field-hdr" style="margin-bottom: 0.625rem;">
+            <span class="form-label" style="margin-bottom:0">CUSTOM TAGS</span>
+            <button class="btn btn-secondary btn-sm" type="button" (click)="addTag()" [disabled]="!tagKey.trim()">
+              <i class="fa-solid fa-plus"></i> New Tag
+            </button>
+          </div>
+          @if (tags().length === 0) {
+            <p class="empty-hint">No tags to display...</p>
+          } @else {
+            <div class="tags-list">
+              @for (tag of tags(); track $index) {
+                <div class="tag-row">
+                  <span class="tag-key">{{ tag.key }}</span>
+                  <span class="tag-eq">=</span>
+                  <span class="tag-val">{{ tag.value }}</span>
+                  <button class="btn-icon-xs" type="button" (click)="removeTag($index)" aria-label="Remove tag">
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                </div>
+              }
+            </div>
+          }
+          <div class="tag-add-row">
+            <input class="form-control" [(ngModel)]="tagKey" placeholder="Key" />
+            <input class="form-control" [(ngModel)]="tagValue" placeholder="Value" />
+            <button class="btn btn-secondary btn-sm" type="button" (click)="addTag()" [disabled]="!tagKey.trim()">Add</button>
+          </div>
+        </div>
+
+        <!-- App Data -->
+        <div class="adv-block">
+          <div class="field-hdr" style="margin-bottom: 0.375rem;">
+            <label class="form-label" for="app-data" style="margin-bottom:0">APP DATA</label>
+            <span class="field-tag">OPTIONAL</span>
+          </div>
+          <textarea
+            id="app-data"
+            class="form-control code-textarea"
+            [(ngModel)]="appData"
+            rows="5"
+            spellcheck="false"></textarea>
+        </div>
+      }
+
+    </div><!-- /step-panel -->
+
+    <!-- Navigation footer -->
+    <div class="wiz-footer">
+      @if (currentStep > 1) {
+        <button class="btn btn-secondary" type="button" (click)="back()">
+          <i class="fa-solid fa-arrow-left"></i> Back
+        </button>
+      } @else {
+        <span></span>
+      }
+      <div class="wiz-footer-right">
+        <button class="btn btn-secondary" type="button" (click)="cancel()">Cancel</button>
+        @if (currentStep < totalSteps) {
+          <button class="btn btn-primary" type="button" (click)="next()" [disabled]="!canProceed">
+            Next <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        } @else {
+          <button class="btn btn-primary" type="button" (click)="save()" [disabled]="!name.trim()">
+            <i class="fa-solid fa-check"></i> Save
+          </button>
+        }
+      </div>
+    </div>
+  </main>
+
+  <!-- Right: Developer Tools (power users only) -->
+  @if (prefs.isPowerUser()) {
+    <div class="dev-panel">
+      <button class="dev-panel-hdr" type="button" (click)="devPanelOpen = !devPanelOpen">
+        <span class="dev-panel-title">Developer Tools</span>
+        <i class="fa-solid" [class.fa-chevron-up]="devPanelOpen" [class.fa-chevron-down]="!devPanelOpen"></i>
+      </button>
+      @if (devPanelOpen) {
+        <div class="dev-panel-body">
+          <pre class="dev-json">{{ jsonPreview }}</pre>
+        </div>
+      }
+    </div>
+  }
+
+</div><!-- /wiz-body -->

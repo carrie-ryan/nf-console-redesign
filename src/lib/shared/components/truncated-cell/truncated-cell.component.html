@@ -1,0 +1,8 @@
+<span class="truncated-value" [title]="value()">{{ value() }}</span>
+<button
+  class="copy-btn"
+  (click)="copy($event)"
+  [title]="copied() ? 'Copied!' : 'Copy to clipboard'"
+  [attr.aria-label]="'Copy ' + value()">
+  <i [class]="copied() ? 'fa-solid fa-check' : 'fa-regular fa-copy'"></i>
+</button>

@@ -1,0 +1,103 @@
+<app-modal-shell (dismissed)="cancel()">
+  <span modal-title>Mute alerts</span>
+
+  <p class="mute-copy">
+    A mute stops the paging. It does not stop the alert: the condition is still evaluated,
+    the alert is still recorded, and it still resolves on its own.
+  </p>
+
+  <!-- ─── WHAT TO MUTE ──────────────────────────────────────────────── -->
+  <fieldset class="mute-fieldset">
+    <legend class="mute-legend">What to mute</legend>
+
+    <label class="scope-opt" [class.scope-opt--disabled]="perAlertDisabled()">
+      <input
+        type="radio"
+        name="mute-scope"
+        [checked]="effectiveScope() === 'A'"
+        [disabled]="perAlertDisabled()"
+        (change)="pickScope('A')" />
+      <span class="scope-body">
+        <span class="scope-title">Just this alert</span>
+        <span class="scope-hint">Pins the alert's identifying labels — the same alert, wherever it reasserts.</span>
+      </span>
+    </label>
+
+    <label class="scope-opt" [class.scope-opt--disabled]="perAlertDisabled()">
+      <input
+        type="radio"
+        name="mute-scope"
+        [checked]="effectiveScope() === 'B'"
+        [disabled]="perAlertDisabled()"
+        (change)="pickScope('B')" />
+      <span class="scope-body">
+        <span class="scope-title">{{ optionBLabel() }}</span>
+        <span class="scope-hint">Across this whole network, including instances not yet seen.</span>
+      </span>
+    </label>
+
+    <label class="scope-opt">
+      <input
+        type="radio"
+        name="mute-scope"
+        [checked]="effectiveScope() === 'C'"
+        (change)="pickScope('C')" />
+      <span class="scope-body">
+        <span class="scope-title">Everything in this network</span>
+        <span class="scope-hint">Every alert of every type. Nothing on this network pages anybody.</span>
+      </span>
+    </label>
+  </fieldset>
+
+  <!-- ─── STARTS ────────────────────────────────────────────────────── -->
+  <div class="mute-field">
+    <span class="form-label">Starts</span>
+    <div class="pill-row">
+      <button type="button" class="pill" [class.pill--active]="startMode() === 'now'"
+        (click)="startMode.set('now')">Now</button>
+      <button type="button" class="pill" [class.pill--active]="startMode() === 'later'"
+        (click)="startMode.set('later')">Later</button>
+    </div>
+    @if (startMode() === 'later') {
+      <input
+        type="datetime-local"
+        class="form-control mute-datetime"
+        [ngModel]="startLater()"
+        (ngModelChange)="startLater.set($event)"
+        aria-label="Start time" />
+    }
+  </div>
+
+  <!-- ─── DURATION ──────────────────────────────────────────────────── -->
+  <div class="mute-field">
+    <span class="form-label">For how long</span>
+    <div class="pill-row">
+      @for (d of durationOptions; track d) {
+        <button type="button" class="pill" [class.pill--active]="duration() === d"
+          (click)="duration.set(d)">{{ durationLabel(d) }}</button>
+      }
+    </div>
+  </div>
+
+  <!-- ─── REASON ────────────────────────────────────────────────────── -->
+  <label class="form-label" for="mute-reason">Reason <span class="mute-optional">(optional)</span></label>
+  <textarea
+    id="mute-reason"
+    class="form-control"
+    rows="2"
+    [ngModel]="reason()"
+    (ngModelChange)="reason.set($event)"
+    placeholder="e.g. known bad transceiver, replacement scheduled"></textarea>
+
+  <!-- ─── LIVE PREVIEW ──────────────────────────────────────────────── -->
+  <div class="mute-preview">
+    <span class="mute-preview-label">This will silence</span>
+    <span class="mute-preview-scope">{{ previewScopeLine() }}</span>
+    <span class="mute-preview-timing">{{ previewTimingLine() }}</span>
+  </div>
+
+  <ng-container modal-footer>
+    <button class="btn btn-secondary" type="button" (click)="cancel()">Cancel</button>
+    <button class="btn btn-primary" type="button" [disabled]="submitDisabled()" (click)="mute()">Mute</button>
+  </ng-container>
+</app-modal-shell>

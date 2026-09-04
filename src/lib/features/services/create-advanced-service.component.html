@@ -1,0 +1,652 @@
+<!-- Wizard header -->
+<div class="wiz-header">
+  <div class="wiz-header-left">
+    <a routerLink="/services/new" class="btn-back" title="Back">
+      <i class="fa-solid fa-arrow-left"></i>
+    </a>
+    <h1>Create Advanced Service</h1>
+  </div>
+</div>
+
+<!-- Wizard body -->
+<div class="wiz-body">
+
+  <!-- Left sidebar: numbered steps -->
+  <aside class="wiz-sidebar">
+    <p class="step-progress">Step {{ currentStep }} of {{ totalSteps }}</p>
+    <div class="step-list">
+      @for (step of steps; track step.id) {
+        <div
+          class="step-item"
+          [class.step-item--active]="step.id === currentStep"
+          [class.step-item--done]="step.id < currentStep"
+          (click)="goToStep(step.id)"
+          role="button"
+          [attr.aria-current]="step.id === currentStep ? 'step' : null">
+          <div class="step-num">
+            @if (step.id < currentStep) {
+              <i class="fa-solid fa-check"></i>
+            } @else {
+              {{ step.id }}
+            }
+          </div>
+          <div class="step-info">
+            <span class="step-name">{{ step.label }}</span>
+            @if (step.optional) {
+              <span class="step-opt-badge">Optional</span>
+            }
+          </div>
+        </div>
+        @if (!$last) {
+          <div class="step-connector" [class.step-connector--done]="step.id < currentStep"></div>
+        }
+      }
+    </div>
+  </aside>
+
+  <!-- Center: step content + nav footer -->
+  <main class="wiz-main">
+    <div class="step-panel">
+
+      <!-- ── Step 1: Service Details ─────────────────────────────── -->
+      @if (currentStep === 1) {
+        <h2 class="step-heading">Service Details</h2>
+
+        <div class="form-group">
+          <div class="field-hdr">
+            <label class="form-label" for="adv-name">SERVICE NAME</label>
+            <span class="field-tag">REQUIRED</span>
+          </div>
+          <input
+            id="adv-name"
+            class="form-control"
+            [(ngModel)]="name"
+            placeholder="Name this Service"
+            autocomplete="off" />
+        </div>
+
+        <div class="form-group">
+          <div class="field-hdr">
+            <label class="form-label" for="adv-attrs">SERVICE ATTRIBUTES</label>
+            <span class="field-tag">OPTIONAL</span>
+          </div>
+          <div class="tag-input-wrap">
+            @for (attr of attributes(); track attr) {
+              <span class="tag-chip">
+                {{ attr }}
+                <button class="tag-chip-x" type="button" (click)="removeAttribute(attr)" aria-label="Remove">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </span>
+            }
+            <input
+              id="adv-attrs"
+              class="tag-bare-input"
+              [(ngModel)]="attributeInput"
+              (keydown)="onAttrKeydown($event)"
+              [placeholder]="attributes().length === 0 ? 'Add attributes to group Services' : ''"
+              autocomplete="off" />
+          </div>
+          <p class="field-hint">Press Enter or comma to add. Prefix with # for role attributes.</p>
+        </div>
+      }
+
+      <!-- ── Step 2: Configurations ──────────────────────────────── -->
+      @if (currentStep === 2) {
+        <h2 class="step-heading">
+          Configurations
+          <span class="heading-badge">Optional</span>
+        </h2>
+
+        <!-- Config type selector -->
+        <div class="config-selector-block">
+          <div class="form-group" style="margin-bottom:0.875rem">
+            <label class="form-label" for="cfg-type">SELECT A CONFIG TYPE</label>
+            <select id="cfg-type" class="form-control" [(ngModel)]="configType">
+              <option value="host.v1">host.v1</option>
+              <option value="intercept.v1">intercept.v1</option>
+              <option value="host.v2">host.v2</option>
+              <option value="intercept.v2">intercept.v2</option>
+            </select>
+          </div>
+
+          <!-- Config name + attach -->
+          <div class="config-name-bar">
+            <div class="config-name-label">CONFIG NAME</div>
+            <div class="config-name-row">
+              <input
+                class="form-control"
+                [(ngModel)]="configName"
+                placeholder="New Config Name"
+                autocomplete="off" />
+              <button class="btn btn-primary btn-sm" type="button" [disabled]="!configName.trim()">
+                Create and Attach
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Configuration data form -->
+        <div class="config-data-block">
+          <div class="config-data-hdr">CONFIGURATION DATA</div>
+
+          <!-- Protocol + Address + Port -->
+          <div class="proto-addr-row">
+            <div class="form-group" style="width:8rem; flex-shrink:0; margin-bottom:0">
+              <label class="form-label" for="cfg-proto">PROTOCOL</label>
+              <select id="cfg-proto" class="form-control" [(ngModel)]="protocol">
+                <option value="tcp">tcp</option>
+                <option value="udp">udp</option>
+              </select>
+            </div>
+            <div class="form-group" style="flex:1; margin-bottom:0">
+              <label class="form-label" for="cfg-addr">ADDRESS</label>
+              <input id="cfg-addr" class="form-control" [(ngModel)]="address" placeholder="host.name" autocomplete="off" />
+            </div>
+            <div class="form-group" style="width:6rem; flex-shrink:0; margin-bottom:0">
+              <label class="form-label" for="cfg-port">PORT</label>
+              <input id="cfg-port" type="number" class="form-control" [(ngModel)]="port" min="0" max="65535" />
+            </div>
+          </div>
+
+          <!-- Forward toggles row -->
+          <div class="fwd-row">
+            <div class="fwd-item">
+              <span class="fwd-label">FORWARD PROTOCOL</span>
+              <label class="toggle-switch">
+                <input type="checkbox" [(ngModel)]="forwardProtocol">
+                <span class="toggle-track"><span class="toggle-knob"></span></span>
+              </label>
+              <span class="toggle-val">{{ forwardProtocol ? 'YES' : 'NO' }}</span>
+            </div>
+            <div class="fwd-item">
+              <span class="fwd-label">FORWARD ADDRESS</span>
+              <label class="toggle-switch">
+                <input type="checkbox" [(ngModel)]="forwardAddress">
+                <span class="toggle-track"><span class="toggle-knob"></span></span>
+              </label>
+              <span class="toggle-val">{{ forwardAddress ? 'YES' : 'NO' }}</span>
+            </div>
+            <div class="fwd-item">
+              <span class="fwd-label">FORWARD PORT</span>
+              <label class="toggle-switch">
+                <input type="checkbox" [(ngModel)]="forwardPort">
+                <span class="toggle-track"><span class="toggle-knob"></span></span>
+              </label>
+              <span class="toggle-val">{{ forwardPort ? 'YES' : 'NO' }}</span>
+            </div>
+          </div>
+
+          <!-- Allowed source addresses -->
+          <div class="form-group">
+            <label class="form-label" for="cfg-src">ALLOWED SOURCE ADDRESSES</label>
+            <input id="cfg-src" class="form-control" [(ngModel)]="allowedSourceAddresses" placeholder="enter values separated with a comma" autocomplete="off" />
+          </div>
+
+          <!-- Forward address translations -->
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label" for="cfg-fwd-trans">FORWARD ADDRESS TRANSLATIONS</label>
+            <input id="cfg-fwd-trans" class="form-control" [(ngModel)]="forwardAddressTranslations" placeholder="enter values separated with a comma" autocomplete="off" />
+          </div>
+        </div>
+
+        <!-- ── HTTP CHECKS accordion ───────────────────────────── -->
+        <div class="accordion" [class.accordion--open]="httpChecksOpen">
+          <button class="accordion-hdr" type="button" (click)="httpChecksOpen = !httpChecksOpen">
+            <span class="accordion-title">HTTP CHECKS</span>
+            @if (!httpChecksOpen) {
+              <span class="opt-badge">OPTIONAL</span>
+            }
+            <i class="fa-solid accordion-chevron"
+               [class.fa-chevron-down]="!httpChecksOpen"
+               [class.fa-chevron-up]="httpChecksOpen"></i>
+          </button>
+          @if (httpChecksOpen) {
+            <div class="accordion-body">
+              @if (httpChecks().length === 0) {
+                <span class="none-badge">NONE ADDED</span>
+              } @else {
+                <div class="check-list">
+                  @for (check of httpChecks(); track $index) {
+                    <div class="check-row">
+                      <span class="check-url">{{ check.url }}</span>
+                      <button class="btn-icon-xs" type="button" (click)="removeHttpCheck($index)" aria-label="Remove">
+                        <i class="fa-solid fa-xmark"></i>
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+              <!-- Actions sub-accordion -->
+              <div class="sub-accordion">
+                <button class="sub-accordion-hdr" type="button" (click)="httpActionsOpen = !httpActionsOpen">
+                  <span>ACTIONS</span>
+                  <i class="fa-solid" [class.fa-chevron-right]="!httpActionsOpen" [class.fa-chevron-down]="httpActionsOpen"></i>
+                </button>
+                @if (httpActionsOpen) {
+                  <div class="sub-accordion-body">
+                    <div class="form-group">
+                      <label class="form-label" for="http-body">BODY</label>
+                      <input id="http-body" class="form-control" [(ngModel)]="httpBody" placeholder="enter a value for body" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label" for="http-xbody">EXPECT IN BODY</label>
+                      <input id="http-xbody" class="form-control" [(ngModel)]="httpExpectBody" placeholder="enter a value for expectBody" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label" for="http-xstatus">EXPECT STATUS</label>
+                      <input id="http-xstatus" type="number" class="form-control" [(ngModel)]="httpExpectStatus" placeholder="numeric value between 100-599" min="100" max="599" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label" for="http-interval">INTERVAL</label>
+                      <input id="http-interval" class="form-control" [(ngModel)]="httpInterval" placeholder="enter a value for interval" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label" for="http-method">METHOD</label>
+                      <select id="http-method" class="form-control" [(ngModel)]="httpMethod">
+                        <option value="">select method</option>
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                        <option value="PATCH">PATCH</option>
+                        <option value="DELETE">DELETE</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label" for="http-timeout">TIMEOUT</label>
+                      <input id="http-timeout" class="form-control" [(ngModel)]="httpTimeout" placeholder="enter a value for timeout" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label" for="http-url">URL</label>
+                      <input id="http-url" class="form-control" [(ngModel)]="httpUrl" placeholder="enter a value for url" />
+                    </div>
+                    <button class="btn btn-primary btn-sm" type="button" (click)="addHttpCheck()" [disabled]="!httpUrl.trim()">
+                      ADD
+                    </button>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- ── LISTEN OPTIONS accordion ────────────────────────── -->
+        <div class="accordion" [class.accordion--open]="listenOptionsOpen">
+          <button class="accordion-hdr" type="button" (click)="listenOptionsOpen = !listenOptionsOpen">
+            <span class="accordion-title">LISTEN OPTIONS</span>
+            @if (!listenOptionsOpen) {
+              <span class="opt-badge">OPTIONAL</span>
+            }
+            <i class="fa-solid accordion-chevron"
+               [class.fa-chevron-down]="!listenOptionsOpen"
+               [class.fa-chevron-up]="listenOptionsOpen"></i>
+          </button>
+          @if (listenOptionsOpen) {
+            <div class="accordion-body">
+              <div class="form-group">
+                <div class="field-hdr">
+                  <label class="form-label">BIND USING EDGE IDENTITY</label>
+                </div>
+                <div class="toggle-row">
+                  <label class="toggle-switch">
+                    <input type="checkbox" [(ngModel)]="bindUsingEdgeIdentity">
+                    <span class="toggle-track"><span class="toggle-knob"></span></span>
+                  </label>
+                  <span class="toggle-label">{{ bindUsingEdgeIdentity ? 'YES' : 'NO' }}</span>
+                </div>
+              </div>
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label class="form-label" for="lo-ctimeout">CONNECT TIMEOUT</label>
+                  <input id="lo-ctimeout" class="form-control" [(ngModel)]="listenConnectTimeout" placeholder="enter a value for connectTimeout" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="lo-ctimeout-s">CONNECT TIMEOUT SECONDS</label>
+                  <input id="lo-ctimeout-s" type="number" class="form-control" [(ngModel)]="listenConnectTimeoutSeconds" placeholder="numeric value between 0-2147483647" min="0" />
+                </div>
+              </div>
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label class="form-label" for="lo-cost">COST</label>
+                  <input id="lo-cost" type="number" class="form-control" [(ngModel)]="listenCost" placeholder="numeric value between 0-65535" min="0" max="65535" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="lo-identity">IDENTITY</label>
+                  <input id="lo-identity" class="form-control" [(ngModel)]="listenIdentity" placeholder="enter a value for identity" />
+                </div>
+              </div>
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label class="form-label" for="lo-maxconn">MAX CONNECTIONS</label>
+                  <input id="lo-maxconn" type="number" class="form-control" [(ngModel)]="listenMaxConnections" placeholder="number greater than 1" min="1" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="lo-prec">PRECEDENCE</label>
+                  <select id="lo-prec" class="form-control" [(ngModel)]="listenPrecedence">
+                    <option value="">select precedence</option>
+                    <option value="default">Default</option>
+                    <option value="required">Required</option>
+                    <option value="failed">Failed</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- ── PORT CHECKS accordion ───────────────────────────── -->
+        <div class="accordion" [class.accordion--open]="portChecksOpen">
+          <button class="accordion-hdr" type="button" (click)="portChecksOpen = !portChecksOpen">
+            <span class="accordion-title">PORT CHECKS</span>
+            @if (!portChecksOpen) {
+              <span class="opt-badge">OPTIONAL</span>
+            }
+            <i class="fa-solid accordion-chevron"
+               [class.fa-chevron-down]="!portChecksOpen"
+               [class.fa-chevron-up]="portChecksOpen"></i>
+          </button>
+          @if (portChecksOpen) {
+            <div class="accordion-body">
+              @if (portChecks().length === 0) {
+                <span class="none-badge">NONE ADDED</span>
+              } @else {
+                <div class="check-list">
+                  @for (check of portChecks(); track $index) {
+                    <div class="check-row">
+                      <span class="check-url">{{ check.address }}</span>
+                      <button class="btn-icon-xs" type="button" (click)="removePortCheck($index)" aria-label="Remove">
+                        <i class="fa-solid fa-xmark"></i>
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+              <div class="form-group">
+                <label class="form-label" for="pc-addr">ADDRESS</label>
+                <input id="pc-addr" class="form-control" [(ngModel)]="portCheckAddress" placeholder="host.name" />
+              </div>
+              <!-- Port check actions sub-accordion -->
+              <div class="sub-accordion">
+                <button class="sub-accordion-hdr" type="button" (click)="portActionsOpen = !portActionsOpen">
+                  <span>ACTIONS</span>
+                  <i class="fa-solid" [class.fa-chevron-right]="!portActionsOpen" [class.fa-chevron-down]="portActionsOpen"></i>
+                </button>
+                @if (portActionsOpen) {
+                  <div class="sub-accordion-body">
+                    <div class="form-group">
+                      <label class="form-label" for="pc-interval">INTERVAL</label>
+                      <input id="pc-interval" class="form-control" [(ngModel)]="portCheckInterval" placeholder="enter a value for interval" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label" for="pc-timeout">TIMEOUT</label>
+                      <input id="pc-timeout" class="form-control" [(ngModel)]="portCheckTimeout" placeholder="enter a value for timeout" />
+                    </div>
+                    <button class="btn btn-primary btn-sm" type="button" (click)="addPortCheck()" [disabled]="!portCheckAddress.trim()">
+                      ADD
+                    </button>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- ── PROXY accordion ─────────────────────────────────── -->
+        <div class="accordion" [class.accordion--open]="proxyOpen">
+          <button class="accordion-hdr" type="button" (click)="proxyOpen = !proxyOpen">
+            <span class="accordion-title">PROXY</span>
+            @if (!proxyOpen) {
+              <span class="opt-badge">OPTIONAL</span>
+            }
+            <i class="fa-solid accordion-chevron"
+               [class.fa-chevron-down]="!proxyOpen"
+               [class.fa-chevron-up]="proxyOpen"></i>
+          </button>
+          @if (proxyOpen) {
+            <div class="accordion-body">
+              <div class="form-group">
+                <label class="form-label" for="proxy-addr">ADDRESS</label>
+                <input id="proxy-addr" class="form-control" [(ngModel)]="proxyAddress" placeholder="host.name" />
+              </div>
+              <div class="form-group" style="margin-bottom:0">
+                <label class="form-label" for="proxy-type">TYPE</label>
+                <select id="proxy-type" class="form-control" [(ngModel)]="proxyType">
+                  <option value="">select type</option>
+                  <option value="http">HTTP</option>
+                  <option value="socks5">SOCKS5</option>
+                </select>
+              </div>
+            </div>
+          }
+        </div>
+
+      }
+
+      <!-- ── Step 3: Access & Policies ──────────────────────────── -->
+      @if (currentStep === 3) {
+        <h2 class="step-heading">Access &amp; Policies</h2>
+
+        <!-- Prerequisite warning -->
+        @if (!hasIdentities) {
+          <div class="prereq-warning">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <div>
+              <strong>No identities found.</strong>
+              Create an identity first to assign access.
+              <a routerLink="/identities/new" class="prereq-link">Create an identity</a>
+            </div>
+          </div>
+        }
+
+        <!-- Dial Access -->
+        <div class="policy-block">
+          <div class="policy-block-hdr">
+            <span class="policy-block-title">DIAL ACCESS</span>
+            <span class="count-badge">{{ dialRoles().length }}</span>
+          </div>
+          <p class="policy-block-desc">Which identities or groups can access (dial) this service?</p>
+          <div class="tag-input-wrap">
+            @for (role of dialRoles(); track role) {
+              <span class="tag-chip">
+                {{ role }}
+                <button class="tag-chip-x" type="button" (click)="removeDialRole(role)" aria-label="Remove">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </span>
+            }
+            <input
+              class="tag-bare-input"
+              [(ngModel)]="dialRoleInput"
+              (keydown)="onDialRoleKeydown($event)"
+              [placeholder]="dialRoles().length === 0 ? 'Add identity role attributes (e.g. #users)' : ''"
+              autocomplete="off" />
+          </div>
+          <p class="field-hint">Press Enter or comma to add role attributes.</p>
+        </div>
+
+        <!-- Bind Access -->
+        <div class="policy-block">
+          <div class="policy-block-hdr">
+            <span class="policy-block-title">BIND ACCESS</span>
+            <span class="count-badge">{{ bindRoles().length }}</span>
+          </div>
+          <p class="policy-block-desc">Which identities or groups can host (bind) this service?</p>
+          <div class="tag-input-wrap">
+            @for (role of bindRoles(); track role) {
+              <span class="tag-chip">
+                {{ role }}
+                <button class="tag-chip-x" type="button" (click)="removeBindRole(role)" aria-label="Remove">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </span>
+            }
+            <input
+              class="tag-bare-input"
+              [(ngModel)]="bindRoleInput"
+              (keydown)="onBindRoleKeydown($event)"
+              [placeholder]="bindRoles().length === 0 ? 'Add identity role attributes (e.g. #servers)' : ''"
+              autocomplete="off" />
+          </div>
+          <p class="field-hint">Press Enter or comma to add role attributes.</p>
+        </div>
+
+        <!-- Posture Checks -->
+        <div class="policy-block">
+          <div class="policy-block-hdr">
+            <span class="policy-block-title">POSTURE CHECKS</span>
+            <span class="count-badge">{{ postureChecks().length }}</span>
+          </div>
+          <p class="policy-block-desc">Optional security requirements identities must satisfy.</p>
+          <div class="tag-input-wrap">
+            @for (p of postureChecks(); track p) {
+              <span class="tag-chip">
+                {{ p }}
+                <button class="tag-chip-x" type="button" (click)="removePosture(p)" aria-label="Remove">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </span>
+            }
+            <input
+              class="tag-bare-input"
+              [(ngModel)]="postureInput"
+              (keydown)="onPostureKeydown($event)"
+              [placeholder]="postureChecks().length === 0 ? 'Add posture check role attributes' : ''"
+              autocomplete="off" />
+          </div>
+          <p class="field-hint">Press Enter or comma to add role attributes.</p>
+        </div>
+      }
+
+      <!-- ── Step 4: Advanced Settings ──────────────────────────── -->
+      @if (currentStep === 4) {
+        <h2 class="step-heading">
+          Advanced Settings
+          <span class="heading-badge">Optional</span>
+        </h2>
+
+        <!-- Terminator Strategy -->
+        <div class="adv-block">
+          <div class="form-group" style="margin-bottom:0">
+            <div class="field-hdr">
+              <div class="field-hdr-label">
+                <label class="form-label" for="term-strat" style="margin-bottom:0">TERMINATOR STRATEGY</label>
+                <span class="info-tip" title="Controls how the network selects which terminator to use when multiple exist for a service." aria-label="Terminator strategy info">
+                  <i class="fa-solid fa-circle-info"></i>
+                </span>
+              </div>
+              <span class="field-tag">OPTIONAL</span>
+            </div>
+            <select id="term-strat" class="form-control" [(ngModel)]="terminatorStrategy">
+              <option value="">Select a Strategy...</option>
+              <option value="smartrouting">Smart Routing</option>
+              <option value="random">Random</option>
+              <option value="weighted">Weighted</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Require Encryption -->
+        <div class="adv-block">
+          <div class="field-hdr" style="margin-bottom:0.625rem">
+            <div class="field-hdr-label">
+              <span class="form-label" style="margin-bottom:0">ENCRYPTION</span>
+              <span class="info-tip" title="Require end-to-end encryption for all traffic on this service. Strongly recommended — disabling encryption sends traffic in plaintext between endpoints." aria-label="Encryption info">
+                <i class="fa-solid fa-circle-info"></i>
+              </span>
+            </div>
+          </div>
+          <div class="toggle-row">
+            <label class="toggle-switch">
+              <input type="checkbox" [(ngModel)]="encryptionRequired">
+              <span class="toggle-track"><span class="toggle-knob"></span></span>
+            </label>
+            <div>
+              <span class="toggle-label">{{ encryptionRequired ? 'REQUIRE ENCRYPTION' : 'NO ENCRYPTION' }}</span>
+              <p class="toggle-sublabel">
+                @if (encryptionRequired) {
+                  End-to-end encryption is enforced for all traffic.
+                } @else {
+                  Traffic may be sent unencrypted between endpoints.
+                }
+              </p>
+            </div>
+            <span class="enc-badge" [class.enc-badge--yes]="encryptionRequired" [class.enc-badge--no]="!encryptionRequired">
+              {{ encryptionRequired ? 'YES' : 'NO' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Custom Tags -->
+        <div class="adv-block">
+          <div class="field-hdr" style="margin-bottom:0.625rem">
+            <span class="form-label" style="margin-bottom:0">CUSTOM TAGS</span>
+            <button class="btn btn-secondary btn-sm" type="button" (click)="addTag()" [disabled]="!tagKey.trim()">
+              <i class="fa-solid fa-plus"></i> New Tag
+            </button>
+          </div>
+          @if (tags().length === 0) {
+            <p class="empty-hint">No tags to display...</p>
+          } @else {
+            <div class="tags-list">
+              @for (tag of tags(); track $index) {
+                <div class="tag-row">
+                  <span class="tag-key">{{ tag.key }}</span>
+                  <span class="tag-eq">=</span>
+                  <span class="tag-val">{{ tag.value }}</span>
+                  <button class="btn-icon-xs" type="button" (click)="removeTag($index)" aria-label="Remove tag">
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                </div>
+              }
+            </div>
+          }
+          <div class="tag-add-row">
+            <input class="form-control" [(ngModel)]="tagKey" placeholder="Key" />
+            <input class="form-control" [(ngModel)]="tagValue" placeholder="Value" />
+            <button class="btn btn-secondary btn-sm" type="button" (click)="addTag()" [disabled]="!tagKey.trim()">Add</button>
+          </div>
+        </div>
+      }
+
+    </div><!-- /step-panel -->
+
+    <!-- Navigation footer -->
+    <div class="wiz-footer">
+      @if (currentStep > 1) {
+        <button class="btn btn-secondary" type="button" (click)="back()">
+          <i class="fa-solid fa-arrow-left"></i> Back
+        </button>
+      } @else {
+        <span></span>
+      }
+      <div class="wiz-footer-right">
+        <button class="btn btn-secondary" type="button" (click)="cancel()">Cancel</button>
+        @if (currentStep < totalSteps) {
+          <button class="btn btn-primary" type="button" (click)="next()" [disabled]="!canProceed">
+            Next <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        } @else {
+          <button class="btn btn-primary" type="button" (click)="save()" [disabled]="!name.trim()">
+            <i class="fa-solid fa-check"></i> Save
+          </button>
+        }
+      </div>
+    </div>
+  </main>
+
+  <!-- Right: Developer Tools (power users only) -->
+  @if (prefs.isPowerUser()) {
+    <div class="dev-panel">
+      <button class="dev-panel-hdr" type="button" (click)="devPanelOpen = !devPanelOpen">
+        <span class="dev-panel-title">Developer Tools</span>
+        <i class="fa-solid" [class.fa-chevron-up]="devPanelOpen" [class.fa-chevron-down]="!devPanelOpen"></i>
+      </button>
+      @if (devPanelOpen) {
+        <div class="dev-panel-body">
+          <pre class="dev-json">{{ jsonPreview }}</pre>
+        </div>
+      }
+    </div>
+  }
+
+</div><!-- /wiz-body -->

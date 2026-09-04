@@ -1,0 +1,425 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Alerts</h1>
+    <p>Network alerts raised by detectors, and the mutes that suppress them</p>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <button class="tab-btn" [class.tab-btn--active]="activeTab() === 'alerts'" (click)="setTab('alerts')">
+    Alerts
+  </button>
+  <button class="tab-btn" [class.tab-btn--active]="activeTab() === 'mutes'" (click)="setTab('mutes')">
+    Mutes
+  </button>
+</div>
+
+<div class="list-body" (click)="closeDropdowns()">
+
+  @if (activeTab() === 'alerts') {
+
+    <section class="stats-header section-card">
+      <div class="stats-intro-row">
+        <p class="stats-intro">Every open alert in this network. Not affected by the filters on the list below.</p>
+        <div class="stats-controls">
+          <button type="button" class="btn btn-sm" (click)="muteAllOpen.set(true)">Mute all alerts</button>
+          <div class="range-toggle">
+            <button type="button" class="range-btn">1h</button>
+            <button type="button" class="range-btn">24h</button>
+            <button type="button" class="range-btn">7d</button>
+            <button type="button" class="range-btn">30d</button>
+            <button type="button" class="range-btn range-btn--active">All</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-tiles">
+        <div class="tile-cluster">
+          <div class="stat-tile tile--neutral">
+            <span class="tile-count">{{ stats().total }}</span>
+            <span class="tile-label">Total Alerts</span>
+          </div>
+          <div class="stat-tile tile--neutral">
+            <span class="tile-count">{{ stats().byStatus.PENDING }}</span>
+            <span class="tile-label">Pending</span>
+          </div>
+          <div class="stat-tile tile--neutral">
+            <span class="tile-count">{{ stats().byStatus.FIRING }}</span>
+            <span class="tile-label">Firing</span>
+          </div>
+          <div class="stat-tile tile--critical">
+            <span class="tile-count">{{ stats().bySeverity.CRITICAL }}</span>
+            <span class="tile-label">Critical</span>
+          </div>
+          <div class="stat-tile tile--major">
+            <span class="tile-count">{{ stats().bySeverity.MAJOR }}</span>
+            <span class="tile-label">Major</span>
+          </div>
+          <div class="stat-tile tile--minor">
+            <span class="tile-count">{{ stats().bySeverity.MINOR }}</span>
+            <span class="tile-label">Minor</span>
+          </div>
+          <div class="stat-tile tile--info">
+            <span class="tile-count">{{ stats().bySeverity.INFO }}</span>
+            <span class="tile-label">Info</span>
+          </div>
+        </div>
+
+        <div class="tile-cluster">
+          <div class="stat-tile tile--neutral">
+            <span class="tile-count">{{ stats().byComponent.Service }}</span>
+            <span class="tile-label">Service</span>
+          </div>
+          <div class="stat-tile tile--neutral">
+            <span class="tile-count">{{ stats().byComponent['Edge Router'] }}</span>
+            <span class="tile-label">Edge Router</span>
+          </div>
+          <div class="stat-tile tile--neutral">
+            <span class="tile-count">{{ stats().byComponent.Link }}</span>
+            <span class="tile-label">Link</span>
+          </div>
+          <div class="stat-tile tile--neutral">
+            <span class="tile-count">{{ stats().byComponent.Detector }}</span>
+            <span class="tile-label">Detector</span>
+          </div>
+        </div>
+      </div>
+
+      <p class="stats-footnote">
+        <i class="fa-solid fa-circle-info stats-footnote-icon" aria-hidden="true"></i>
+        The four component tiles won't always sum to the total — some alerts aren't about any component.
+      </p>
+    </section>
+
+    @if (data.alerts().length === 0) {
+      <div class="section-card empty-card">
+        <app-empty-state
+          icon="fa-solid fa-bell-slash"
+          title="No alerts"
+          message="Alerts appear here when a detector asserts a problem on a component. A quiet list means everything is healthy." />
+      </div>
+    } @else {
+
+      <div class="split-pane" [class.split-pane--open]="selectedAlert()">
+      <div class="section-card table-card split-list">
+        <div class="filter-toolbar" (click)="$event.stopPropagation()">
+          <div class="filter-search">
+            <i class="fa-solid fa-magnifying-glass filter-search-icon"></i>
+            <input
+              type="text"
+              class="filter-search-input"
+              placeholder="Search component name"
+              [value]="searchText()"
+              (input)="searchText.set($any($event.target).value)" />
+          </div>
+
+          <!-- Status -->
+          <div class="filter-dd">
+            <button type="button" class="btn btn-secondary btn-sm filter-dd-btn"
+              [class.filter-dd-btn--on]="statusFilter().size > 0" (click)="toggleDropdown('status')">
+              Status
+              @if (statusFilter().size) { <span class="filter-count">{{ statusFilter().size }}</span> }
+              <i class="fa-solid fa-chevron-down filter-caret"></i>
+            </button>
+            @if (openFilter() === 'status') {
+              <div class="filter-menu" role="menu">
+                @for (opt of statusOptions; track opt) {
+                  <label class="filter-opt">
+                    <input type="checkbox" [checked]="statusFilter().has(opt)" (change)="toggleFilter(statusFilter, opt)" />
+                    <span>{{ opt }}</span>
+                  </label>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Severity -->
+          <div class="filter-dd">
+            <button type="button" class="btn btn-secondary btn-sm filter-dd-btn"
+              [class.filter-dd-btn--on]="severityFilter().size > 0" (click)="toggleDropdown('severity')">
+              Severity
+              @if (severityFilter().size) { <span class="filter-count">{{ severityFilter().size }}</span> }
+              <i class="fa-solid fa-chevron-down filter-caret"></i>
+            </button>
+            @if (openFilter() === 'severity') {
+              <div class="filter-menu" role="menu">
+                @for (opt of severityOptions; track opt) {
+                  <label class="filter-opt">
+                    <input type="checkbox" [checked]="severityFilter().has(opt)" (change)="toggleFilter(severityFilter, opt)" />
+                    <span>{{ opt }}</span>
+                  </label>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Component -->
+          <div class="filter-dd">
+            <button type="button" class="btn btn-secondary btn-sm filter-dd-btn"
+              [class.filter-dd-btn--on]="componentFilter().size > 0" (click)="toggleDropdown('component')">
+              Component
+              @if (componentFilter().size) { <span class="filter-count">{{ componentFilter().size }}</span> }
+              <i class="fa-solid fa-chevron-down filter-caret"></i>
+            </button>
+            @if (openFilter() === 'component') {
+              <div class="filter-menu" role="menu">
+                @for (opt of componentOptions; track opt) {
+                  <label class="filter-opt">
+                    <input type="checkbox" [checked]="componentFilter().has(opt)" (change)="toggleFilter(componentFilter, opt)" />
+                    <span>{{ opt }}</span>
+                  </label>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Ownership -->
+          <div class="filter-dd">
+            <button type="button" class="btn btn-secondary btn-sm filter-dd-btn"
+              [class.filter-dd-btn--on]="ownershipFilter().size > 0" (click)="toggleDropdown('ownership')">
+              Ownership
+              @if (ownershipFilter().size) { <span class="filter-count">{{ ownershipFilter().size }}</span> }
+              <i class="fa-solid fa-chevron-down filter-caret"></i>
+            </button>
+            @if (openFilter() === 'ownership') {
+              <div class="filter-menu" role="menu">
+                @for (opt of ownershipOptions; track opt.value) {
+                  <label class="filter-opt">
+                    <input type="checkbox" [checked]="ownershipFilter().has(opt.value)" (change)="toggleFilter(ownershipFilter, opt.value)" />
+                    <span>{{ opt.label }}</span>
+                  </label>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Muted -->
+          <div class="filter-dd">
+            <button type="button" class="btn btn-secondary btn-sm filter-dd-btn"
+              [class.filter-dd-btn--on]="mutedFilter().size > 0" (click)="toggleDropdown('muted')">
+              Muted
+              @if (mutedFilter().size) { <span class="filter-count">{{ mutedFilter().size }}</span> }
+              <i class="fa-solid fa-chevron-down filter-caret"></i>
+            </button>
+            @if (openFilter() === 'muted') {
+              <div class="filter-menu" role="menu">
+                @for (opt of mutedOptions; track opt.value) {
+                  <label class="filter-opt">
+                    <input type="checkbox" [checked]="mutedFilter().has(opt.value)" (change)="toggleFilter(mutedFilter, opt.value)" />
+                    <span>{{ opt.label }}</span>
+                  </label>
+                }
+              </div>
+            }
+          </div>
+
+          @if (anyFilterActive()) {
+            <button type="button" class="btn btn-secondary btn-sm filter-clear" (click)="clearFilters()">Clear</button>
+          }
+        </div>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="col-severity">Severity</th>
+              <th class="col-status">Status</th>
+              <th class="col-type">Alert Type</th>
+              <th class="col-component">Component</th>
+              <th class="col-date">First Asserted</th>
+              <th class="col-ownership">Ownership</th>
+              <th class="col-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (alert of filteredAlerts(); track alert.id) {
+              <tr
+                class="alert-row"
+                [class.alert-row--selected]="alert.id === selected()"
+                (click)="selectAlert(alert.id)">
+                <td class="col-severity">
+                  <app-pill [variant]="severityVariant(alert.severity)" [label]="alert.severity" />
+                </td>
+                <td class="col-status">
+                  <span class="status-text">{{ alert.status }}</span>
+                  @if (alert.suppressed) {
+                    <span class="muted-chip" title="Suppressed by a mute">
+                      <i class="fa-solid fa-volume-xmark"></i> MUTED
+                    </span>
+                  }
+                </td>
+                <td class="col-type">
+                  <div class="type-name">{{ alertTypeDisplay(alert.alertType) }}</div>
+                  <div class="type-code">{{ alert.alertType }}</div>
+                </td>
+                <td class="col-component">
+                  @if (componentName(alert); as name) {
+                    <div class="component-name">{{ name }}</div>
+                    @if (componentType(alert.alertType); as ctype) {
+                      <div class="component-type">{{ ctype }}</div>
+                    }
+                  } @else {
+                    <span class="dim">—</span>
+                  }
+                </td>
+                <td class="col-date">{{ formatDate(alert.firstAssertedAt) }}</td>
+                <td class="col-ownership">
+                  @if (ownership(alert); as own) {
+                    <div class="ownership" [class.ownership--muted]="own.kind === 'muted'">
+                      <span class="ownership-kind">{{ own.kind === 'claimed' ? 'Claimed by' : 'Muted by' }}</span>
+                      <span class="ownership-name">{{ own.name }}</span>
+                      @if (own.email) {
+                        <span class="ownership-email">{{ own.email }}</span>
+                      }
+                    </div>
+                  } @else {
+                    <span class="dim">Unclaimed</span>
+                  }
+                </td>
+                <td class="col-actions" (click)="$event.stopPropagation()">
+                  <app-action-menu
+                    [items]="alertMenuItems(alert)"
+                    [ariaLabel]="'Actions for ' + (componentName(alert) ?? 'alert')"
+                  />
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        @if (filteredAlerts().length === 0) {
+          <div class="no-results">No alerts match the current filters.</div>
+        }
+      </div>
+
+      @if (selectedAlert(); as sel) {
+        <div class="section-card split-detail">
+          <app-alert-detail
+            [alert]="sel"
+            [ownership]="selectedOwnership()"
+            [mute]="selectedMute()"
+            [muteCreator]="selectedMuteCreator()"
+            [timeline]="selectedTimeline()"
+            [onClose]="clearSelection"
+            [onPrev]="selectPrev"
+            [onNext]="selectNext"
+            [position]="paneposition()" />
+        </div>
+      }
+      </div>
+    }
+
+  } @else {
+
+    @if (data.mutes().length === 0) {
+      <div class="section-card empty-card">
+        <app-empty-state
+          icon="fa-solid fa-volume-xmark"
+          title="No mutes"
+          message="A mute suppresses the paging for alerts it covers, for a window of time. When someone mutes alerts, they show up here." />
+      </div>
+    } @else {
+
+      <p class="mutes-intro">A mute stops the paging and nothing else. The alerts it covers keep firing, resolving and being recorded exactly as before.</p>
+
+      <div class="section-card table-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="col-covers">Covers</th>
+              <th class="col-window">Window</th>
+              <th class="col-reason">Reason</th>
+              <th class="col-createdby">Created By</th>
+              <th class="col-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (mute of data.mutes(); track mute.id) {
+              <tr class="mute-row">
+                <td class="col-covers">
+                  <div class="covers-types">{{ muteAlertTypesPhrase(mute) }}</div>
+                  @for (matcher of mute.matchers; track $index) {
+                    <div class="covers-matcher">{{ muteMatcherWords(matcher) }}</div>
+                  } @empty {
+                    <div class="covers-matcher">across the whole network</div>
+                  }
+                  <div class="covers-id">{{ mute.id }}</div>
+                </td>
+                <td class="col-window">{{ muteWindowStart(mute) }} → {{ muteWindowEnd(mute) }}</td>
+                <td class="col-reason">
+                  @if (mute.reason) {
+                    {{ mute.reason }}
+                  } @else {
+                    <span class="dim">No reason given</span>
+                  }
+                </td>
+                <td class="col-createdby">
+                  @if (muteCreatedBy(mute); as who) {
+                    <div class="createdby-name">{{ who.name }}</div>
+                    @if (who.email) {
+                      <div class="createdby-email">{{ who.email }}</div>
+                    }
+                  }
+                </td>
+                <td class="col-actions">
+                  <div class="action-btns">
+                    <button class="btn btn-sm" type="button" (click)="reschedulingMuteId.set(mute.id)">Reschedule</button>
+                    <button class="btn btn-sm" type="button" (click)="revokingMuteId.set(mute.id)">Revoke</button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+    }
+
+  }
+</div>
+
+@if (claimingAlert(); as alert) {
+  <app-claim-alert-modal
+    [alert]="alert"
+    [onConfirm]="confirmClaim"
+    [onCancel]="cancelClaim" />
+}
+
+@if (resolvingAlert(); as alert) {
+  <app-confirm-dialog
+    title="Resolve this alert"
+    message="This closes the alert by hand. It does not stop the condition: if the detector is still asserting it, the next evaluation opens a new alert. To stop paging, mute instead."
+    confirmLabel="Resolve"
+    [danger]="true"
+    (confirmed)="resolveAlert(alert.id)"
+    (cancelled)="resolvingAlertId.set(null)" />
+}
+
+@if (mutingAlert(); as alert) {
+  <app-mute-alert-modal
+    [alert]="alert"
+    [onCancel]="() => mutingAlertId.set(null)"
+    [onConfirm]="createMute" />
+}
+
+@if (muteAllOpen()) {
+  <app-mute-alert-modal
+    [alert]="null"
+    [onCancel]="() => muteAllOpen.set(false)"
+    [onConfirm]="createMute" />
+}
+
+@if (reschedulingMute(); as mute) {
+  <app-reschedule-mute-modal
+    [mute]="mute"
+    [onConfirm]="confirmReschedule"
+    [onCancel]="() => reschedulingMuteId.set(null)" />
+}
+
+@if (revokingMute(); as mute) {
+  <app-confirm-dialog
+    title="Revoke this mute"
+    message="This ends the mute now. Alerts it covered will page again. The mute stays listed as revoked, so there's a record of why nobody was paged."
+    confirmLabel="Revoke"
+    [danger]="true"
+    (confirmed)="revokeMute(mute.id)"
+    (cancelled)="revokingMuteId.set(null)" />
+}

@@ -1,0 +1,240 @@
+<header class="detail-header">
+  <div class="detail-title-row">
+    <span class="detail-eyebrow">Alert Detail</span>
+    <div class="detail-pager">
+      <button
+        type="button"
+        class="pager-btn"
+        [disabled]="!pagerEnabled()"
+        (click)="onPrev()()"
+        title="Previous alert">
+        <i class="fa-solid fa-chevron-left"></i>
+      </button>
+      @if (position(); as pos) {
+        <span class="pager-label">{{ pos.index + 1 }}/{{ pos.total }}</span>
+      } @else {
+        <span class="pager-label pager-label--off">—</span>
+      }
+      <button
+        type="button"
+        class="pager-btn"
+        [disabled]="!pagerEnabled()"
+        (click)="onNext()()"
+        title="Next alert">
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+      <button type="button" class="pager-btn detail-close" (click)="onClose()()" title="Close">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="detail-type-row">
+    <app-pill [variant]="severityVariant(alert().severity)" [label]="alert().severity" />
+    <div class="detail-type">
+      <div class="detail-type-name">{{ alertTypeDisplay(alert().alertType) }}</div>
+      <div class="detail-type-code">{{ alert().alertType }}</div>
+    </div>
+  </div>
+</header>
+
+<nav class="detail-tabs">
+  @for (tab of tabs; track tab.id) {
+    <button
+      type="button"
+      class="detail-tab"
+      [class.detail-tab--active]="activeTab() === tab.id"
+      (click)="setTab(tab.id)">
+      {{ tab.label }}
+    </button>
+  }
+</nav>
+
+<div class="detail-body">
+  @switch (activeTab()) {
+
+    @case ('details') {
+      <section class="fd-section">
+        <h3 class="fd-heading">Identity</h3>
+        <dl class="fd-list">
+          <div class="fd-row"><dt>Status</dt><dd>{{ alert().status }}</dd></div>
+          <div class="fd-row"><dt>Severity</dt><dd>{{ alert().severity }}</dd></div>
+          <div class="fd-row"><dt>Open</dt><dd>{{ alert().open ? 'Yes' : 'No' }}</dd></div>
+          <div class="fd-row"><dt>Stale</dt><dd>{{ alert().stale ? 'Yes' : 'No' }}</dd></div>
+        </dl>
+      </section>
+
+      <section class="fd-section">
+        <h3 class="fd-heading">Component</h3>
+        <dl class="fd-list">
+          <div class="fd-row"><dt>Type</dt><dd>{{ componentType(alert().alertType) ?? '—' }}</dd></div>
+          <div class="fd-row"><dt>Name</dt><dd>{{ componentName(alert()) ?? '—' }}</dd></div>
+          <div class="fd-row"><dt>Id</dt><dd class="fd-mono">{{ componentId(alert()) ?? '—' }}</dd></div>
+        </dl>
+      </section>
+
+      <section class="fd-section">
+        <h3 class="fd-heading">Ownership</h3>
+        <dl class="fd-list">
+          <div class="fd-row"><dt>Claimed</dt><dd>{{ alert().ack.acked ? 'Yes' : 'No' }}</dd></div>
+          @if (alert().ack.acked) {
+            <div class="fd-row"><dt>By</dt><dd>{{ ownership()?.name ?? '—' }}</dd></div>
+            <div class="fd-row"><dt>Email</dt><dd>{{ ownership()?.email ?? '—' }}</dd></div>
+            <div class="fd-row"><dt>At</dt><dd>{{ formatTimestamp(alert().ack.at) }}</dd></div>
+            <div class="fd-row"><dt>Note</dt><dd>{{ alert().ack.note ?? '—' }}</dd></div>
+          }
+        </dl>
+      </section>
+    }
+
+    @case ('advanced') {
+      <section class="fd-section">
+        <h3 class="fd-heading">Diagnostics</h3>
+        <dl class="fd-list">
+          <div class="fd-row"><dt>Alert type</dt><dd class="fd-mono">{{ alert().alertType }}</dd></div>
+          <div class="fd-row"><dt>Detector id</dt><dd class="fd-mono">{{ alert().detectorId }}</dd></div>
+          <div class="fd-row"><dt>Source id</dt><dd class="fd-mono">{{ alert().sourceId }}</dd></div>
+          <div class="fd-row"><dt>Fingerprint</dt><dd class="fd-mono">{{ alert().fingerprint }}</dd></div>
+        </dl>
+      </section>
+
+      <section class="fd-section">
+        <h3 class="fd-heading">Timeline</h3>
+        <dl class="fd-list">
+          <div class="fd-row"><dt>First asserted</dt><dd>{{ formatTimestamp(alert().firstAssertedAt) }}</dd></div>
+          <div class="fd-row"><dt>Opened</dt><dd>{{ formatTimestamp(alert().openedAt) }}</dd></div>
+          <div class="fd-row"><dt>Last asserted</dt><dd>{{ formatTimestamp(alert().lastAssertedAt) }}</dd></div>
+          <div class="fd-row"><dt>Expires</dt><dd>{{ formatTimestamp(alert().expiresAt) }}</dd></div>
+          <div class="fd-row"><dt>Resolved</dt><dd>{{ formatTimestamp(alert().resolvedAt) }}</dd></div>
+          <div class="fd-row"><dt>Resolution reason</dt><dd>{{ alert().resolutionReason ?? '—' }}</dd></div>
+        </dl>
+      </section>
+
+      <section class="fd-section">
+        <h3 class="fd-heading">Labels</h3>
+        <dl class="fd-list">
+          @for (entry of labelEntries(); track entry[0]) {
+            <div class="fd-row"><dt class="fd-mono">{{ entry[0] }}</dt><dd>{{ entry[1] }}</dd></div>
+          } @empty {
+            <p class="fd-empty">No labels</p>
+          }
+        </dl>
+      </section>
+
+      <section class="fd-section">
+        <h3 class="fd-heading">Evidence</h3>
+        @if (evidenceEntries().length) {
+          <dl class="fd-list">
+            @for (entry of evidenceEntries(); track entry[0]) {
+              <div class="fd-row"><dt class="fd-mono">{{ entry[0] }}</dt><dd class="fd-mono">{{ entry[1] }}</dd></div>
+            }
+          </dl>
+        } @else {
+          <p class="fd-empty">No evidence recorded</p>
+        }
+      </section>
+    }
+
+    @case ('muting') {
+      @if (alert().suppressed) {
+        <section class="fd-section">
+          <h3 class="fd-heading">Suppression</h3>
+          <dl class="fd-list">
+            <div class="fd-row"><dt>Suppressed</dt><dd>Yes</dd></div>
+            <div class="fd-row"><dt>Reason</dt><dd>{{ alert().suppressionReason ?? '—' }}</dd></div>
+          </dl>
+        </section>
+
+        <section class="fd-section">
+          <h3 class="fd-heading">Covering mute</h3>
+          @if (mute(); as m) {
+            <dl class="fd-list">
+              <div class="fd-row"><dt>Alert types</dt><dd>{{ muteAlertTypes(m) }}</dd></div>
+              <div class="fd-row">
+                <dt>Matchers</dt>
+                <dd>
+                  @for (matcher of m.matchers; track $index) {
+                    <div>{{ matcherText(matcher) }}</div>
+                  } @empty {
+                    <div>Whole network</div>
+                  }
+                </dd>
+              </div>
+              <div class="fd-row"><dt>Window</dt><dd>{{ muteStart(m) }} → {{ muteEnd(m) }}</dd></div>
+              <div class="fd-row">
+                <dt>Created by</dt>
+                <dd>
+                  @if (muteCreator(); as who) {
+                    <div>{{ who.name }}</div>
+                    @if (who.email) { <div class="fd-sub">{{ who.email }}</div> }
+                  } @else {
+                    <span>—</span>
+                  }
+                </dd>
+              </div>
+            </dl>
+          } @else {
+            <dl class="fd-list">
+              <div class="fd-row fd-empty">Mute {{ alert().suppressedBy }} not found</div>
+            </dl>
+          }
+        </section>
+      } @else {
+        <p class="fd-empty">This alert is not muted. It is being paged normally.</p>
+      }
+    }
+
+    @case ('source') {
+      <section class="fd-section">
+        <h3 class="fd-heading">Detector</h3>
+        <dl class="fd-list">
+          <div class="fd-row"><dt>Detector id</dt><dd class="fd-mono">{{ alert().detectorId }}</dd></div>
+          <div class="fd-row"><dt>Alert type</dt><dd class="fd-mono">{{ alert().alertType }}</dd></div>
+        </dl>
+      </section>
+
+      <section class="fd-section">
+        <h3 class="fd-heading">Source</h3>
+        <dl class="fd-list">
+          <div class="fd-row"><dt>Source id</dt><dd class="fd-mono">{{ alert().sourceId }}</dd></div>
+        </dl>
+        <p class="fd-footnote">The source is the event family this detector consumes.</p>
+      </section>
+    }
+
+    @case ('history') {
+      @if (timeline(); as tl) {
+        @if (tl.events.length === 0) {
+          <p class="fd-empty">No history recorded for this alert.</p>
+        } @else {
+          @if (tl.derived) {
+            <div class="tl-derived-banner">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+              <span>Reconstructed timeline — event actors and exact ordering are not recorded for this alert.</span>
+            </div>
+          }
+          <ol class="tl-list">
+            @for (event of tl.events; track event.sequence) {
+              <li class="tl-item">
+                <span class="tl-dot" aria-hidden="true"></span>
+                <div class="tl-content">
+                  <div class="tl-event">{{ eventLabel(event.type) }}</div>
+                  <div class="tl-time">{{ formatTimestamp(event.at) }}</div>
+                  @if (eventActorName(event); as actor) {
+                    <div class="tl-actor">by {{ actor }}</div>
+                  }
+                </div>
+              </li>
+            }
+          </ol>
+        }
+      } @else {
+        <p class="fd-empty">No history recorded for this alert.</p>
+      }
+    }
+
+    @default {
+      <p class="detail-placeholder">…</p>
+    }
+  }
+</div>

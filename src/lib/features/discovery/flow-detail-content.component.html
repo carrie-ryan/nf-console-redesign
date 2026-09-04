@@ -1,0 +1,38 @@
+@if (canCreatePolicy()) {
+  <div class="fd-action">
+    <button type="button" class="btn btn-primary fd-create-btn" (click)="createServicePolicy()">
+      <i class="fa-solid fa-shield-halved"></i> Create service policy
+    </button>
+    <p class="fd-action-hint">
+      Define a specific intercept service for this destination and a dial policy for
+      the callers above — carving it out of wildcard discovery.
+    </p>
+  </div>
+}
+
+@if (rows().length; as count) {
+  <div class="fd-list" role="table" aria-label="Observed flows behind the clicked element">
+    <div class="fd-head" role="row">
+      <span class="fd-col-src" role="columnheader">Ingress Entity</span>
+      <span class="fd-col-dest" role="columnheader">Destination</span>
+      <span class="fd-col-circ" role="columnheader">Circuits</span>
+    </div>
+    @for (r of rows(); track r.key) {
+      <div class="fd-row" role="row">
+        <span class="fd-col-src" role="cell" [class.src-unenrolled]="!r.enrolled">
+          {{ r.ingressLabel }}
+          @if (!r.enrolled) {
+            <span class="src-badge" title="Observed source — not a managed identity">unmanaged</span>
+          }
+        </span>
+        <span class="fd-col-dest" role="cell"><code class="fd-mono">{{ r.destination }}</code></span>
+        <span class="fd-col-circ" role="cell"><span class="fd-num">{{ r.circuits }}</span></span>
+      </div>
+    }
+  </div>
+} @else {
+  <p class="fd-empty">
+    <i class="fa-solid fa-circle-info"></i>
+    No observed flows behind this element.
+  </p>
+}

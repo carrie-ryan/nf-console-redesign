@@ -1,0 +1,289 @@
+<div class="dialog-backdrop" (click)="cancel()">
+  <div class="dialog-panel" (click)="$event.stopPropagation()" role="dialog" aria-modal="true"
+    aria-labelledby="cpm-title">
+
+    <!-- ─── Header ─────────────────────────────────────────────────────── -->
+    <div class="dialog-header">
+      <div class="cpm-headrow">
+        <div>
+          <span class="cpm-eyebrow"><i class="fa-solid fa-hand-pointer"></i> Construct from selection</span>
+          <h2 class="dialog-title" id="cpm-title">Create service &amp; policy from selected traffic</h2>
+        </div>
+        <button class="cpm-close" type="button" (click)="cancel()" aria-label="Close">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <p class="cpm-lede">
+        You selected {{ flowCount() }} {{ flowCount() === 1 ? 'flow' : 'flows' }} across
+        {{ destinations().length }} {{ destinations().length === 1 ? 'destination' : 'destinations' }}.
+        Nothing's defined yet — each destination becomes its own intercept service, identity
+        authorization, and dial policy below.
+      </p>
+    </div>
+
+    @if (summary(); as s) {
+      <!-- ─── Post-create honest summary (partial-materialize) ──────────── -->
+      <div class="dialog-body">
+        <div class="cpm-created">
+          <div class="cpm-created-icon"><i class="fa-solid fa-circle-check"></i></div>
+          <h3 class="cpm-created-title">
+            {{ s.policyCount === 1 ? 'Service &amp; policy created' : 'Services &amp; policies created' }}
+          </h3>
+          <p class="detail-note enroll">
+            <i class="fa-solid fa-id-badge"></i>
+            <span>
+              Policy created for {{ s.grantCount }}
+              authorized caller{{ s.grantCount === 1 ? '' : 's' }}.
+              {{ s.excludedAddresses.length }}
+              observed source{{ s.excludedAddresses.length === 1 ? '' : 's' }}
+              {{ s.excludedAddresses.length === 1 ? 'is' : 'are' }} unmanaged and
+              {{ s.excludedAddresses.length === 1 ? "wasn't" : "weren't" }} included — enroll
+              {{ s.excludedAddresses.length === 1 ? 'it' : 'them' }} to authorize:
+            </span>
+            <span class="straggler-list">
+              @for (ip of s.excludedAddresses; track ip) {
+                <span class="member-pill enroll-pill">{{ ip }}</span>
+              }
+            </span>
+          </p>
+        </div>
+      </div>
+      <div class="dialog-footer">
+        <div class="footer-actions">
+          <button class="btn btn-primary" type="button" (click)="done()">Done</button>
+        </div>
+      </div>
+    } @else {
+    <div class="dialog-body">
+
+      <!-- ─── Self-contained destination cards (one per destination) ───── -->
+      <label class="field-label">
+        Destinations
+        <span class="field-hint">— {{ includedDestinations().length }} of {{ destinations().length }} included</span>
+      </label>
+      <div class="svc-list">
+        @for (dest of destinations(); track dest.hostPort) {
+          <div class="isc" [class.is-excluded]="!isIncluded(dest.hostPort)">
+
+            <!-- Collapsed head -->
+            <div class="isc-head">
+              <label class="row-check" (click)="$event.stopPropagation()">
+                <input type="checkbox" [checked]="isIncluded(dest.hostPort)"
+                  (change)="toggleInclude(dest.hostPort)"
+                  [attr.aria-label]="'Include ' + dest.hostPort" />
+                <span class="check-box" aria-hidden="true"><i class="fa-solid fa-check"></i></span>
+              </label>
+
+              <button type="button" class="isc-head-main" (click)="toggleExpand(dest.hostPort)"
+                [attr.aria-expanded]="isExpanded(dest.hostPort)">
+                <span class="isc-title">
+                  <span class="isc-name" [class.muted]="!cardFor(dest).serviceName.trim()">
+                    {{ cardFor(dest).serviceName.trim() || 'Unnamed service' }}
+                  </span>
+                  <span class="isc-badge new"><i class="fa-solid fa-plus"></i> new</span>
+                </span>
+                <span class="isc-meta">
+                  <code class="isc-hostport">{{ dest.hostPort }}</code>
+                  <span class="isc-dialers">
+                    <i class="fa-solid fa-user"></i>
+                    {{ dest.identities.length }} {{ dest.identities.length === 1 ? 'source' : 'sources' }} observed
+                  </span>
+                </span>
+                <i class="isc-chevron fa-solid"
+                  [class.fa-chevron-up]="isExpanded(dest.hostPort)"
+                  [class.fa-chevron-down]="!isExpanded(dest.hostPort)"></i>
+              </button>
+            </div>
+
+            <!-- Expanded body — self-contained: service + identity auth + policy -->
+            @if (isExpanded(dest.hostPort)) {
+              <div class="isc-body">
+
+                <!-- Service Name -->
+                <div class="iscf">
+                  <label class="form-label" [for]="'isc-name-' + dest.hostPort">
+                    Service Name <span class="req">Required</span>
+                  </label>
+                  <input [id]="'isc-name-' + dest.hostPort" class="text-input"
+                    [class.is-error]="showError(dest, 'name')" type="text"
+                    [ngModel]="cardFor(dest).serviceName"
+                    (ngModelChange)="setName(dest, $event)"
+                    (blur)="markTouched(dest, 'name')"
+                    placeholder="Name this service" autocomplete="off" />
+                  <p class="iscf-hint">A recognizable name for this service.</p>
+                </div>
+
+                <!-- Attributes -->
+                <div class="iscf">
+                  <label class="form-label" [for]="'isc-attrs-' + dest.hostPort">
+                    Attributes <span class="opt">Optional</span>
+                  </label>
+                  <div class="tag-input-wrap">
+                    @for (attr of cardFor(dest).attributes; track attr) {
+                      <span class="tag-chip">
+                        {{ attr }}
+                        <button class="tag-chip-x" type="button" (click)="removeAttr(dest, attr)"
+                          aria-label="Remove attribute"><i class="fa-solid fa-xmark"></i></button>
+                      </span>
+                    }
+                    <input [id]="'isc-attrs-' + dest.hostPort" class="tag-bare-input"
+                      [(ngModel)]="attrBuf[dest.hostPort]"
+                      (keydown)="onAttrKeydown(dest, $event)"
+                      [placeholder]="cardFor(dest).attributes.length === 0 ? 'Add attributes to group services' : ''"
+                      autocomplete="off" />
+                  </div>
+                  <p class="iscf-hint">Press Enter or comma to add. Prefix with # for role attributes policies can target.</p>
+                </div>
+
+                <!-- How it's accessed: intercept address/port + protocol -->
+                <div class="iscf">
+                  <span class="form-label">How will the service be accessed?</span>
+
+                  <div class="isc-addr-row">
+                    <div class="iscf isc-addr">
+                      <label class="form-label" [for]="'isc-addr-' + dest.hostPort">
+                        Intercept Address <span class="req">Required</span>
+                      </label>
+                      <input [id]="'isc-addr-' + dest.hostPort" class="text-input"
+                        [class.is-error]="showError(dest, 'interceptAddr')" type="text"
+                        [ngModel]="cardFor(dest).interceptAddress"
+                        (ngModelChange)="setInterceptAddress(dest, $event)"
+                        (blur)="markTouched(dest, 'interceptAddr')"
+                        placeholder="e.g. myservice.ziti" autocomplete="off" />
+                    </div>
+                    <div class="iscf isc-port">
+                      <label class="form-label" [for]="'isc-port-' + dest.hostPort">
+                        Intercept Port <span class="req">Required</span>
+                      </label>
+                      <input [id]="'isc-port-' + dest.hostPort" class="text-input"
+                        [class.is-error]="showError(dest, 'interceptPort')" type="number"
+                        [ngModel]="cardFor(dest).interceptPort"
+                        (ngModelChange)="setInterceptPort(dest, $event)"
+                        (blur)="markTouched(dest, 'interceptPort')"
+                        placeholder="443" min="1" max="65535" />
+                    </div>
+                    <div class="iscf isc-proto">
+                      <label class="form-label" [for]="'isc-proto-' + dest.hostPort">
+                        Protocol <span class="opt">Optional</span>
+                      </label>
+                      <select [id]="'isc-proto-' + dest.hostPort" class="text-input"
+                        [ngModel]="cardFor(dest).protocol"
+                        (ngModelChange)="setProtocol(dest, $event)">
+                        <option value="">—</option>
+                        <option value="tcp">TCP</option>
+                        <option value="udp">UDP</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- ── Identity authorization (this card) ────────────────── -->
+                <div class="iscf isc-subsection">
+                  <span class="isc-sub-label">Identity authorization</span>
+
+                  <!-- Observed dialers — read-only, always visible. Descriptive
+                       (who called it), distinct from who gets authorized below. -->
+                  <div class="iscf isc-observed">
+                    <p class="iscf-hint">
+                      {{ observedIdentities(dest).length }}
+                      {{ observedIdentities(dest).length === 1 ? 'identity' : 'identities' }}
+                      called this destination in the selected traffic:
+                    </p>
+                    <div class="observed-pills">
+                      @for (id of observedIdentities(dest); track id.id) {
+                        <span class="tag-chip observed">&#64;{{ id.name }}</span>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="iscf isc-access-field">
+                    <span class="form-label">
+                      What can access this service? <span class="req">Required</span>
+                    </span>
+                    <div [class.is-error]="showError(dest, 'grants')">
+                      <app-identity-search-select
+                        [candidateIdentities]="identityPool()"
+                        [candidateRoles]="rolePool()"
+                        [selected]="cardFor(dest).grants"
+                        (add)="onAddGrant(dest, $event)"
+                        (remove)="onRemoveGrant(dest, $event)" />
+                    </div>
+                    <p class="iscf-hint">
+                      Prefilled from the observed dialers above. Search to add specific
+                      <code>&#64;identity</code> references or existing <code>#roles</code> — refs are
+                      used as-is; a role authorizes its existing members.
+                    </p>
+                  </div>
+                </div>
+
+                <!-- ── This card's dial policy ───────────────────────────── -->
+                <div class="iscf isc-subsection">
+                  <span class="isc-sub-label">Dial policy</span>
+                  <div class="iscf">
+                    <label class="form-label" [for]="'isc-policy-' + dest.hostPort">
+                      Policy Name <span class="req">Required</span>
+                    </label>
+                    <input [id]="'isc-policy-' + dest.hostPort" class="text-input mono"
+                      [class.is-error]="showError(dest, 'policyName')" type="text"
+                      [ngModel]="policyName(dest)"
+                      (ngModelChange)="setPolicyName(dest, $event)"
+                      (blur)="markTouched(dest, 'policyName')"
+                      placeholder="dial-service" autocomplete="off" />
+                  </div>
+
+                  <div class="grant-stmt">
+                    <span class="grant-ids">
+                      @for (ref of grantTokens(dest); track ref) {
+                        <span class="grant-id">{{ ref }}</span>
+                      } @empty {
+                        <span class="grant-muted">no identities yet</span>
+                      }
+                    </span>
+                    <span class="grant-verb">may <strong>DIAL</strong> →</span>
+                    @if (cardFor(dest).serviceName.trim()) {
+                      <span class="grant-svc">{{ cardFor(dest).serviceName.trim() }}</span>
+                    } @else {
+                      <span class="grant-muted">(name this service)</span>
+                    }
+                  </div>
+
+                  <!-- Observed addresses are NOT part of the DIAL grant — surface the
+                       exclusion here, muted, so it's visible before create. -->
+                  @if (addressIps(dest).length; as addrCount) {
+                    <p class="grant-excluded-note">
+                      {{ addrCount }} observed
+                      address{{ addrCount === 1 ? '' : 'es' }} not authorized — unmanaged:
+                      <span class="grant-excluded-ips">
+                        @for (ip of addressIps(dest); track ip) {
+                          <span class="grant-excluded-ip">{{ ip }}</span>
+                        }
+                      </span>
+                    </p>
+                  }
+                </div>
+
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- ─── Footer ─────────────────────────────────────────────────────── -->
+    <div class="dialog-footer">
+      <span class="consequence">
+        Creates {{ includedDestinations().length }}
+        {{ includedDestinations().length === 1 ? 'intercept service' : 'intercept services' }} ·
+        {{ includedDestinations().length }}
+        {{ includedDestinations().length === 1 ? 'dial policy' : 'dial policies' }}
+      </span>
+      <div class="footer-actions">
+        <button class="btn btn-secondary" type="button" (click)="cancel()">Cancel</button>
+        <button class="btn btn-primary" type="button" (click)="confirm()" [disabled]="!allIncludedValid()">
+          <i class="fa-solid fa-check"></i> Create service policy
+        </button>
+      </div>
+    </div>
+    }
+  </div>
+</div>

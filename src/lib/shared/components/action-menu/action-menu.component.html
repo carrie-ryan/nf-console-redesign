@@ -1,0 +1,32 @@
+<!-- A row with no available actions shouldn't show a ⋮ at all. -->
+@if (items().length > 0) {
+  <div class="action-menu">
+    <button
+      class="btn-icon"
+      type="button"
+      [attr.aria-label]="ariaLabel()"
+      [attr.aria-expanded]="open()"
+      (click)="toggle($event)"
+    >
+      <i class="fa-solid fa-ellipsis-vertical"></i>
+    </button>
+
+    @if (open()) {
+      <div class="dropdown-menu" role="menu">
+        @for (item of items(); track item.label) {
+          <button
+            class="dropdown-item"
+            role="menuitem"
+            type="button"
+            [class.dropdown-item--danger]="item.danger"
+            [class.dropdown-item--disabled]="item.disabled"
+            [disabled]="item.disabled"
+            (click)="select(item)"
+          >
+            <i [class]="item.icon"></i> {{ item.label }}
+          </button>
+        }
+      </div>
+    }
+  </div>
+}

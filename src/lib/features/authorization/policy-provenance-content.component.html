@@ -1,0 +1,155 @@
+@if (content(); as c) {
+  <div class="prov">
+    <!-- relationship + state banner -->
+    <div class="prov-relation" [attr.class]="'prov-relation state-' + c.state">
+      <div class="prov-endpoints">
+        <span class="prov-seg prov-seg-id">{{ c.fromLabel }}</span>
+        <i class="fa-solid fa-arrow-right prov-arrow"></i>
+        <span class="prov-seg prov-seg-svc">{{ c.toLabel }}</span>
+      </div>
+      <div class="prov-state">
+        @switch (c.state) {
+          @case ('full') {
+            <span class="prov-state-badge badge-full"><i class="fa-solid fa-circle-check"></i> Full access</span>
+          }
+          @case ('partial') {
+            <span class="prov-state-badge badge-partial"><i class="fa-solid fa-circle-half-stroke"></i> Partial access</span>
+          }
+          @case ('none') {
+            <span class="prov-state-badge badge-none"><i class="fa-solid fa-ban"></i> Isolated</span>
+          }
+        }
+        <span class="prov-count">{{ c.authorizedCount }} / {{ c.totalCount }} identity→service pairs authorized</span>
+      </div>
+    </div>
+
+    @if (c.state === 'none') {
+      <!-- affirmative isolation: the absence IS the finding -->
+      <div class="prov-isolated">
+        <i class="fa-solid fa-shield-halved"></i>
+        <div>
+          <p class="prov-isolated-lead">No dial policy authorizes {{ c.fromLabel }} → {{ c.toLabel }}.</p>
+          <p class="prov-isolated-sub">These segments are isolated — no identity in <strong>{{ c.fromLabel }}</strong> can dial any service in <strong>{{ c.toLabel }}</strong> over the overlay. That is the current posture, not a missing lookup.</p>
+        </div>
+      </div>
+    } @else {
+      <!-- the authorizing dial policies (union across the cell's pairs) -->
+      <div class="prov-policies">
+        <h4 class="prov-h">
+          Authorized by
+          <span class="prov-policy-count">{{ c.policies.length }} dial polic{{ c.policies.length === 1 ? 'y' : 'ies' }}</span>
+        </h4>
+
+        @for (p of c.policies; track p.id) {
+          <div class="prov-policy">
+            <div class="prov-policy-head">
+              <span class="prov-policy-name"><i class="fa-solid fa-shield-halved"></i> {{ p.name }}</span>
+              <span class="prov-badges">
+                <span class="prov-badge badge-semantic" [class.badge-allof]="p.semantic === 'AllOf'">{{ p.semantic }}</span>
+                <span class="prov-badge badge-type">{{ p.type }}</span>
+              </span>
+            </div>
+            <div class="prov-roles">
+              <div class="prov-role-col">
+                <span class="prov-role-label">identity roles</span>
+                <span class="prov-role-vals">
+                  @for (r of p.identityRoles; track r) { <code class="prov-role">{{ r }}</code> }
+                </span>
+              </div>
+              <i class="fa-solid fa-arrow-right prov-role-arrow"></i>
+              <div class="prov-role-col">
+                <span class="prov-role-label">service roles</span>
+                <span class="prov-role-vals">
+                  @for (r of p.serviceRoles; track r) { <code class="prov-role">{{ r }}</code> }
+                </span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ── member drill-in: symmetric identity + service lists (within the cell) ── -->
+    <section class="prov-members">
+      <!-- A. identities -->
+      <div class="prov-member-section">
+        <h4 class="prov-h">
+          Identities
+          <span class="prov-member-tally">{{ c.identityAuthorizedCount }}/{{ c.identityTotal }} authorized</span>
+        </h4>
+        <ul class="prov-member-list">
+          @for (m of c.identities; track m.id) {
+            <li class="prov-member" [class.member-excluded]="m.status === 'excluded'">
+              <span class="prov-member-name">
+                @if (m.status === 'authorized') {
+                  <i class="fa-solid fa-circle-check member-icon-ok" aria-hidden="true"></i>
+                } @else {
+                  <i class="fa-solid fa-circle-xmark member-icon-excluded" aria-hidden="true"></i>
+                }
+                {{ m.name }}
+              </span>
+              @if (m.status === 'excluded' && m.reason) {
+                <span class="prov-member-reason">
+                  @if (m.reason.kind === 'failed-allof') {
+                    <span class="reason-line">
+                      missing
+                      @for (r of m.reason.missingRoles; track r) { <code class="reason-chip">{{ r }}</code> }
+                    </span>
+                    @if (m.reason.nearestPolicyName) {
+                      <span class="reason-sub">half-matched <strong>{{ m.reason.nearestPolicyName }}</strong></span>
+                    }
+                  } @else {
+                    <span class="reason-line reason-line-muted">not referenced by any dial policy</span>
+                  }
+                </span>
+              }
+            </li>
+          }
+        </ul>
+        @if (c.identities.length < c.identityTotal) {
+          <p class="prov-member-more">showing {{ c.identities.length }} of {{ c.identityTotal }} — excluded shown first</p>
+        }
+      </div>
+
+      <!-- B. services -->
+      <div class="prov-member-section">
+        <h4 class="prov-h">
+          Services
+          <span class="prov-member-tally">{{ c.serviceReachedCount }}/{{ c.serviceTotal }} reached</span>
+        </h4>
+        <ul class="prov-member-list">
+          @for (m of c.services; track m.id) {
+            <li class="prov-member" [class.member-excluded]="m.status === 'unreached'">
+              <span class="prov-member-name">
+                @if (m.status === 'reached') {
+                  <i class="fa-solid fa-circle-check member-icon-ok" aria-hidden="true"></i>
+                } @else {
+                  <i class="fa-solid fa-circle-xmark member-icon-excluded" aria-hidden="true"></i>
+                }
+                {{ m.name }}
+              </span>
+              @if (m.status === 'unreached' && m.reason) {
+                <span class="prov-member-reason">
+                  @if (m.reason.kind === 'failed-allof') {
+                    <span class="reason-line">
+                      missing
+                      @for (r of m.reason.missingRoles; track r) { <code class="reason-chip">{{ r }}</code> }
+                    </span>
+                    @if (m.reason.nearestPolicyName) {
+                      <span class="reason-sub">half-matched <strong>{{ m.reason.nearestPolicyName }}</strong></span>
+                    }
+                  } @else {
+                    <span class="reason-line reason-line-muted">not referenced by any dial policy</span>
+                  }
+                </span>
+              }
+            </li>
+          }
+        </ul>
+        @if (c.services.length < c.serviceTotal) {
+          <p class="prov-member-more">showing {{ c.services.length }} of {{ c.serviceTotal }} — unreached shown first</p>
+        }
+      </div>
+    </section>
+  </div>
+}

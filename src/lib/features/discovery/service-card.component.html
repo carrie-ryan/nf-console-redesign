@@ -1,0 +1,93 @@
+@let d = draft();
+<div class="svc-card"
+  [class.svc-card--off]="!included()"
+  [class.svc-card--new]="isNew()"
+  [class.svc-card--existing]="!isNew()">
+
+  <!-- Collapsed header row -->
+  <div class="svc-head">
+    <label class="svc-toggle" (click)="$event.stopPropagation()">
+      <input type="checkbox" [checked]="included()" (change)="includeToggled.emit()"
+        [attr.aria-label]="'Include ' + d.name" />
+      <span class="svc-check" aria-hidden="true"><i class="fa-solid fa-check"></i></span>
+    </label>
+
+    <button class="svc-headmain" type="button" (click)="toggleExpand()"
+      [attr.aria-expanded]="expanded()">
+      <i class="fa-solid fa-chevron-right svc-chevron" [class.open]="expanded()"></i>
+      <span class="svc-name">{{ d.name }}</span>
+      @if (isNew()) {
+        <span class="svc-badge new"><i class="fa-solid fa-plus"></i> new</span>
+      } @else {
+        <span class="svc-badge tag"><i class="fa-solid fa-tag"></i> tag existing</span>
+      }
+      <code class="svc-dest">{{ d.interceptAddress }}</code>
+    </button>
+
+    @if (volume() !== undefined) {
+      <span class="svc-vol">{{ volume() }} circuits</span>
+    }
+  </div>
+
+  <!-- Expanded definition -->
+  @if (expanded()) {
+    <div class="svc-detail">
+      @if (!isNew()) {
+        <!-- EXISTING: read-only tag treatment -->
+        <p class="svc-tagnote">
+          <i class="fa-solid fa-circle-info"></i>
+          This destination already maps to an existing service. It won't be recreated —
+          it will be tagged <code>{{ attribute() }}</code> so this policy resolves to it.
+        </p>
+        <div class="def-grid">
+          <div class="def-field">
+            <span class="def-label">Existing service</span>
+            <span class="def-ro">{{ d.name }}</span>
+          </div>
+          <div class="def-field">
+            <span class="def-label">Intercept address</span>
+            <span class="def-ro mono">{{ d.interceptAddress }}</span>
+          </div>
+          <div class="def-field">
+            <span class="def-label">Tag applied</span>
+            <span class="def-ro mono">{{ attribute() }}</span>
+          </div>
+        </div>
+      } @else {
+        <!-- NEW: full editable definition -->
+        <div class="def-grid">
+          <div class="def-field">
+            <span class="def-label">Name</span>
+            <input class="def-input" [ngModel]="d.name"
+              (ngModelChange)="setField('name', $event)" aria-label="Service name" />
+          </div>
+          <div class="def-field">
+            <span class="def-label">Protocol</span>
+            <select class="def-input" [ngModel]="d.protocol"
+              (ngModelChange)="setField('protocol', $event)" aria-label="Protocol">
+              @for (proto of protocols; track proto) {
+                <option [value]="proto">{{ proto }}</option>
+              }
+            </select>
+          </div>
+          <div class="def-field">
+            <span class="def-label">Intercept address</span>
+            <input class="def-input mono" [ngModel]="d.interceptAddress"
+              (ngModelChange)="setField('interceptAddress', $event)" aria-label="Intercept address" />
+            <span class="def-hint">what identities dial (host:port)</span>
+          </div>
+          <div class="def-field">
+            <span class="def-label">Host address</span>
+            <input class="def-input mono" [ngModel]="d.hostAddress"
+              (ngModelChange)="setField('hostAddress', $event)" aria-label="Host address" />
+            <span class="def-hint">where it forwards (brownfield: same)</span>
+          </div>
+          <div class="def-field def-field--full">
+            <span class="def-label">Service attribute</span>
+            <span class="def-ro mono">{{ attribute() }} <span class="def-auto">auto — lets the policy resolve</span></span>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

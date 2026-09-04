@@ -1,0 +1,167 @@
+<div class="ob-map">
+
+  <header class="ob-map-head">
+    <span class="ob-map-eyebrow">Your setup</span>
+    <span class="ob-map-path">{{ pathLabel() }}</span>
+  </header>
+
+  <!-- Two-zone authorization topology. Policies render as PERMISSION CARDS —
+       name + what the policy does — each riding the edge it governs (never
+       floating); path-derived treatment (manual / auto / unset) on each card. -->
+  <svg
+    class="ob-map-svg"
+    viewBox="0 0 640 360"
+    role="img"
+    [attr.aria-label]="'Target network topology — ' + pathLabel() + ', shown as a ghosted outline'"
+    preserveAspectRatio="xMidYMid meet">
+
+    <defs>
+      <marker
+        id="ob-map-arrow"
+        viewBox="0 0 8 8" refX="6.5" refY="4"
+        markerWidth="6" markerHeight="6"
+        orient="auto-start-reverse">
+        <path class="ob-map-arrowhead" d="M1,1 L7,4 L1,7 Z" />
+      </marker>
+      <!-- Solid-flow arrowhead: markers can't inherit a per-path class, so a
+           solid arrow/connector swaps to this one. -->
+      <marker
+        id="ob-map-arrow-solid"
+        viewBox="0 0 8 8" refX="6.5" refY="4"
+        markerWidth="6" markerHeight="6"
+        orient="auto-start-reverse">
+        <path class="ob-map-arrowhead is-solid" d="M1,1 L7,4 L1,7 Z" />
+      </marker>
+    </defs>
+
+    <!-- ── Zones (drawn first, behind everything). A clear gutter (y188→212)
+         separates them; only the Service node (and thin edges) bridge it. ──── -->
+    <g class="ob-zone ob-zone-transport">
+      <rect class="ob-zone-rect" x="16" y="212" width="608" height="126" rx="14" />
+      <text class="ob-zone-label" x="34" y="233">Transport zone</text>
+    </g>
+    <g class="ob-zone ob-zone-access">
+      <rect class="ob-zone-rect" x="16" y="20" width="608" height="168" rx="14" />
+      <text class="ob-zone-label" x="34" y="41">Access zone</text>
+    </g>
+
+    <!-- ── Per-router edges — each router independently carries the service
+         (Service → Router, SERP) and is used by the dialing identity (Identity →
+         Router, Router policy). Two routers ⇒ two of each. ──────────────────── -->
+    @for (rt of routerNodes(); track rt.id) {
+      <path
+        class="ob-connector"
+        [class.is-solid]="rt.connectorSolid"
+        [attr.d]="rt.connectorEdge"
+        [attr.marker-end]="rt.connectorSolid ? 'url(#ob-map-arrow-solid)' : 'url(#ob-map-arrow)'" />
+      <path
+        class="ob-connector"
+        [class.is-solid]="rt.linkSolid"
+        [attr.d]="rt.linkEdge"
+        [attr.marker-end]="rt.linkSolid ? 'url(#ob-map-arrow-solid)' : 'url(#ob-map-arrow)'" />
+    }
+
+    <!-- ── Traffic arrows (identity → service) with pills riding them ────── -->
+    @for (arrow of visibleArrows(); track arrow.id) {
+      <path
+        class="ob-arrow"
+        [class.is-solid]="solid().arrows[arrow.id]"
+        [attr.d]="arrow.d"
+        [attr.marker-end]="solid().arrows[arrow.id] ? 'url(#ob-map-arrow-solid)' : 'url(#ob-map-arrow)'" />
+      <g class="ob-arrow-pill" [class.is-solid]="solid().arrows[arrow.id]">
+        <rect
+          [attr.x]="arrow.px - 18" [attr.y]="arrow.py - 8"
+          width="36" height="16" rx="8" />
+        <text [attr.x]="arrow.px" [attr.y]="arrow.py">{{ arrow.pill }}</text>
+      </g>
+    }
+
+    <!-- ── Config annotations — short type text ('intercept' / 'host') set FLUSH
+         ALONG the flow it describes: rotated to the line's slope and centred on it,
+         reading like an edge label on the wire. Subordinate to the dial/bind pills. -->
+    @for (anno of configAnnotations(); track anno.id) {
+      <text
+        class="ob-config-label"
+        [class.is-solid]="anno.solid"
+        [attr.x]="anno.x" [attr.y]="anno.y"
+        [attr.transform]="'rotate(' + anno.angle + ' ' + anno.x + ' ' + anno.y + ')'">{{ anno.label }}</text>
+    }
+
+    <!-- ── Permission cards (each rides the edge it governs; width hugs text) ─
+         NAME (bold) + what the policy DOES (muted). Never floating. -->
+    @for (card of policyCards(); track card.id) {
+      <g
+        class="ob-policy"
+        [class.is-auto]="policyVariant() === 'auto'"
+        [class.is-manual]="policyVariant() === 'manual'"
+        [class.is-unset]="policyVariant() === 'unset'"
+        [class.is-solid]="solid().cards[card.id]">
+        <rect
+          class="ob-policy-card"
+          [attr.x]="card.x" [attr.y]="card.y"
+          [attr.width]="card.w" [attr.height]="card.h" rx="7" />
+        <text class="ob-policy-icon" [attr.x]="card.iconX" [attr.y]="card.iconY">{{ card.glyph }}</text>
+        <text class="ob-policy-name" [attr.x]="card.textX" [attr.y]="card.nameY">{{ card.name }}</text>
+        <text class="ob-policy-phrase" [attr.x]="card.textX" [attr.y]="card.phraseY">{{ card.phrase }}</text>
+      </g>
+    }
+
+    <!-- ── Core entity nodes (dialing identity + service) ──────────────────── -->
+    @for (node of visibleNodes(); track node.id) {
+      <g class="ob-node" [attr.data-hue]="node.hue" [class.is-solid]="solid().nodes[node.id]">
+        <!-- Full name on hover, even when the visible label is ellipsised. -->
+        <title>{{ rawLabels()[node.id] }}</title>
+        <circle class="ob-node-ring" [attr.cx]="node.cx" [attr.cy]="node.cy" [attr.r]="node.r" />
+        <text class="ob-node-icon" [attr.x]="node.cx" [attr.y]="node.cy">{{ node.glyph }}</text>
+        <text class="ob-node-label" [attr.x]="node.cx" [attr.y]="node.labelY">{{ nodeLabels()[node.id] }}</text>
+      </g>
+    }
+
+    <!-- ── Hosting identity — SIMPLE branch only, SUBORDINATE (small rounded square,
+         not a core circle), so it reads as a supporting participant. Never in
+         advanced (there the router binds the service). ─────────────────────── -->
+    @if (showHostingNode()) {
+      <g class="ob-node ob-host-node" data-hue="teal" [class.is-solid]="solid().nodes['hosting']">
+        <title>{{ hostingIdentityName() || 'Hosting identity' }}</title>
+        <rect
+          class="ob-host-ring"
+          [attr.x]="hostNode.x" [attr.y]="hostNode.y"
+          [attr.width]="hostNode.size" [attr.height]="hostNode.size" rx="8" />
+        <text class="ob-host-icon" [attr.x]="hostNode.cx" [attr.y]="hostNode.cy">{{ hostGlyph }}</text>
+        <text class="ob-node-label" [attr.x]="hostNode.cx" [attr.y]="hostNode.labelY">{{ hostingNodeLabel() }}</text>
+      </g>
+    }
+
+    <!-- ── Router nodes — one pre-provisioned, plus an optional second. Each is
+         keyed by its entry id and carries its OWN label, hosting sub-label, NF
+         logo (when NF-hosted), and solid/ghost state. ─────────────────────── -->
+    @for (rt of routerNodes(); track rt.id) {
+      <g class="ob-node" data-hue="coral" [class.is-solid]="rt.solid">
+        <title>{{ rt.rawLabel }}</title>
+        <circle class="ob-node-ring" [attr.cx]="rt.cx" [attr.cy]="rt.cy" [attr.r]="rt.r" />
+        <!-- NF-hosted routers show the NF logo (below) instead of the glyph. -->
+        @if (!rt.hostedByNf) {
+          <text class="ob-node-icon" [attr.x]="rt.cx" [attr.y]="rt.cy">{{ routerGlyph }}</text>
+        }
+        <text class="ob-node-label" [attr.x]="rt.cx" [attr.y]="rt.labelY">{{ rt.label }}</text>
+        <!-- Hosting-type sub-label — NAMES what the icon shows, per router. -->
+        <text class="ob-node-sublabel" [attr.x]="rt.cx" [attr.y]="rt.sublabelY">{{ rt.hostingLabel }}</text>
+      </g>
+      <!-- NetFoundry-hosting CHOICE MARKER — drawn OUTSIDE the node group so it
+           stays full-colour even while the router ring is ghosted. -->
+      @if (rt.hostedByNf) {
+        <image
+          class="ob-router-nf-logo"
+          [attr.href]="nfLogo"
+          [attr.x]="rt.logoX" [attr.y]="rt.logoY"
+          [attr.width]="rt.logoSize" [attr.height]="rt.logoSize" />
+      }
+    }
+  </svg>
+
+  <p class="ob-map-note">
+    Your setup takes shape as you go. Ghosted parts aren't configured yet —
+    each fills in as you complete it.
+  </p>
+
+</div>

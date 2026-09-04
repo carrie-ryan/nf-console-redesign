@@ -1,0 +1,18 @@
+<div class="console-shell">
+  <app-side-nav />
+  <div class="console-main">
+    <app-header />
+    <app-breadcrumb />
+    <main class="console-content">
+      <router-outlet />
+    </main>
+  </div>
+  <app-drawer />
+  @if (policyLauncher.launch(); as launch) {
+    <app-construct-policy-modal
+      [destinations]="launch.destinations"
+      [flowCount]="launch.flowCount"
+      (created)="policyLauncher.close()"
+      (cancelled)="policyLauncher.close()" />
+  }
+</div>

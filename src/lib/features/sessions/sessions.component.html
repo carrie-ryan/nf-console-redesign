@@ -1,0 +1,224 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Sessions</h1>
+    <p>Active network connections between identities and services</p>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <button class="tab-btn" [class.tab-btn--active]="activeTab() === 'sessions'" (click)="setTab('sessions')">
+    Sessions
+  </button>
+  <button class="tab-btn" [class.tab-btn--active]="activeTab() === 'api-sessions'" (click)="setTab('api-sessions')">
+    API Sessions
+  </button>
+</div>
+
+<div class="list-body" (click)="closeMenu()">
+
+  @if (activeTab() === 'sessions') {
+
+    @if (data.sessions().length === 0) {
+      <div class="section-card empty-card">
+        <app-empty-state
+          icon="fa-solid fa-wave-square"
+          title="No active sessions"
+          message="Sessions appear here when identities connect to services. Sessions are read-only — they're created automatically by the network when access is granted.">
+          <p class="readonly-note">Sessions are automatically created and expired by the network. Nothing to configure here.</p>
+        </app-empty-state>
+      </div>
+    } @else {
+
+      <div class="section-card table-card">
+        <div class="toolbar">
+          <div class="filter-wrap">
+            <i class="fa-solid fa-magnifying-glass filter-icon"></i>
+            <input
+              class="filter-input"
+              type="text"
+              placeholder="Type to Filter"
+              [value]="filterText()"
+              (input)="filterText.set($any($event.target).value)" />
+            @if (filterText()) {
+              <button class="filter-clear" (click)="filterText.set('')" title="Clear filter">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            } @else {
+              <i class="fa-solid fa-filter filter-funnel"></i>
+            }
+          </div>
+          <div class="toolbar-right">
+            @if (selectedIds().size > 0) {
+              <button class="btn btn-danger btn-sm">
+                <i class="fa-solid fa-trash"></i> Delete ({{ selectedIds().size }})
+              </button>
+            }
+            <span class="pagination-info">
+              {{ filteredSessions().length === 0 ? '0' : '1' }}–{{ filteredSessions().length }} of {{ data.sessions().length }}
+            </span>
+            <button class="page-btn" [disabled]="true"><i class="fa-solid fa-chevron-left"></i></button>
+            <button class="page-btn" [disabled]="true"><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+        </div>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="col-check">
+                <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll()" />
+              </th>
+              <th class="col-id">ID <i class="fa-solid fa-arrow-down sort-icon"></i></th>
+              <th class="col-service">Service Name</th>
+              <th class="col-service-id">Service ID</th>
+              <th class="col-routers">Edge Routers</th>
+              <th class="col-type">Type</th>
+              <th class="col-bool">Is System</th>
+              <th class="col-date">Created At</th>
+              <th class="col-actions"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (session of filteredSessions(); track session.id) {
+              <tr class="clickable-row" (click)="navigateToDetail(session.id)">
+                <td class="col-check" (click)="$event.stopPropagation()">
+                  <input
+                    type="checkbox"
+                    [checked]="selectedIds().has(session.id)"
+                    (change)="toggleSelect(session.id)" />
+                </td>
+                <td class="col-id">
+                  <app-truncated-cell [value]="session.id" />
+                </td>
+                <td class="col-service">
+                  <a class="link-pill" [routerLink]="['/services', session.serviceId]" (click)="$event.stopPropagation()">
+                    {{ session.serviceName }}
+                  </a>
+                </td>
+                <td class="col-service-id">
+                  <app-truncated-cell [value]="session.serviceId" />
+                </td>
+                <td class="col-routers">
+                  <span class="routers-cell" [title]="edgeRouterNames(session.edgeRouters)">
+                    {{ edgeRouterNames(session.edgeRouters) }}
+                  </span>
+                </td>
+                <td class="col-type">
+                  <span class="type-pill" [class.type-pill--bind]="session.type === 'Bind'" [class.type-pill--dial]="session.type === 'Dial'">
+                    {{ session.type }}
+                  </span>
+                </td>
+                <td class="col-bool">
+                  @if (session.isSystem) {
+                    <i class="fa-solid fa-circle-check check-yes" title="System session"></i>
+                  }
+                </td>
+                <td class="col-date">{{ formatDate(session.createdAt) }}</td>
+                <td class="actions-cell" (click)="$event.stopPropagation()">
+                  <div class="action-menu">
+                    <button
+                      class="btn-icon"
+                      (click)="toggleMenu(session.id, $event)"
+                      [attr.aria-label]="'Actions for ' + session.id">
+                      <i class="fa-solid fa-ellipsis-vertical"></i>
+                    </button>
+                    @if (openMenuId() === session.id) {
+                      <div class="dropdown-menu" role="menu">
+                        <button class="dropdown-item dropdown-item--danger" role="menuitem">
+                          <i class="fa-solid fa-trash"></i> Delete
+                        </button>
+                      </div>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        @if (filteredSessions().length === 0 && filterText()) {
+          <div class="no-results">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            No sessions match <strong>"{{ filterText() }}"</strong>
+          </div>
+        }
+      </div>
+    }
+
+  } @else {
+
+    @if (data.apiSessions().length === 0) {
+      <div class="section-card empty-card">
+        <app-empty-state
+          icon="fa-solid fa-wave-square"
+          title="No active API sessions"
+          message="API sessions appear here when identities authenticate to the network. They're created automatically and expire on their own.">
+          <p class="readonly-note">Sessions are automatically created and expired by the network. Nothing to configure here.</p>
+        </app-empty-state>
+      </div>
+    } @else {
+
+      <div class="section-card table-card">
+        <div class="toolbar">
+          <div class="filter-wrap">
+            <i class="fa-solid fa-magnifying-glass filter-icon"></i>
+            <input
+              class="filter-input"
+              type="text"
+              placeholder="Type to Filter"
+              [value]="filterText()"
+              (input)="filterText.set($any($event.target).value)" />
+            @if (filterText()) {
+              <button class="filter-clear" (click)="filterText.set('')" title="Clear filter">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            } @else {
+              <i class="fa-solid fa-filter filter-funnel"></i>
+            }
+          </div>
+          <div class="toolbar-right">
+            <span class="pagination-info">
+              {{ filteredApiSessions().length === 0 ? '0' : '1' }}–{{ filteredApiSessions().length }} of {{ data.apiSessions().length }}
+            </span>
+            <button class="page-btn" [disabled]="true"><i class="fa-solid fa-chevron-left"></i></button>
+            <button class="page-btn" [disabled]="true"><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+        </div>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="col-id">ID</th>
+              <th class="col-token">Token</th>
+              <th class="col-identity">Identity Name</th>
+              <th class="col-date">Created At</th>
+              <th class="col-date">Expires At</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (session of filteredApiSessions(); track session.id) {
+              <tr>
+                <td class="col-id">
+                  <app-truncated-cell [value]="session.id" />
+                </td>
+                <td class="col-token">
+                  <app-truncated-cell [value]="session.token" />
+                </td>
+                <td class="col-identity">{{ session.identityName }}</td>
+                <td class="col-date">{{ formatDate(session.createdAt) }}</td>
+                <td class="col-date">{{ formatDate(session.expiresAt) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        @if (filteredApiSessions().length === 0 && filterText()) {
+          <div class="no-results">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            No API sessions match <strong>"{{ filterText() }}"</strong>
+          </div>
+        }
+      </div>
+    }
+
+  }
+</div>

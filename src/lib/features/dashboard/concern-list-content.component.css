@@ -1,0 +1,90 @@
+/* Concern-list drawer body. Reuses the global .data-table / .field-badge; the
+   dismiss-button + value styles mirror the panel's (dashboard.component.css is
+   view-scoped, so the small set is duplicated here). No new global color vars. */
+
+.concern-list-table td:first-child {
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.concern-th--value,
+.concern-value {
+  text-align: right;
+  white-space: nowrap;
+}
+.concern-value--danger {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+/* Sortable column header button. */
+.concern-sort {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-weight: inherit;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+.concern-sort i {
+  color: var(--color-text-3);
+  font-size: 0.75rem;
+}
+.concern-sort:hover {
+  color: var(--color-text);
+}
+.concern-sort:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+/* Per-row dismiss action column — narrow, right-aligned. */
+.concern-th--action {
+  width: 1%;
+}
+.concern-action {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Icon buttons for the dismiss affordance (existing color tokens only). */
+.concern-btn {
+  padding: 0.125rem 0.25rem;
+  border: none;
+  background: none;
+  color: var(--color-text-3);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  line-height: 1;
+}
+.concern-btn:hover {
+  color: var(--color-text);
+}
+.concern-btn:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+.concern-btn--dismiss:hover {
+  color: var(--color-danger);
+}
+
+.concern-confirm {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.concern-confirm-label {
+  font-size: 0.6875rem;
+  color: var(--color-text-2);
+}
+.concern-btn--yes:hover {
+  color: var(--color-success);
+}
+.concern-btn--no:hover {
+  color: var(--color-danger);
+}

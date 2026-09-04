@@ -1,0 +1,26 @@
+.overview-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.overview-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.stat-unit {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-text-2);
+}
+
+.overview-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--color-text-2);
+}

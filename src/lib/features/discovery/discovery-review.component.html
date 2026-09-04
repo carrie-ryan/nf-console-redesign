@@ -1,0 +1,328 @@
+<div class="review-body">
+
+  <!-- ─── Intro + progress (tight) ─────────────────────────────────── -->
+  <header class="review-intro">
+    <div class="intro-text">
+      <span class="intro-eyebrow"><i class="fa-solid fa-wand-magic-sparkles"></i> Traffic analysis → policy</span>
+      <h2>Turn observed traffic into policies</h2>
+      <p>
+        Wildcard-intercepted identities were grouped by the destinations they share into the roles
+        below. Expand a role to see the observed flows behind it, then create one dial policy for the
+        whole group.
+      </p>
+    </div>
+
+    <div class="progress-ledger" role="status" aria-live="polite">
+      <div class="ledger-counts">
+        <span class="lc accent"><strong>{{ policiesCreated() }}</strong> policies created</span>
+        <span class="lc muted"><strong>{{ rolesRemaining() }}</strong> roles to review</span>
+      </div>
+      <div class="progress-track" [attr.aria-label]="reviewedPct() + '% of roles have a policy'">
+        <div class="progress-fill" [style.width.%]="reviewedPct()"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ─── Discovered-role table ────────────────────────────────────── -->
+  <section class="review-section">
+    <div class="section-head">
+      <h3>Discovered roles</h3>
+      <span class="section-sub">{{ totalRoles() }} groups · ranked by observed volume</span>
+    </div>
+
+    <div class="section-card table-card">
+      <table class="data-table role-table">
+        <thead>
+          <tr>
+            <th class="col-chevron"></th>
+            <th>Role</th>
+            <th class="col-num">Sources</th>
+            <th class="col-num">Services</th>
+            <th>Volume</th>
+            <th class="col-action"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of roleViews(); track r.clusterId) {
+            <!-- ── Group (role) row ── -->
+            <tr class="group-row" [class.is-done]="r.policyName" (click)="toggle(r.clusterId)">
+              <td class="col-chevron">
+                <i class="fa-solid fa-chevron-right chevron" [class.chevron--open]="isExpanded(r.clusterId)"></i>
+              </td>
+
+              <td class="col-role">
+                @if (editingClusterId() === r.clusterId) {
+                  <span class="role-edit" (click)="$event.stopPropagation()">
+                    <input
+                      class="role-edit-input"
+                      [ngModel]="editValue()"
+                      (ngModelChange)="editValue.set($event)"
+                      (keydown.enter)="commitEdit(r.clusterId)"
+                      (keydown.escape)="cancelEdit()"
+                      aria-label="Rename role" />
+                    <button class="role-edit-btn ok" type="button" (click)="commitEdit(r.clusterId)"
+                      aria-label="Save role name"><i class="fa-solid fa-check"></i></button>
+                    <button class="role-edit-btn" type="button" (click)="cancelEdit()"
+                      aria-label="Cancel"><i class="fa-solid fa-xmark"></i></button>
+                    @if (editError()) {
+                      <span class="rename-error"><i class="fa-solid fa-triangle-exclamation"></i> {{ editError() }}</span>
+                    }
+                  </span>
+                } @else {
+                  <button class="role-chip" type="button"
+                    [class.provisional]="r.roleName === r.originalRole"
+                    (click)="$event.stopPropagation(); startEdit(r.clusterId, r.roleName)"
+                    [title]="'Rename ' + r.roleName + ' — propagates everywhere it is used'">
+                    {{ r.roleName }}
+                    <i class="fa-solid fa-pen role-chip-pen" aria-hidden="true"></i>
+                  </button>
+                }
+              </td>
+
+              <td class="col-num">
+                <span class="num">{{ r.managedCount }}</span>
+                @if (!r.policyName && r.unenrolledMembers.length) {
+                  <span class="enroll-hint"
+                    [title]="r.unenrolledMembers.length + ' member(s) are unmanaged hosts — this policy won\'t cover them'">
+                    {{ r.unenrolledMembers.length }} unmanaged
+                  </span>
+                }
+              </td>
+              <td class="col-num">
+                <span class="num">{{ r.serviceCount }}</span>
+                @if (r.newServiceCount) {
+                  <span class="svc-new-hint">{{ r.newServiceCount }} new</span>
+                }
+              </td>
+
+              <td class="col-vol">
+                <div class="vol-meter">
+                  <span class="vol-count"><strong>{{ r.totalCircuits }}</strong> circuits</span>
+                  <div class="vol-bar">
+                    <div class="vol-fill" [style.width.%]="(r.totalCircuits / peakVolume()) * 100"></div>
+                  </div>
+                </div>
+              </td>
+
+              <td class="col-action" (click)="$event.stopPropagation()">
+                @if (r.policyName) {
+                  <span class="status-tag approved" [title]="'Created policy ' + r.policyName">
+                    <i class="fa-solid fa-circle-check"></i> Policy created
+                  </span>
+                } @else {
+                  <button class="btn btn-primary btn-sm" type="button" (click)="openModal(r.clusterId)">
+                    <i class="fa-solid fa-shield-halved"></i> Create service policy
+                  </button>
+                }
+              </td>
+            </tr>
+
+            <!-- ── Expanded evidence row ── -->
+            @if (isExpanded(r.clusterId)) {
+              <tr class="detail-row">
+                <td></td>
+                <td colspan="5">
+                  <div class="role-detail">
+
+                    <!-- Why they're grouped -->
+                    <p class="detail-rationale">
+                      <i class="fa-solid fa-diagram-project"></i>
+                      Grouped because all {{ r.identityCount }} members share
+                      @for (d of r.sharedDestinations; track d) {
+                        <code class="shared-dest">{{ d }}</code>
+                      }
+                    </p>
+
+                    <!-- Observed flows — the CloudZiti evidence -->
+                    <div class="evidence">
+                      <div class="evidence-cap">
+                        <i class="fa-solid fa-wave-square"></i> Observed flows ({{ r.evidence.length }}) — the evidence behind this grouping
+                      </div>
+                      <div class="evidence-scroll">
+                        <table class="data-table evidence-table">
+                          <colgroup>
+                            <col class="ec-ip" />
+                            <col class="ec-ip" />
+                            <col class="ec-port" />
+                            <col class="ec-entity" />
+                            <col class="ec-egress" />
+                            <col class="ec-service" />
+                            <col class="ec-circuits" />
+                          </colgroup>
+                          <thead>
+                            <tr>
+                              <th>Ingress IP</th>
+                              <th>Egress IP</th>
+                              <th>Egress Port</th>
+                              <th>Ingress Entity</th>
+                              <th>Egress Entity</th>
+                              <th>Service</th>
+                              <th>Circuits</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            @for (e of r.evidence; track e.key) {
+                              <tr>
+                                <td><code class="ev-ip">{{ e.ingressIp }}</code></td>
+                                <td><code class="ev-ip">{{ e.egressIp }}</code></td>
+                                <td class="ev-port"><span class="num">{{ e.egressPort }}</span></td>
+                                <td class="ev-entity" [class.src-unenrolled]="!isEnrolled(e.identityId)">
+                                  @if (isEnrolled(e.identityId)) {
+                                    {{ e.ingressEntityName }}
+                                  } @else {
+                                    <span aria-label="No managed entity">—</span>
+                                  }
+                                </td>
+                                <td class="ev-egress">{{ e.egressEntityName }}</td>
+                                <td><span class="svc-name">{{ e.serviceName }}</span></td>
+                                <td class="ev-circuits"><span class="num">{{ e.circuits }}</span></td>
+                              </tr>
+                            }
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    <!-- Honesty notes, subordinate -->
+                    @if (r.partialServices.length) {
+                      <p class="detail-note info">
+                        <i class="fa-solid fa-circle-info"></i>
+                        Not unanimous — dialed by a majority, not all members:
+                        @for (s of r.partialServices; track s.destination) {
+                          <span class="partial-pill">{{ s.destination }} · {{ s.dialing }}/{{ s.total }}</span>
+                        }
+                      </p>
+                    }
+                    @if (r.stragglers.length) {
+                      <p class="detail-note warn">
+                        <i class="fa-solid fa-user-slash"></i>
+                        Also dialed by {{ r.stragglers.length }} source(s) outside this role — not
+                        covered by this policy, each needs its own (deferred):
+                        <span class="straggler-list">
+                          @for (s of r.stragglers; track s.id) {
+                            <span class="member-pill straggler" [class.src-unenrolled]="!isEnrolled(s.id)">
+                              {{ s.name }}
+                              @if (!isEnrolled(s.id)) {
+                                <span class="src-badge" title="Observed source — not a managed identity">unmanaged</span>
+                              }
+                            </span>
+                          }
+                        </span>
+                      </p>
+                    }
+
+                    <!-- NEW (step 2): partial-materialize consequence — DISTINCT
+                         from the two notes above. Not "outside the role" (those are
+                         stragglers) and not "non-unanimous destination" (partial-
+                         Services): these ARE members of this role, they just aren't
+                         enrolled yet, so the created policy couldn't tag them. -->
+                    @if (r.policyName && unenrolledForCreated(r.clusterId).length; as unN) {
+                      <p class="detail-note enroll">
+                        <i class="fa-solid fa-id-badge"></i>
+                        Policy created for {{ r.identityCount - unN }} enrolled member(s).
+                        {{ unN }} unmanaged host(s) aren't covered by this policy:
+                        <span class="straggler-list">
+                          @for (m of unenrolledForCreated(r.clusterId); track m.id) {
+                            <span class="member-pill enroll-pill">{{ m.name }}</span>
+                          }
+                        </span>
+                      </p>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ─── Ungrouped / low-confidence ───────────────────────────────── -->
+  <section class="review-section low-conf">
+    <div class="section-head">
+      <h3><i class="fa-solid fa-signal-bars-weak"></i> Ungrouped &amp; low-confidence</h3>
+      <span class="section-sub">Individual identities / below noise threshold — review carefully</span>
+    </div>
+
+    <div class="section-card low-card">
+      <!-- The ungrouped tail: identities that cleared the threshold with nobody. -->
+      <div class="low-block">
+        <div class="low-head">
+          <i class="fa-solid fa-user"></i>
+          {{ ungroupedIdentities.length }} sources didn't cluster
+        </div>
+        <p class="low-sub">
+          Each cleared the similarity threshold with no one else — no shared-behaviour group to build a
+          role from. Individual policies are a later increment.
+        </p>
+        <div class="ungrouped-list">
+          @for (u of ungroupedIdentities; track u.identityId) {
+            <span class="member-pill straggler" [class.src-unenrolled]="!isEnrolled(u.identityId)"
+              [title]="'Closest match ' + (u.bestMatchIdentityName ?? '—') + ' at Jaccard ' + u.bestJaccard">
+              {{ u.identityName }}
+              @if (!isEnrolled(u.identityId)) {
+                <span class="src-badge" title="Observed source — not a managed identity">unmanaged</span>
+              }
+            </span>
+          }
+        </div>
+      </div>
+
+      <!-- Low-volume / noise proposals (no cluster dials them). -->
+      @if (lowConfidence().length) {
+        <div class="low-block">
+          <div class="low-head">
+            <i class="fa-solid fa-signal-bars-weak"></i>
+            {{ lowConfidence().length }} low-volume destination(s)
+          </div>
+          <p class="low-sub">Below the {{ 25 }}-circuit noise threshold and used only by individual identities.</p>
+          <table class="data-table lowvol-table">
+            <thead>
+              <tr>
+                <th>Destination</th>
+                <th>Dialed by</th>
+                <th class="col-num">Circuits</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of lowConfidence(); track p.id) {
+                <tr>
+                  <td><code class="ev-dest">{{ p.destinationHostPort }}</code></td>
+                  <td class="low-dialers">
+                    @for (u of p.ungroupedDialers; track u.identityId) {
+                      <span class="member-pill straggler" [class.src-unenrolled]="!isEnrolled(u.identityId)">
+                        {{ u.identityName }}
+                        @if (!isEnrolled(u.identityId)) {
+                          <span class="src-badge" title="Observed source — not a managed identity">unmanaged</span>
+                        }
+                      </span>
+                    }
+                  </td>
+                  <td class="col-num"><span class="num">{{ p.totalCircuitCount }}</span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- ─── Deferred scope ───────────────────────────────────────────── -->
+  <footer class="review-defer">
+    <i class="fa-solid fa-circle-half-stroke"></i>
+    <span>
+      Later increments: editing cluster membership (add/remove identities), per-identity policies for
+      the ungrouped tail, the wildcard-intercept setup that turns discovery on, and switch-export import.
+    </span>
+  </footer>
+</div>
+
+<!-- ─── Create-policy modal ────────────────────────────────────────── -->
+@if (openClusterId(); as cid) {
+  <app-role-policy-modal
+    [clusterId]="cid"
+    (created)="onPolicyCreated(cid, $event)"
+    (cancelled)="closeModal()" />
+}

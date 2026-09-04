@@ -1,0 +1,463 @@
+@if (showAdvancedForm()) {
+
+  <!-- Advanced branch — a dedicated full-screen form (own header, rail, nav). -->
+  <app-onboarding-service-advanced />
+
+} @else {
+
+<div class="ob-screen">
+
+  <div class="ob-step-panel">
+
+    <header class="ob-step-head">
+      <span class="ob-step-badge"><i class="fa-solid fa-server"></i></span>
+      <div class="ob-step-head-text">
+        <h1>Create Service</h1>
+        <p class="ob-step-tag">Define the application resource your identity connects to — and who can reach or host it.</p>
+      </div>
+      <button type="button" class="btn btn-secondary btn-sm ob-learn" (click)="openHelp()">
+        <i class="fa-solid fa-circle-info"></i> Learn more
+      </button>
+    </header>
+
+    @if (showChoice()) {
+
+      @if (serviceMode() === 'choice') {
+
+        <!-- Branch point — resolves the rail's placeholder tail (Simple vs Advanced),
+             plus a template shortcut that tees up the advanced path pre-filled. -->
+        <div class="section-card ob-placeholder">
+          <p class="ob-placeholder-lede">
+            How do you want to authorize this service? Simple auto-creates the dial
+            and bind policies for you; Advanced lets you define each policy yourself.
+          </p>
+
+          <div class="ob-branch-choice ob-branch-choice--3">
+            <button type="button" class="ob-branch section-card" (click)="chooseSimple()">
+              <span class="ob-branch-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+              <span class="ob-branch-title">Simple</span>
+              <span class="ob-branch-desc">Dial and bind policies are auto-created for you — then straight to Verify.</span>
+            </button>
+            <button type="button" class="ob-branch section-card" (click)="chooseAdvanced()">
+              <span class="ob-branch-icon"><i class="fa-solid fa-sliders"></i></span>
+              <span class="ob-branch-title">Advanced</span>
+              <span class="ob-branch-desc">Define your configs and policies by hand on the Policy step, then Verify.</span>
+            </button>
+            <button type="button" class="ob-branch section-card" (click)="chooseTemplate()">
+              <span class="ob-branch-icon"><i class="fa-solid fa-shapes"></i></span>
+              <span class="ob-branch-title">Start from a template</span>
+              <span class="ob-branch-desc">Begin from a common service pattern like HTTPS, SSH, or a database.</span>
+            </button>
+          </div>
+        </div>
+
+      } @else {
+
+        <!-- ── Template picker — selecting a card pre-fills the advanced form ── -->
+        <div class="section-card ob-form-card">
+          <div class="tmpl-picker-head">
+            <button type="button" class="btn btn-secondary btn-sm" (click)="backToChoice()">
+              <i class="fa-solid fa-arrow-left"></i> Back to options
+            </button>
+          </div>
+
+          <div class="tmpl-section">
+            <h2 class="ob-section-title">Curated templates</h2>
+            <p class="ob-section-note">Pick a pattern to get a head start on the advanced form — it opens pre-filled with these configs, fully editable.</p>
+            <div class="tmpl-grid">
+              @for (t of curatedTemplates; track t.id) {
+                <button type="button" class="tmpl-card section-card" (click)="startFromTemplate(t)">
+                  <span class="tmpl-card-icon"><i [class]="t.icon"></i></span>
+                  <span class="tmpl-card-name">{{ t.name }}</span>
+                  <span class="tmpl-card-desc">{{ t.description }}</span>
+                  <span class="tmpl-card-summary">
+                    <i class="fa-solid fa-gear"></i> {{ templateConfigSummary(t) }}
+                  </span>
+                </button>
+              }
+            </div>
+          </div>
+
+          <div class="tmpl-section">
+            <h2 class="ob-section-title">Saved by you</h2>
+            <p class="ob-section-note">Templates you saved from a completed service. These persist on this browser.</p>
+            @if (userTemplates().length === 0) {
+              <div class="tmpl-empty">
+                <i class="fa-solid fa-bookmark"></i>
+                <span>Your saved templates will appear here.</span>
+              </div>
+            } @else {
+              <div class="tmpl-grid">
+                @for (t of userTemplates(); track t.id) {
+                  <div class="tmpl-card tmpl-card--user section-card">
+                    @if (renamingTemplateId() === t.id) {
+                      <!-- Inline rename -->
+                      <div class="tmpl-rename">
+                        <input
+                          type="text"
+                          class="form-control"
+                          [(ngModel)]="renameInput"
+                          (keydown.enter)="commitRename()"
+                          (keydown.escape)="cancelRename()"
+                          placeholder="Template name"
+                          autocomplete="off" />
+                        <div class="tmpl-rename-actions">
+                          <button type="button" class="btn btn-primary btn-sm" [disabled]="!renameInput.trim()" (click)="commitRename()">Save</button>
+                          <button type="button" class="btn btn-secondary btn-sm" (click)="cancelRename()">Cancel</button>
+                        </div>
+                      </div>
+                    } @else {
+                      <!-- Selecting the card applies it (Part 4b wires full apply). -->
+                      <button type="button" class="tmpl-card-main" (click)="applyUserTemplate(t)">
+                        <span class="tmpl-card-icon"><i [class]="t.icon"></i></span>
+                        <span class="tmpl-card-name">{{ t.name }}</span>
+                        <span class="tmpl-card-desc">{{ t.description }}</span>
+                        <span class="tmpl-card-summary">
+                          <i class="fa-solid fa-gear"></i> {{ templateConfigSummary(t) }}
+                        </span>
+                      </button>
+                      <div class="tmpl-card-tools">
+                        <button type="button" class="tmpl-tool" (click)="startRename(t)" aria-label="Rename template" title="Rename">
+                          <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button type="button" class="tmpl-tool tmpl-tool--danger" (click)="deleteTemplate(t)" aria-label="Delete template" title="Delete">
+                          <i class="fa-solid fa-trash"></i>
+                        </button>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+      }
+
+    } @else if (showSimpleForm() && !saved()) {
+
+      <!-- ── Section 1: Service Details ──────────────────────────────────── -->
+      <div class="section-card ob-form-card">
+        <h2 class="ob-section-title">Service Details</h2>
+
+        <div class="ob-field">
+          <label class="form-label" for="ob-svc-name">Service Name <span class="ob-required">Required</span></label>
+          <input
+            id="ob-svc-name"
+            class="form-control"
+            [class.is-error]="showError('name')"
+            type="text"
+            [(ngModel)]="serviceName"
+            (blur)="markTouched('name')"
+            placeholder="Name this service"
+            autocomplete="off" />
+          <p class="field-hint">A recognizable name for this service.</p>
+        </div>
+
+        <div class="ob-field">
+          <label class="form-label" for="ob-svc-attrs">Service Attributes <span class="ob-optional">Optional</span></label>
+          <div class="tag-input-wrap">
+            @for (attr of attributes(); track attr) {
+              <span class="tag-chip">
+                {{ attr }}
+                <button class="tag-chip-x" type="button" (click)="removeAttribute(attr)" aria-label="Remove attribute">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </span>
+            }
+            <input
+              id="ob-svc-attrs"
+              class="tag-bare-input"
+              [(ngModel)]="attributeInput"
+              (keydown)="onAttributeKeydown($event)"
+              [placeholder]="attributes().length === 0 ? 'Add attributes to group services' : ''"
+              autocomplete="off" />
+          </div>
+          <p class="field-hint">Add attributes and NetFoundry auto-creates the policies that authorize this service. Leave blank to define policies yourself on the next step. Press Enter or comma to add. Prefix with # for role attributes policies can target.</p>
+        </div>
+      </div>
+
+      <!-- ── Section 2: Accessing Configuration ──────────────────────────── -->
+      <div class="section-card ob-form-card">
+        <h2 class="ob-section-title">Accessing Configuration</h2>
+        <p class="ob-section-note">Defines who can dial the service and the address they use to reach it — this becomes the service's dial policy and intercept.</p>
+
+        <div class="ob-field">
+          <label class="form-label" for="ob-svc-access-ids">What identities can access this service? <span class="ob-required">Required</span></label>
+          <div class="tag-input-wrap" [class.is-error]="showError('accessIds')">
+            @for (id of accessIdentities(); track id) {
+              <span class="tag-chip">
+                {{ id }}
+                <button class="tag-chip-x" type="button" (click)="removeAccessIdentity(id)" aria-label="Remove identity attribute">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </span>
+            }
+            <input
+              id="ob-svc-access-ids"
+              class="tag-bare-input"
+              [(ngModel)]="accessIdentityInput"
+              (keydown)="onAccessIdentityKeydown($event)"
+              (blur)="markTouched('accessIds')"
+              [placeholder]="accessIdentities().length === 0 ? 'Select identity attributes to grant access' : ''"
+              autocomplete="off" />
+          </div>
+          <p class="field-hint">Press Enter or comma to add. Use #role or @identity attributes.</p>
+        </div>
+
+        <div class="ob-field">
+          <span class="form-label">How will the service be accessed?</span>
+
+          <div class="ob-toggle-field">
+            <div class="ob-toggle-text">
+              <span class="form-label">SDK Only</span>
+              <p class="field-hint">The client connects through an embedded SDK — no intercept address needed.</p>
+            </div>
+            <button
+              type="button"
+              class="ob-switch"
+              role="switch"
+              [class.on]="sdkOnlyAccess()"
+              [attr.aria-checked]="sdkOnlyAccess()"
+              (click)="toggleSdkOnlyAccess()">
+              <span class="ob-switch-thumb"></span>
+            </button>
+          </div>
+
+          <div class="ob-addr-port-row">
+            <div class="ob-field ob-addr-group">
+              <label class="form-label" for="ob-svc-access-addr">Address
+                @if (sdkOnlyAccess()) {
+                  <span class="ob-optional">Optional</span>
+                } @else {
+                  <span class="ob-required">Required</span>
+                }
+              </label>
+              <input
+                id="ob-svc-access-addr"
+                class="form-control"
+                [class.is-error]="showError('accessAddr')"
+                type="text"
+                [(ngModel)]="accessAddress"
+                [disabled]="sdkOnlyAccess()"
+                (blur)="markTouched('accessAddr')"
+                placeholder="e.g. myservice.ziti"
+                autocomplete="off" />
+            </div>
+            <div class="ob-field ob-port-group">
+              <label class="form-label" for="ob-svc-access-port">Port
+                @if (sdkOnlyAccess()) {
+                  <span class="ob-optional">Optional</span>
+                } @else {
+                  <span class="ob-required">Required</span>
+                }
+              </label>
+              <input
+                id="ob-svc-access-port"
+                class="form-control"
+                [class.is-error]="showError('accessPort')"
+                type="number"
+                [(ngModel)]="accessPort"
+                [disabled]="sdkOnlyAccess()"
+                (blur)="markTouched('accessPort')"
+                placeholder="443"
+                min="1"
+                max="65535" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Section 3: Hosting Configuration ────────────────────────────── -->
+      <div class="section-card ob-form-card">
+        <h2 class="ob-section-title">Hosting Configuration</h2>
+        <p class="ob-section-note">Defines who can host the service and where its traffic is actually sent — this becomes the service's bind policy and host.</p>
+
+        <div class="ob-field">
+          <label class="form-label" for="ob-svc-host-ids">What identities can host this service? <span class="ob-required">Required</span></label>
+          <div class="tag-input-wrap" [class.is-error]="showError('hostIds')">
+            @for (id of hostIdentities(); track id) {
+              <span class="tag-chip">
+                {{ id }}
+                <button class="tag-chip-x" type="button" (click)="removeHostIdentity(id)" aria-label="Remove identity attribute">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </span>
+            }
+            <input
+              id="ob-svc-host-ids"
+              class="tag-bare-input"
+              [(ngModel)]="hostIdentityInput"
+              (keydown)="onHostIdentityKeydown($event)"
+              (blur)="markTouched('hostIds')"
+              [placeholder]="hostIdentities().length === 0 ? 'Select identity attributes' : ''"
+              autocomplete="off" />
+          </div>
+          <p class="field-hint">Press Enter or comma to add. Use #role or @identity attributes.</p>
+        </div>
+
+        <div class="ob-field">
+          <span class="form-label">Where should traffic be sent?</span>
+
+          <div class="ob-toggle-field">
+            <div class="ob-toggle-text">
+              <span class="form-label">SDK Only</span>
+              <p class="field-hint">The hosting app terminates traffic through an embedded SDK — no host address needed.</p>
+            </div>
+            <button
+              type="button"
+              class="ob-switch"
+              role="switch"
+              [class.on]="sdkOnlyHost()"
+              [attr.aria-checked]="sdkOnlyHost()"
+              (click)="toggleSdkOnlyHost()">
+              <span class="ob-switch-thumb"></span>
+            </button>
+          </div>
+
+          <div class="ob-addr-port-row">
+            <div class="ob-field ob-proto-group">
+              <label class="form-label" for="ob-svc-host-proto">Protocol <span class="ob-optional">Optional</span></label>
+              <select id="ob-svc-host-proto" class="form-control" [(ngModel)]="hostProtocol" [disabled]="sdkOnlyHost()">
+                <option value="tcp">TCP</option>
+                <option value="udp">UDP</option>
+              </select>
+            </div>
+            <div class="ob-field ob-addr-group">
+              <label class="form-label" for="ob-svc-host-addr">Address
+                @if (sdkOnlyHost()) {
+                  <span class="ob-optional">Optional</span>
+                } @else {
+                  <span class="ob-required">Required</span>
+                }
+              </label>
+              <input
+                id="ob-svc-host-addr"
+                class="form-control"
+                [class.is-error]="showError('hostAddr')"
+                type="text"
+                [(ngModel)]="hostAddress"
+                [disabled]="sdkOnlyHost()"
+                (blur)="markTouched('hostAddr')"
+                placeholder="e.g. myservice.ziti"
+                autocomplete="off" />
+            </div>
+            <div class="ob-field ob-port-group">
+              <label class="form-label" for="ob-svc-host-port">Port
+                @if (sdkOnlyHost()) {
+                  <span class="ob-optional">Optional</span>
+                } @else {
+                  <span class="ob-required">Required</span>
+                }
+              </label>
+              <input
+                id="ob-svc-host-port"
+                class="form-control"
+                [class.is-error]="showError('hostPort')"
+                type="number"
+                [(ngModel)]="hostPort"
+                [disabled]="sdkOnlyHost()"
+                (blur)="markTouched('hostPort')"
+                placeholder="443"
+                min="1"
+                max="65535" />
+            </div>
+          </div>
+        </div>
+
+        <div class="ob-form-actions">
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="save()">
+            <i class="fa-solid fa-check"></i> Save
+          </button>
+        </div>
+      </div>
+
+    } @else if (saved()) {
+
+      <!-- ── Confirmation: service created + policies auto-generated ──────── -->
+      <div class="section-card ob-form-card">
+        <div class="ob-saved-banner">
+          <span class="ob-saved-icon"><i class="fa-solid fa-circle-check"></i></span>
+          <div>
+            <p class="ob-saved-title">“{{ serviceName }}” created</p>
+            <p class="ob-saved-sub">Dial and bind policies were generated automatically.</p>
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm svc-edit" (click)="edit()">
+            <i class="fa-solid fa-pen"></i> Edit
+          </button>
+        </div>
+
+        <div class="ob-gen-policies">
+          <div class="ob-gen-policy">
+            <span class="ob-gen-icon"><i class="fa-solid fa-arrow-right-to-bracket"></i></span>
+            <div>
+              <p class="ob-gen-title">Dial policy</p>
+              <p class="ob-gen-sub">
+                @if (accessIdentities().length) {
+                  Grants {{ accessIdentities().join(', ') }} access to dial “{{ serviceName }}”.
+                } @else {
+                  Grants the identities you selected access to dial “{{ serviceName }}”.
+                }
+              </p>
+            </div>
+          </div>
+          <div class="ob-gen-policy">
+            <span class="ob-gen-icon"><i class="fa-solid fa-arrow-right-from-bracket"></i></span>
+            <div>
+              <p class="ob-gen-title">Bind policy</p>
+              <p class="ob-gen-sub">
+                @if (hostIdentities().length) {
+                  Lets {{ hostIdentities().join(', ') }} host “{{ serviceName }}”.
+                } @else {
+                  Lets the identities you selected host “{{ serviceName }}”.
+                }
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <p class="ob-gen-note">
+          <i class="fa-solid fa-circle-info"></i>
+          Because Simple created these two service policies for you, there's no separate
+          policy step — continue to Verify.
+        </p>
+      </div>
+
+    }
+
+    <!-- Navigation. Branch phase shows Back only (the cards advance the flow). -->
+    @if (showChoice()) {
+      <!-- Chooser tiles: step-level Back (→ previous step). The picker supplies
+           its own "Back to options" (→ tiles), so no bottom Back there. -->
+      @if (serviceMode() === 'choice') {
+        <div class="ob-step-nav">
+          @if (hasBack) {
+            <button type="button" class="btn btn-secondary" (click)="back()">
+              <i class="fa-solid fa-arrow-left"></i> Back
+            </button>
+          }
+        </div>
+      }
+    } @else {
+      <div class="ob-step-nav">
+        @if (hasBack) {
+          <button type="button" class="btn btn-secondary" (click)="back()">
+            <i class="fa-solid fa-arrow-left"></i> Back
+          </button>
+        } @else {
+          <span></span>
+        }
+        <button type="button" class="btn btn-primary" [disabled]="!saved()" (click)="continue()">
+          Continue <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+    }
+
+  </div>
+
+</div>
+
+}

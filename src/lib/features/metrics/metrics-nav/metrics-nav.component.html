@@ -1,0 +1,14 @@
+<div class="page-header">
+  <div>
+    <h1>{{ pageTitle() }}</h1>
+    <p>Latency &amp; traffic analytics</p>
+  </div>
+</div>
+
+<nav class="metrics-tab-bar">
+  <a routerLink="/metrics/overview"            routerLinkActive="active" class="tab-btn">Metrics</a>
+  <a routerLink="/metrics/fabric-latency"      routerLinkActive="active" class="tab-btn">Fabric Latency</a>
+  <a routerLink="/metrics/controller-latency"  routerLinkActive="active" class="tab-btn">Controller Latency</a>
+  <a routerLink="/metrics/latency-timeouts"    routerLinkActive="active" class="tab-btn">Latency Timeouts</a>
+  <a routerLink="/metrics/traffic-analysis"    routerLinkActive="active" class="tab-btn">Traffic Analysis</a>
+</nav>

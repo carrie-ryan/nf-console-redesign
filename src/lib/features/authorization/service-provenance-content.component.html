@@ -1,0 +1,94 @@
+@if (content(); as c) {
+  <div class="prov">
+    <!-- service identity + SERVICE banner (mirrors segment drawer's relation) -->
+    <div class="prov-relation kind-service">
+      <div class="prov-endpoints">
+        <span class="prov-seg prov-seg-service">{{ c.serviceName }}</span>
+        <span class="prov-side">service</span>
+      </div>
+      <div class="prov-state">
+        <span class="prov-state-badge badge-service"><i class="fa-solid fa-cube"></i> Service</span>
+        <span class="prov-count">
+          {{ c.totalIdentities }} {{ c.totalIdentities === 1 ? 'identity' : 'identities' }}
+          across {{ c.reachedBy.length }} segment{{ c.reachedBy.length === 1 ? '' : 's' }} authorized
+        </span>
+      </div>
+    </div>
+
+    <!-- ── endpoint facts ── -->
+    <section class="prov-facts-section">
+      <h4 class="prov-h">Facts</h4>
+      <dl class="prov-facts">
+        <div class="prov-fact">
+          <dt>Protocol</dt>
+          <dd>{{ c.protocol }}</dd>
+        </div>
+        <div class="prov-fact">
+          <dt>Port</dt>
+          <dd>{{ c.port }}</dd>
+        </div>
+        <div class="prov-fact">
+          <dt>Intercept address</dt>
+          <dd class="prov-fact-mono">{{ c.interceptAddress }}</dd>
+        </div>
+        <div class="prov-fact">
+          <dt>Service segment</dt>
+          <dd>{{ c.serviceSegmentLabel }}</dd>
+        </div>
+      </dl>
+    </section>
+
+    <!-- ── reached by: every source segment authorized to dial this service ── -->
+    <section class="prov-reach-section">
+      @if (c.reachedBy.length === 0) {
+        <!-- affirmative: nothing reaches it (mirrors the segment drawer's isolation) -->
+        <div class="prov-isolated">
+          <i class="fa-solid fa-shield-halved"></i>
+          <div>
+            <p class="prov-isolated-lead">{{ c.serviceName }} is reached by nothing over the overlay.</p>
+            <p class="prov-isolated-sub">No dial policy authorizes any identity segment to dial this service. That is the current posture — an intentional isolation, not a missing lookup.</p>
+          </div>
+        </div>
+      } @else {
+        <h4 class="prov-h">
+          Reached by
+          <span class="prov-member-tally">{{ c.reachedBy.length }} segment{{ c.reachedBy.length === 1 ? '' : 's' }} authorized</span>
+        </h4>
+        <ul class="prov-reach-list">
+          @for (g of c.reachedBy; track g.sourceSegment) {
+            <li>
+              <button
+                type="button"
+                class="prov-reach"
+                (click)="c.onReachSelect(g.sourceSegment, c.serviceSegment)"
+                [attr.aria-label]="'Open dial policy provenance for ' + g.sourceSegmentLabel + ' to ' + c.serviceName">
+                <span class="prov-reach-dir">
+                  <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                  <span class="prov-reach-label">{{ g.sourceSegmentLabel }}</span>
+                </span>
+                <span class="prov-reach-meta">
+                  @if (g.state === 'full') {
+                    <span class="prov-state-badge badge-full"><i class="fa-solid fa-circle-check"></i> Full</span>
+                  } @else {
+                    <span class="prov-state-badge badge-partial"><i class="fa-solid fa-circle-half-stroke"></i> Partial</span>
+                  }
+                  <span class="prov-reach-count">{{ g.identities.length }}</span>
+                  <i class="fa-solid fa-chevron-right prov-reach-chevron" aria-hidden="true"></i>
+                </span>
+              </button>
+              <ul class="prov-ident-list">
+                @for (ident of g.identities; track ident.id) {
+                  <li class="prov-ident">
+                    <i class="fa-solid fa-user" aria-hidden="true"></i>
+                    {{ ident.name }}
+                  </li>
+                }
+              </ul>
+            </li>
+          }
+        </ul>
+        <p class="prov-reach-hint">Select a segment for the authorizing dial policies.</p>
+      }
+    </section>
+  </div>
+}

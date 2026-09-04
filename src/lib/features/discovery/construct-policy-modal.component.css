@@ -1,0 +1,438 @@
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+/* ─── Post-create summary (partial-materialize) ───────────────────────────
+   Shown inline after Create when some caller couldn't be tagged (unenrolled).
+   The note mirrors the suggested-roles "N enrolled, M need enrolling" cue —
+   same green/success tone: the policy WAS created, this is a positive follow-up. */
+.cpm-created {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem 0.5rem;
+  text-align: center;
+}
+.cpm-created-icon {
+  font-size: 2.25rem;
+  color: var(--color-success);
+}
+.cpm-created-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+.detail-note {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  padding: 0.6rem 0.85rem;
+  border-radius: var(--radius-sm);
+  text-align: left;
+}
+.detail-note.enroll { background: var(--color-success-bg); color: var(--color-text-2); }
+.detail-note.enroll i { color: var(--color-success); align-self: center; }
+.straggler-list { display: inline-flex; flex-wrap: wrap; gap: 0.3rem; }
+.member-pill {
+  display: inline-flex;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  font-size: 0.6875rem;
+  color: var(--color-text-2);
+}
+.member-pill.enroll-pill {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  border-color: var(--color-success-border);
+  color: var(--color-text-2);
+}
+
+.dialog-panel {
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  width: 100%;
+  max-width: 52rem;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.dialog-header {
+  padding: 1.25rem 1.5rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+.cpm-headrow { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.cpm-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--brand-accent);
+}
+.dialog-title {
+  margin: 0.35rem 0 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.cpm-close {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--color-text-3);
+}
+.cpm-close:hover { background: var(--color-surface-2); color: var(--color-text); }
+.cpm-lede {
+  margin: 0.5rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-text-2);
+  max-width: 46rem;
+}
+
+.dialog-body {
+  padding: 1.125rem 1.5rem 1.25rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.field-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-3);
+  margin: 1.125rem 0 0.4rem;
+}
+.field-label:first-child { margin-top: 0; }
+.field-hint { text-transform: none; letter-spacing: 0; font-weight: 500; color: var(--color-text-3); }
+
+/* ─── Intercept-service cards (one per destination) ───────────────────── */
+.svc-list { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.isc {
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+.isc.is-excluded { opacity: 0.55; }
+
+.isc-head { display: flex; align-items: center; gap: 0.625rem; padding: 0.5rem 0.75rem; }
+.isc-head-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  padding: 0.125rem 0;
+}
+.isc-title { display: inline-flex; align-items: center; gap: 0.5rem; min-width: 0; }
+.isc-name { font-size: 0.875rem; font-weight: 600; color: var(--color-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.isc-name.muted { color: var(--color-text-3); font-weight: 500; font-style: italic; }
+.isc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: var(--radius-full);
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+}
+.isc-badge i { font-size: 0.5625rem; }
+.isc-badge.new { background: color-mix(in srgb, var(--brand-accent) 12%, transparent); color: var(--brand-accent); }
+.isc-meta { display: inline-flex; align-items: center; gap: 0.75rem; margin-left: auto; flex-shrink: 0; }
+.isc-hostport {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  color: var(--color-text-2);
+}
+.isc-dialers { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.75rem; color: var(--color-text-3); }
+.isc-chevron { font-size: 0.75rem; color: var(--color-text-3); margin-left: 0.5rem; }
+
+.isc-body {
+  padding: 0.875rem 0.875rem 1rem;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+/* Card fields */
+.iscf { display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }
+.form-label { font-size: 0.75rem; font-weight: 600; color: var(--color-text); display: flex; align-items: center; gap: 0.4rem; }
+.req { font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--color-danger); }
+.opt { font-size: 0.625rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: var(--color-text-3); }
+.iscf-hint { margin: 0; font-size: 0.6875rem; line-height: 1.45; color: var(--color-text-3); }
+
+.text-input {
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: 0.8125rem;
+  color: var(--color-text);
+  background: var(--color-surface);
+  width: 100%;
+}
+.text-input:focus-visible { outline: 2px solid var(--color-focus-ring); outline-offset: 1px; }
+.text-input.is-error { border-color: var(--color-danger); }
+.text-input:disabled { background: var(--color-surface-2); color: var(--color-text-3); cursor: not-allowed; }
+
+/* Chip inputs */
+.tag-input-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  min-height: 2.1rem;
+}
+.tag-input-wrap:focus-within { outline: 2px solid var(--color-focus-ring); outline-offset: 1px; }
+.tag-input-wrap.is-error { border-color: var(--color-danger); }
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.2rem 0.15rem 0.5rem;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  font-size: 0.75rem;
+  color: var(--color-text);
+}
+.tag-chip-x {
+  display: inline-grid;
+  place-items: center;
+  width: 1rem;
+  height: 1rem;
+  border: none;
+  border-radius: var(--radius-full);
+  background: none;
+  cursor: pointer;
+  color: var(--color-text-3);
+  font-size: 0.625rem;
+}
+.tag-chip-x:hover { background: var(--color-border); color: var(--color-text); }
+.tag-bare-input {
+  flex: 1;
+  min-width: 8rem;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 0.8125rem;
+  color: var(--color-text);
+  padding: 0.15rem 0.1rem;
+}
+.tag-bare-input:focus-visible { outline: none; }
+
+/* SDK-only toggle */
+.isc-toggle-field { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.isc-toggle-text { display: flex; flex-direction: column; gap: 0.15rem; }
+.isc-switch {
+  flex-shrink: 0;
+  position: relative;
+  width: 2.25rem;
+  height: 1.25rem;
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--color-border-strong);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  padding: 0;
+}
+.isc-switch.on { background: var(--brand-primary); }
+.isc-switch-thumb {
+  position: absolute;
+  top: 0.15rem;
+  left: 0.15rem;
+  width: 0.95rem;
+  height: 0.95rem;
+  border-radius: 50%;
+  background: var(--color-surface);
+  transition: transform var(--transition-fast);
+}
+.isc-switch.on .isc-switch-thumb { transform: translateX(1rem); }
+
+/* Intercept address / port / protocol row */
+.isc-addr-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 0.625rem; }
+@media (max-width: 640px) { .isc-addr-row { grid-template-columns: 1fr; } }
+
+/* Collapsed-head mode badge (specific / role) */
+.isc-badge.mode {
+  background: var(--color-surface-2);
+  color: var(--color-text-2);
+  border: 1px solid var(--color-border);
+}
+
+/* Per-card subsections (identity authorization + dial policy) */
+.isc-subsection {
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border);
+}
+.isc-sub-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-3);
+}
+.isc-role-field { margin-top: 0.25rem; }
+.grant-muted { font-size: 0.75rem; font-style: italic; color: var(--color-text-3); }
+
+/* Card checkbox reuses the raw-table check styling */
+.row-check { display: inline-flex; cursor: pointer; position: relative; }
+.row-check input { position: absolute; opacity: 0; pointer-events: none; }
+.check-box {
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 4px;
+  border: 1.5px solid var(--color-border-strong);
+  display: grid;
+  place-items: center;
+  color: var(--color-text-inverse);
+  font-size: 0.625rem;
+  background: var(--color-surface);
+}
+.row-check input:checked + .check-box { background: var(--brand-primary); border-color: var(--brand-primary); }
+.row-check input:not(:checked) + .check-box i { display: none; }
+
+/* ─── Identity mode switch ────────────────────────────────────────────── */
+.mode-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+.mode-opt {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 0.5rem;
+  align-items: center;
+  text-align: left;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+.mode-opt:hover { border-color: var(--brand-primary); }
+.mode-opt.active {
+  border-color: var(--brand-primary);
+  background: color-mix(in srgb, var(--brand-primary) 6%, transparent);
+}
+.mode-opt > i {
+  grid-row: 1 / 3;
+  font-size: 1rem;
+  color: var(--color-text-3);
+  align-self: center;
+}
+.mode-opt.active > i { color: var(--brand-primary); }
+.mode-main { font-size: 0.8125rem; font-weight: 600; color: var(--color-text); }
+.mode-sub { font-size: 0.6875rem; color: var(--color-text-3); }
+.mode-sub code,
+.mode-main code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* ─── Per-card grant readout ──────────────────────────────────────────── */
+.grant-stmt {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.5rem;
+  padding: 0.625rem 0.75rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+.grant-ids { display: inline-flex; flex-wrap: wrap; gap: 0.3rem; }
+.grant-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--brand-accent);
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--brand-accent) 8%, transparent);
+}
+.grant-verb { font-size: 0.8125rem; color: var(--color-text-2); }
+.grant-verb strong { color: var(--color-text); letter-spacing: 0.03em; }
+.grant-svc {
+  display: inline-flex;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--brand-primary) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 25%, transparent);
+  font-size: 0.75rem;
+  color: var(--color-text);
+}
+
+/* Observed-address exclusion note under the DIAL preview — muted, plainly not part
+   of the grant. IPs render in the same de-emphasized unenrolled treatment. */
+.grant-excluded-note {
+  margin: 0.4rem 0 0;
+  font-size: 0.6875rem;
+  line-height: 1.45;
+  color: var(--color-text-3);
+}
+.grant-excluded-ips { display: inline-flex; flex-wrap: wrap; gap: 0.3rem; margin-left: 0.15rem; }
+.grant-excluded-ip {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.6875rem;
+  color: var(--color-text-2);
+  padding: 0.05rem 0.35rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-2);
+}
+
+/* ─── Footer ──────────────────────────────────────────────────────────── */
+.dialog-footer {
+  padding: 0.875rem 1.5rem;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.consequence { font-size: 0.75rem; color: var(--color-text-3); }
+.footer-actions { display: flex; gap: 0.5rem; margin-left: auto; }
+.btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+
+@media (max-width: 640px) {
+  .mode-switch { grid-template-columns: 1fr; }
+}

@@ -1,0 +1,28 @@
+<app-modal-shell (dismissed)="cancel()">
+  <span modal-title>Move the end of this mute</span>
+
+  <p class="rs-copy">
+    The mute keeps everything else it has — the same conditions, the same alert types, the
+    same reason. Only when it stops applying changes.
+  </p>
+
+  <div class="rs-block">
+    <span class="form-label">Ends now</span>
+    <div class="rs-current">{{ currentEnds() }}</div>
+  </div>
+
+  <div class="rs-block">
+    <span class="form-label">Ends instead</span>
+    <div class="pill-row">
+      @for (opt of choiceOptions; track opt.key) {
+        <button type="button" class="pill" [class.pill--active]="choice() === opt.key"
+          (click)="pick(opt.key)">{{ opt.label }}</button>
+      }
+    </div>
+  </div>
+
+  <ng-container modal-footer>
+    <button class="btn btn-secondary" type="button" (click)="cancel()">Cancel</button>
+    <button class="btn btn-primary" type="button" (click)="confirm()">Move the end</button>
+  </ng-container>
+</app-modal-shell>

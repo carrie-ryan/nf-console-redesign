@@ -1,0 +1,8 @@
+<div class="empty-state">
+  <div class="empty-icon"><i [class]="icon()"></i></div>
+  <h3>{{ title() }}</h3>
+  @if (message()) {
+    <p>{{ message() }}</p>
+  }
+  <ng-content />
+</div>

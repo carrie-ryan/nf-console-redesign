@@ -1,0 +1,95 @@
+<!-- Reusable per-row dismiss cell: idle × swaps to an inline confirm/cancel
+     pair on first click (no modal, no window.confirm). Same behavior as the
+     panel; both read the shared dismiss store. -->
+<ng-template #dismissCell let-id="id">
+  <td class="concern-action">
+    @if (isDismissPending(id)) {
+      <span class="concern-confirm">
+        <span class="concern-confirm-label">Dismiss?</span>
+        <button type="button" class="concern-btn concern-btn--yes" (click)="confirmDismiss(id)" aria-label="Confirm dismiss">
+          <i class="fa-solid fa-check"></i>
+        </button>
+        <button type="button" class="concern-btn concern-btn--no" (click)="cancelDismiss()" aria-label="Cancel dismiss">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </span>
+    } @else {
+      <button type="button" class="concern-btn concern-btn--dismiss" (click)="requestDismiss(id)" aria-label="Dismiss concern">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    }
+  </td>
+</ng-template>
+
+@switch (data().panel) {
+
+  @case ('latency') {
+    <table class="data-table concern-list-table">
+      <thead>
+        <tr>
+          <th><button type="button" class="concern-sort" (click)="sortBy('link')">Link <i [class]="sortIconFor('link')"></i></button></th>
+          <th class="concern-th--value"><button type="button" class="concern-sort" (click)="sortBy('peak')">Peak Latency <i [class]="sortIconFor('peak')"></i></button></th>
+          <th class="concern-th--action"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (concern of visibleLatency(); track concern.id) {
+          <tr>
+            <td [routerLink]="latencyRoute">{{ concern.source }} &rarr; {{ concern.destination }}</td>
+            <td class="concern-value concern-value--danger" [routerLink]="latencyRoute">{{ concern.peakMs }} ms</td>
+            <ng-container *ngTemplateOutlet="dismissCell; context: { id: concern.id }" />
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  @case ('utilization') {
+    <table class="data-table concern-list-table">
+      <thead>
+        <tr>
+          <th><button type="button" class="concern-sort" (click)="sortBy('entity')">Entity <i [class]="sortIconFor('entity')"></i></button></th>
+          <th><button type="button" class="concern-sort" (click)="sortBy('type')">Type <i [class]="sortIconFor('type')"></i></button></th>
+          <th class="concern-th--value"><button type="button" class="concern-sort" (click)="sortBy('util')">Utilization <i [class]="sortIconFor('util')"></i></button></th>
+          <th class="concern-th--action"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (concern of visibleUtilization(); track concern.id) {
+          <tr>
+            <td>{{ concern.entityName }}</td>
+            <td><span class="field-badge">{{ concern.typeLabel }}</span></td>
+            <td class="concern-value concern-value--danger">{{ concern.utilizationPct }}%</td>
+            <ng-container *ngTemplateOutlet="dismissCell; context: { id: concern.id }" />
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  @case ('health') {
+    <table class="data-table concern-list-table">
+      <thead>
+        <tr>
+          <th><button type="button" class="concern-sort" (click)="sortBy('entity')">Entity <i [class]="sortIconFor('entity')"></i></button></th>
+          <th><button type="button" class="concern-sort" (click)="sortBy('type')">Type <i [class]="sortIconFor('type')"></i></button></th>
+          <th><button type="button" class="concern-sort" (click)="sortBy('status')">Status <i [class]="sortIconFor('status')"></i></button></th>
+          <th class="concern-th--value"><button type="button" class="concern-sort" (click)="sortBy('lastSeen')">Last seen <i [class]="sortIconFor('lastSeen')"></i></button></th>
+          <th class="concern-th--action"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (concern of visibleHealth(); track concern.id) {
+          <tr>
+            <td>{{ concern.entityName }}</td>
+            <td><span class="field-badge">{{ concern.typeLabel }}</span></td>
+            <td><app-pill [variant]="concern.status" /></td>
+            <td class="concern-value">{{ concern.lastSeenLabel }}</td>
+            <ng-container *ngTemplateOutlet="dismissCell; context: { id: concern.id }" />
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+
+}

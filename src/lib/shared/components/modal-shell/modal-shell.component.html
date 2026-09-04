@@ -1,0 +1,15 @@
+<div class="dialog-backdrop" (click)="onBackdrop()">
+  <div
+    class="dialog-panel"
+    (click)="$event.stopPropagation()"
+    role="dialog"
+    aria-modal="true"
+    tabindex="-1"
+    [attr.aria-labelledby]="titleId">
+    <div class="dialog-header">
+      <h2 class="dialog-title" [id]="titleId"><ng-content select="[modal-title]"></ng-content></h2>
+    </div>
+    <div class="dialog-body"><ng-content></ng-content></div>
+    <div class="dialog-footer"><ng-content select="[modal-footer]"></ng-content></div>
+  </div>
+</div>

@@ -1,0 +1,159 @@
+/* ─── Page title ─────────────────────────────────────────────────── */
+.page-title { text-transform: uppercase; letter-spacing: 0.04em; }
+
+/* ─── Sub-tabs (mirrors sessions) ────────────────────────────────── */
+.tab-bar {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+  padding: 0 1.5rem;
+  flex-shrink: 0;
+}
+
+.tab-btn {
+  padding: 0.625rem 1rem;
+  border: none;
+  background: transparent;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-2);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+  font-family: inherit;
+}
+
+.tab-btn:hover { color: var(--color-text); }
+.tab-btn--active { color: var(--brand-primary); border-bottom-color: var(--brand-primary); }
+
+/* ─── List body ──────────────────────────────────────────────────── */
+.list-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem; }
+.table-card { padding: 0; overflow: visible; }
+.empty-card { padding: 0; }
+
+/* overflow was `hidden`, which clipped a downward-opening row action-menu at the
+   card edge. With it removed, that clip is no longer masking the table's corners
+   to the card's border-radius — so round the table's own corner cells instead, so
+   the header fill (and last-row hover fill) follow the rounded corners rather than
+   poking out square. `border-collapse: separate` makes corner radii render
+   reliably; with only bottom borders in play it's visually identical to collapse. */
+.table-card .data-table { border-collapse: separate; border-spacing: 0; }
+.table-card .data-table thead th:first-child { border-top-left-radius: var(--radius-lg); }
+.table-card .data-table thead th:last-child { border-top-right-radius: var(--radius-lg); }
+.table-card .data-table tbody tr:last-child td { border-bottom: none; }
+.table-card .data-table tbody tr:last-child td:first-child { border-bottom-left-radius: var(--radius-lg); }
+.table-card .data-table tbody tr:last-child td:last-child { border-bottom-right-radius: var(--radius-lg); }
+
+/* ─── Stats header ───────────────────────────────────────────────── */
+.stats-header { display: flex; flex-direction: column; gap: 1rem; }
+.stats-intro-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.stats-intro { margin: 0; font-size: 0.8125rem; color: var(--color-text-3); }
+.stats-controls { display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0; }
+.range-toggle { display: inline-flex; border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; }
+.range-btn { padding: 0.3125rem 0.625rem; border: none; border-left: 1px solid var(--color-border); background: var(--color-surface); font: inherit; font-size: 0.75rem; color: var(--color-text-2); cursor: pointer; transition: background var(--transition-fast), color var(--transition-fast); }
+.range-btn:first-child { border-left: none; }
+.range-btn:hover { background: var(--color-surface-2); }
+.range-btn--active { background: var(--brand-primary); color: #fff; }
+
+/* Tile row — two clusters separated by a gap. */
+.stats-tiles { display: flex; flex-wrap: wrap; gap: 1.5rem 2.5rem; }
+.tile-cluster { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+.stat-tile { display: flex; flex-direction: column; gap: 0.125rem; min-width: 5rem; padding: 0.5rem 0.75rem; border-left: 3px solid var(--color-border-strong); background: var(--color-surface-2); border-radius: var(--radius-sm); }
+.tile-count { font-size: 1.5rem; font-weight: 700; line-height: 1.1; color: var(--color-text); }
+.tile-label { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--color-text-3); }
+
+/* Neutral grey accent: total / pending / firing + all four component tiles. */
+.tile--neutral { border-left-color: var(--color-border-strong); }
+
+/* Severity accents — match the severity pill palette. */
+.tile--critical { border-left-color: #B91C1C; }
+.tile--major    { border-left-color: #C2410C; }
+.tile--minor    { border-left-color: #A16207; }
+.tile--info     { border-left-color: #475569; }
+
+.stats-footnote {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  padding-left: 0.625rem;
+  border-left: 2px solid var(--color-border-strong);
+  font-size: 0.75rem;
+  color: var(--color-text-2);
+}
+.stats-footnote-icon { color: var(--color-text-3); font-size: 0.6875rem; }
+
+/* ─── Column widths ──────────────────────────────────────────────── */
+.col-severity { width: 8rem; }
+.col-status { min-width: 140px; }
+.col-type { min-width: 180px; }
+.col-component { min-width: 200px; max-width: 280px; }
+.col-date { min-width: 148px; white-space: nowrap; }
+.col-ownership { min-width: 180px; }
+.col-actions { width: 14rem; }
+
+/* ─── Status cell ────────────────────────────────────────────────── */
+.status-text { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: var(--color-text-2); }
+.muted-chip { display: inline-flex; align-items: center; gap: 0.25rem; margin-left: 0.5rem; padding: 0.0625rem 0.375rem; border-radius: var(--radius-full); font-size: 0.625rem; font-weight: 700; letter-spacing: 0.04em; background: var(--color-surface-2); color: var(--color-text-3); border: 1px solid var(--color-border); }
+.muted-chip i { font-size: 0.5625rem; }
+
+/* ─── Alert type cell (display name over raw code) ───────────────── */
+.type-name { font-size: 0.875rem; color: var(--color-text); font-weight: 500; }
+.type-code { font-size: 0.75rem; color: var(--color-text-3); font-family: var(--font-mono, monospace); }
+
+/* ─── Component cell (name over component type) ──────────────────── */
+.component-name { font-size: 0.8125rem; color: var(--color-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.component-type { font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--color-text-3); }
+
+/* ─── Ownership cell ─────────────────────────────────────────────── */
+.ownership { display: flex; flex-direction: column; line-height: 1.3; }
+.ownership-kind { font-size: 0.6875rem; color: var(--color-text-3); }
+.ownership-name { font-size: 0.8125rem; font-weight: 600; color: var(--color-text); }
+.ownership-email { font-size: 0.75rem; color: var(--color-text-2); }
+.ownership--muted .ownership-name { color: var(--color-text-2); font-weight: 500; }
+
+.dim { font-size: 0.8125rem; color: var(--color-text-3); }
+
+/* ─── Actions ────────────────────────────────────────────────────── */
+.action-btns { display: flex; gap: 0.375rem; }
+
+/* ─── Filter toolbar ─────────────────────────────────────────────── */
+.filter-toolbar { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; padding: 0.625rem 0.75rem; border-bottom: 1px solid var(--color-border); }
+.filter-search { position: relative; flex: 1; min-width: 180px; max-width: 320px; }
+.filter-search-icon { position: absolute; left: 0.625rem; top: 50%; transform: translateY(-50%); font-size: 0.75rem; color: var(--color-text-3); }
+.filter-search-input { width: 100%; padding: 0.3125rem 0.625rem 0.3125rem 1.875rem; font: inherit; font-size: 0.8125rem; color: var(--color-text); background: var(--color-surface); border: 1px solid var(--color-border-strong); border-radius: var(--radius-md); outline: none; }
+.filter-search-input:focus { border-color: var(--brand-primary); box-shadow: 0 0 0 3px var(--color-focus-ring); }
+.filter-dd { position: relative; }
+.filter-dd-btn--on { border-color: var(--brand-primary); color: var(--brand-primary); }
+.filter-caret { font-size: 0.625rem; }
+.filter-count { display: inline-flex; align-items: center; justify-content: center; min-width: 1.125rem; height: 1.125rem; padding: 0 0.25rem; border-radius: var(--radius-full); background: var(--brand-primary); color: #fff; font-size: 0.6875rem; font-weight: 700; }
+.filter-menu { position: absolute; top: calc(100% + 4px); left: 0; z-index: 100; min-width: 12rem; padding: 0.25rem; background: var(--color-surface); border: 1px solid var(--color-border-strong); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); display: flex; flex-direction: column; }
+.filter-opt { display: flex; align-items: center; gap: 0.5rem; padding: 0.375rem 0.5rem; border-radius: var(--radius-sm); font-size: 0.8125rem; color: var(--color-text); cursor: pointer; }
+.filter-opt:hover { background: var(--color-surface-2); }
+.filter-clear { margin-left: auto; }
+.no-results { display: flex; align-items: center; justify-content: center; padding: 2rem; font-size: 0.875rem; color: var(--color-text-2); }
+
+/* ─── Split pane (list ‖ detail) ─────────────────────────────────── */
+.split-pane { display: flex; flex-direction: column; gap: 0; }
+.split-pane--open { flex-direction: row; align-items: flex-start; gap: 1rem; }
+.split-list { flex: 1 1 auto; min-width: 0; }
+.split-detail { flex: 0 0 26rem; align-self: stretch; padding: 0; overflow: hidden; position: sticky; top: 1.5rem; max-height: calc(100vh - 3rem); }
+
+/* Selectable rows */
+.alert-row { cursor: pointer; }
+.alert-row:hover { background: var(--color-surface-2); }
+.alert-row--selected { background: var(--color-selected, var(--color-surface-2)); box-shadow: inset 3px 0 0 var(--brand-primary); }
+
+/* ─── Mutes tab ──────────────────────────────────────────────────── */
+.mutes-intro { margin: 0 0 1rem; font-size: 0.8125rem; color: var(--color-text-3); }
+.col-covers { min-width: 260px; }
+.col-window { min-width: 180px; white-space: nowrap; }
+.col-reason { min-width: 180px; max-width: 320px; }
+.col-createdby { min-width: 160px; }
+.covers-types { font-size: 0.875rem; color: var(--color-text); font-weight: 500; }
+.covers-matcher { font-size: 0.75rem; color: var(--color-text-2); }
+.covers-id { margin-top: 0.25rem; font-size: 0.6875rem; color: var(--color-text-3); font-family: var(--font-mono, monospace); }
+.createdby-name { font-size: 0.8125rem; color: var(--color-text); }
+.createdby-email { font-size: 0.75rem; color: var(--color-text-3); }

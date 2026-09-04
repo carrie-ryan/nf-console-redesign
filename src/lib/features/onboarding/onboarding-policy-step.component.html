@@ -1,0 +1,144 @@
+<div class="ob-screen">
+  <div class="pol-panel">
+
+    <header class="ob-step-head">
+      <span class="ob-step-badge"><i class="fa-solid fa-shield-halved"></i></span>
+      <div class="ob-step-head-text">
+        <h1>Policy</h1>
+        <p class="ob-step-tag">Authorize which identities can reach and route to your services.</p>
+      </div>
+      <button type="button" class="btn btn-secondary btn-sm ob-learn" (click)="openHelp()">
+        <i class="fa-solid fa-circle-info"></i> Learn more
+      </button>
+    </header>
+
+    <div class="pol-body">
+
+      <!-- ── Main column: created list on top, then chooser + authoring form ─ -->
+      <main class="pol-main">
+
+        <!-- Created policies (accumulated) -->
+        <div class="section-card ob-form-card">
+          <h2 class="ob-section-title">Policies</h2>
+          <p class="ob-section-note">
+            Create the policies that authorize this service. Add as many as you need —
+            a working circuit usually needs a service policy plus a router policy.
+          </p>
+
+          @if (serviceHasAttributes()) {
+            <p class="pol-coexist-note">
+              <i class="fa-solid fa-circle-info"></i>
+              NetFoundry will also auto-create policies from your service attributes.
+            </p>
+          }
+
+          @if (createdPolicies().length) {
+            <ul class="pol-created-list">
+              @for (p of createdPolicies(); track p.id) {
+                <li class="pol-created-item" [class.is-editing]="editingId() === p.id">
+                  <span class="pol-created-icon"><i [class]="iconFor(p.type)"></i></span>
+                  <div class="pol-created-meta">
+                    <span class="pol-created-name">{{ p.name }}</span>
+                    <span class="pol-created-type">{{ typeSummary(p) }}</span>
+                  </div>
+                  <button type="button" class="pol-created-edit" (click)="startEdit(p)" aria-label="Edit policy">
+                    <i class="fa-solid fa-pen"></i>
+                  </button>
+                  <button type="button" class="pol-created-remove" (click)="removePolicy(p.id)" aria-label="Remove policy">
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="pol-empty">
+              <i class="fa-solid fa-circle-exclamation"></i>
+              No policies created yet.
+            </p>
+          }
+        </div>
+
+        <!-- Add / edit a policy: chooser swaps to the selected type's form. In
+             edit mode the type is fixed (no chooser) and the form is populated. -->
+        <div class="section-card ob-form-card">
+          <h2 class="ob-section-title">{{ editingId() ? 'Edit policy' : 'Add a policy' }}</h2>
+
+          @if (!selectedType()) {
+            <div class="ob-branch-choice pol-choice">
+              @for (opt of typeOptions; track opt.type) {
+                <button type="button" class="ob-branch section-card" (click)="chooseType(opt.type)">
+                  <span class="ob-branch-icon"><i [class]="opt.icon"></i></span>
+                  <span class="ob-branch-title">{{ opt.label }}</span>
+                  <span class="ob-branch-desc">{{ opt.desc }}</span>
+                </button>
+              }
+            </div>
+          } @else {
+            <div class="pol-authoring">
+              <div class="pol-authoring-hdr">
+                <span class="pol-authoring-type">
+                  <i [class]="iconFor(selectedType()!)"></i> {{ labelFor(selectedType()!) }}
+                </span>
+                @if (!editingId()) {
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="cancelChoice()">
+                    <i class="fa-solid fa-arrow-left"></i> Change type
+                  </button>
+                }
+              </div>
+              <app-policy-form
+                [config]="configFor(selectedType()!)"
+                [initial]="editingInitial()"
+                [editing]="editingId() !== null"
+                (create)="onCreate($event)"
+                (save)="onSave($event)"
+                (cancelEdit)="cancelEditing()" />
+            </div>
+          }
+        </div>
+      </main>
+
+      <!-- ── Right rail: created-policies count + list ────────────────────── -->
+      <aside class="pol-rail">
+        <h3 class="pol-rail-title">Associated Entities</h3>
+
+        <div class="pol-rail-panel">
+          <div class="pol-rail-panel-hdr">
+            <span>Policies</span>
+            <span class="pol-rail-count">{{ createdPolicies().length }}</span>
+          </div>
+          @if (createdPolicies().length) {
+            @for (p of createdPolicies(); track p.id) {
+              <p class="pol-rail-line">{{ p.name }} <span class="pol-rail-line-type">{{ typeSummary(p) }}</span></p>
+            }
+          } @else {
+            <p class="pol-rail-empty">No items to display</p>
+          }
+        </div>
+      </aside>
+
+    </div>
+
+    <!-- Non-blocking completeness caution (Continue stays enabled) -->
+    @if (completenessCaution(); as caution) {
+      <p class="pol-caution" role="status">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        {{ caution }}
+      </p>
+    }
+
+    <!-- Navigation -->
+    <div class="ob-step-nav">
+      @if (hasBack) {
+        <button type="button" class="btn btn-secondary" (click)="back()">
+          <i class="fa-solid fa-arrow-left"></i> Back
+        </button>
+      } @else {
+        <span></span>
+      }
+      <button type="button" class="btn btn-primary" [disabled]="!createdPolicies().length" (click)="continue()">
+        Continue <i class="fa-solid fa-arrow-right"></i>
+      </button>
+    </div>
+
+  </div>
+</div>

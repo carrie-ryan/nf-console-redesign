@@ -1,0 +1,78 @@
+<svg
+  class="seg-svg sankey-svg"
+  [attr.viewBox]="'0 0 ' + layout().width + ' ' + layout().height"
+  [attr.width]="layout().width"
+  [attr.height]="layout().height"
+  preserveAspectRatio="xMidYMin meet"
+  role="img"
+  [attr.aria-label]="ariaLabel()">
+
+  <!-- background: click empty space to clear hover + notify consumer -->
+  <rect
+    class="graph-bg"
+    x="0" y="0"
+    [attr.width]="layout().width"
+    [attr.height]="layout().height"
+    (click)="onBackground()" />
+
+  <!-- column headers: centered over each node column, in the top band -->
+  <g class="sankey-headers">
+    @for (hd of layout().headers; track hd.text) {
+      <text
+        class="sankey-col-header"
+        [attr.x]="hd.x"
+        [attr.y]="hd.y"
+        text-anchor="middle">{{ hd.text }}</text>
+    }
+  </g>
+
+  <!-- ribbons first (under nodes) -->
+  <g class="sankey-links">
+    @for (l of layout().links; track l.key) {
+      <path
+        [class]="linkClass(l)"
+        [class.sankey-dim]="isLinkDim(l)"
+        [attr.d]="l.path"
+        [style.stroke-width.px]="l.width"
+        role="button"
+        tabindex="0"
+        [attr.aria-label]="l.ariaLabel"
+        (click)="onLinkClick(l)"
+        (keydown.enter)="onLinkClick(l)"
+        (keydown.space)="$event.preventDefault(); onLinkClick(l)" />
+    }
+  </g>
+
+  <!-- nodes -->
+  <g class="sankey-nodes">
+    @for (n of layout().nodes; track n.id) {
+      <g
+        [class]="nodeGroupClass(n)"
+        [attr.role]="'button'"
+        [attr.tabindex]="0"
+        [attr.aria-label]="n.ariaLabel"
+        (mouseenter)="hoveredNodeId.set(n.id)"
+        (mouseleave)="hoveredNodeId.set(null)"
+        (click)="onNodeClick(n)"
+        (keydown.enter)="onNodeClick(n)"
+        (keydown.space)="$event.preventDefault(); onNodeClick(n)">
+        <title>{{ n.title }}</title>
+        <rect
+          class="sankey-node"
+          [attr.x]="n.x0"
+          [attr.y]="n.y0"
+          [attr.width]="n.w"
+          [attr.height]="n.h"
+          rx="2" />
+        <!-- labels: first column outside-left, last column outside-right, interior beside -->
+        @if (n.isFirst) {
+          <text class="sankey-label" [attr.x]="n.x0 - 8" [attr.y]="n.y0 + n.h / 2" text-anchor="end" dominant-baseline="middle">{{ truncLabel(n.label) }}</text>
+        } @else if (n.isLast) {
+          <text class="sankey-label" [attr.x]="n.x0 + n.w + 8" [attr.y]="n.y0 + n.h / 2" text-anchor="start" dominant-baseline="middle">{{ truncLabel(n.label) }}</text>
+        } @else {
+          <text class="sankey-label" [attr.x]="n.x0 + n.w + 6" [attr.y]="n.y0 + n.h / 2" text-anchor="start" dominant-baseline="middle">{{ truncLabel(n.label, 18) }}</text>
+        }
+      </g>
+    }
+  </g>
+</svg>

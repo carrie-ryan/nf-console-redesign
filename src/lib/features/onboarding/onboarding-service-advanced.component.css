@@ -1,0 +1,591 @@
+:host { display: block; flex: 1; }
+
+/* ─── Screen + two-column layout ─────────────────────────────────────── */
+.adv-screen {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 3rem 2rem;
+}
+
+.adv-panel {
+  width: 100%;
+  max-width: 72rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  /* Query container for the form's OWN width — so the body + field rows reflow to
+     the form column (which the shell split can narrow), not the viewport. */
+  container-type: inline-size;
+  container-name: advpanel;
+}
+
+.adv-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 16rem;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.adv-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+  /* Nested container: field rows query the MAIN column width (which changes when
+     the rail drops below), not the panel. */
+  container-type: inline-size;
+  container-name: advmain;
+}
+
+/* Drop the Associated Entities rail below the form when the form column is too
+   narrow to seat it alongside — container-based, so it fires at the real width
+   regardless of viewport. */
+@container advpanel (max-width: 48rem) {
+  .adv-body { grid-template-columns: 1fr; }
+}
+
+/* ─── Header (mirrors onboarding-service) ────────────────────────────── */
+.ob-step-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.ob-step-badge {
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-lg);
+  background: var(--brand-primary-light);
+  color: var(--brand-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.ob-step-head-text { flex: 1; min-width: 0; }
+.ob-step-head h1 { margin: 0; font-size: 1.5rem; font-weight: 700; color: var(--color-text); }
+.ob-step-tag { margin: 0.25rem 0 0; font-size: 0.8125rem; color: var(--color-text-2); }
+.ob-learn { flex-shrink: 0; }
+
+.ob-step-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+}
+
+/* ─── Form section cards + fields (mirrors onboarding-service) ────────── */
+.ob-form-card { display: flex; flex-direction: column; gap: 1.25rem; }
+.ob-field { display: flex; flex-direction: column; }
+
+.ob-section-title { margin: 0; font-size: 1rem; font-weight: 600; color: var(--color-text); }
+.ob-section-note {
+  margin: -0.75rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-text-3);
+}
+.ob-section-note strong { color: var(--color-text-2); font-weight: 600; }
+.adv-req-hint { color: var(--color-danger); font-weight: 500; }
+
+/* ─── Add-config mode selector (segmented control) ───────────────────── */
+.adv-mode-toggle {
+  display: inline-flex;
+  gap: 3px;
+  padding: 3px;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  width: fit-content;
+}
+
+.adv-mode-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.375rem 0.875rem;
+  border: none;
+  background: transparent;
+  color: var(--color-text-2);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.adv-mode-btn:hover { color: var(--color-text); }
+.adv-mode-btn i { font-size: 0.75rem; }
+
+.adv-mode-btn.is-active {
+  background: var(--color-surface);
+  color: var(--brand-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.field-hint { margin: 0.375rem 0 0; font-size: 0.75rem; color: var(--color-text-3); }
+
+.ob-form-actions { display: flex; gap: 0.75rem; }
+.adv-save-row { justify-content: flex-start; }
+
+/* Edit header shown when reopening a created config in place. */
+.adv-edit-hdr { display: flex; flex-direction: column; gap: 0.125rem; }
+.adv-edit-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+.adv-edit-type i { color: var(--brand-primary); }
+.adv-edit-note { font-size: 0.75rem; color: var(--color-text-3); }
+
+select.form-control { cursor: pointer; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Error border — layered on top of REQUIRED/Optional markers, only after
+   a submit/create attempt or blur (see showError). */
+.form-control.is-error,
+.tag-input-wrap.is-error { border-color: var(--color-danger); }
+.form-control.is-error:focus,
+.tag-input-wrap.is-error:focus-within {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2);
+}
+
+/* ─── Address / Port / Protocol row ──────────────────────────────────── */
+/* Wraps intrinsically; Address/hostname keeps a usable min-width and takes the
+   slack, Protocol/Port stay compact. Above the stack breakpoint all three seat
+   on one line; below it every field goes full-width (see container query). */
+.ob-addr-port-row { display: flex; flex-wrap: wrap; gap: 1rem; }
+.ob-addr-group { flex: 1 1 12rem; min-width: 11rem; }
+.ob-proto-group { flex: 0 1 8rem; }
+.ob-port-group { flex: 0 1 7rem; }
+
+/* When the MAIN form column is narrow, stack every field in the row full-width
+   rather than squeezing Address — prefer stacking over an unusable field. */
+@container advmain (max-width: 30rem) {
+  .ob-addr-port-row > .ob-field {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+}
+
+/* ─── Toggle field + switch (mirrors onboarding-service) ──────────────── */
+.ob-toggle-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
+}
+
+.ob-toggle-text { min-width: 0; }
+.ob-toggle-text .form-label { margin-bottom: 0; }
+.ob-toggle-text .field-hint { margin-top: 0.125rem; }
+
+.adv-toggle-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.75rem;
+}
+
+.ob-switch {
+  position: relative;
+  flex-shrink: 0;
+  width: 36px;
+  height: 20px;
+  border: none;
+  padding: 0;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-3);
+  cursor: pointer;
+  transition: background var(--transition-base);
+}
+
+.ob-switch.on { background: var(--brand-primary); }
+
+.ob-switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-full);
+  background: white;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-base);
+  display: block;
+}
+
+.ob-switch.on .ob-switch-thumb { transform: translateX(16px); }
+
+/* ─── Checkboxes (intercept Dial Options protocols) ──────────────────── */
+.adv-check-row { display: flex; flex-wrap: wrap; gap: 0.75rem 1.25rem; }
+.adv-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.875rem;
+  color: var(--color-text);
+  cursor: pointer;
+}
+.adv-check input { accent-color: var(--brand-primary); cursor: pointer; }
+
+/* ─── Tag chip input (mirrors onboarding-service) ────────────────────── */
+.tag-input-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.625rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  min-height: 2.5rem;
+  cursor: text;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.tag-input-wrap:focus-within {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem 0.2rem 0.625rem;
+  background: var(--brand-primary-light);
+  border: 1px solid rgba(27, 79, 216, 0.25);
+  border-radius: var(--radius-full);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--brand-primary);
+  line-height: 1;
+}
+
+.tag-chip-x {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--brand-primary);
+  font-size: 0.625rem;
+  padding: 0;
+  border-radius: 50%;
+  opacity: 0.7;
+  transition: opacity var(--transition-fast), background var(--transition-fast);
+}
+
+.tag-chip-x:hover { opacity: 1; background: rgba(27, 79, 216, 0.12); }
+
+.tag-bare-input {
+  flex: 1;
+  min-width: 8rem;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 0.875rem;
+  font-family: inherit;
+  color: var(--color-text);
+  padding: 0;
+  line-height: 1.5;
+}
+
+.tag-bare-input::placeholder { color: var(--color-text-3); }
+
+/* ─── Accordion (Optional groups) ────────────────────────────────────── */
+.ob-accordion {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.ob-accordion--nested { background: var(--color-surface-2); }
+
+.ob-accordion-hdr {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.875rem 1rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: background var(--transition-fast);
+}
+
+.ob-accordion-hdr:hover { background: var(--color-surface-2); }
+.ob-accordion--nested .ob-accordion-hdr:hover { background: var(--color-surface-3); }
+
+.ob-accordion-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.ob-accordion-hdr i { font-size: 0.75rem; color: var(--color-text-3); }
+
+.ob-accordion-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+
+/* ─── Attached config list ───────────────────────────────────────────── */
+.adv-config-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.adv-config-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.adv-config-item:hover { border-color: var(--color-border-strong); }
+.adv-config-item.is-editing {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 1px var(--brand-primary);
+}
+
+.adv-config-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  background: var(--brand-primary-light);
+  color: var(--brand-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8125rem;
+}
+
+.adv-config-meta { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.adv-config-name { font-size: 0.875rem; font-weight: 600; color: var(--color-text); }
+.adv-config-type {
+  font-size: 0.75rem;
+  color: var(--color-text-3);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.adv-config-edit,
+.adv-config-remove {
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: none;
+  background: transparent;
+  color: var(--color-text-3);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast), background var(--transition-fast);
+}
+
+.adv-config-edit:hover { color: var(--brand-primary); background: var(--brand-primary-light); }
+.adv-config-remove:hover { color: var(--color-danger); background: var(--color-danger-bg); }
+
+.adv-empty-configs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.75rem 0.875rem;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  color: var(--color-text-3);
+}
+
+.adv-empty-configs.is-error-text {
+  color: var(--color-danger);
+  border-color: var(--color-danger-border);
+  background: var(--color-danger-bg);
+}
+
+/* ─── New-config authoring block ─────────────────────────────────────── */
+.adv-newcfg {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.adv-cfgdata {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
+}
+
+.adv-cfgdata-title {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-2);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.adv-stub {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+  padding: 1.75rem 1rem;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  color: var(--color-text-3);
+}
+
+.adv-stub i { font-size: 1.25rem; }
+.adv-stub span { font-size: 0.875rem; font-weight: 600; color: var(--color-text-2); }
+.adv-stub p { margin: 0; font-size: 0.75rem; max-width: 24rem; }
+
+/* ─── Right rail: Associated Entities ────────────────────────────────── */
+.adv-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  position: sticky;
+  top: 1rem;
+}
+
+.adv-rail-title {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-3);
+}
+
+.adv-rail-panel {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: 0.875rem 1rem;
+}
+
+.adv-rail-panel-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.adv-rail-count {
+  min-width: 1.5rem;
+  text-align: center;
+  padding: 0.05rem 0.4rem;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-2);
+  color: var(--color-text-2);
+  font-size: 0.75rem;
+}
+
+.adv-rail-empty { margin: 0.5rem 0 0; font-size: 0.75rem; color: var(--color-text-3); }
+.adv-rail-line {
+  margin: 0.5rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-2);
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.adv-rail-line-type {
+  font-size: 0.6875rem;
+  color: var(--color-text-3);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* ─── Confirmation ───────────────────────────────────────────────────── */
+.adv-confirm { max-width: 46rem; }
+
+.ob-saved-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  background: var(--color-success-bg);
+  border: 1px solid var(--color-success-border);
+  border-radius: var(--radius-md);
+}
+
+.ob-saved-icon { color: var(--color-success); font-size: 1.25rem; flex-shrink: 0; }
+.ob-saved-title { margin: 0; font-size: 0.875rem; font-weight: 600; color: var(--color-text); }
+.ob-saved-sub { margin: 0.125rem 0 0; font-size: 0.8125rem; color: var(--color-text-2); }
+
+/* Re-open the form from the confirmation (distinct from Back, which leaves). */
+.adv-edit { margin-left: auto; flex-shrink: 0; }
+
+.adv-next { display: flex; flex-direction: column; gap: 0.75rem; }
+.adv-next-lede { margin: 0; font-size: 0.875rem; line-height: 1.55; color: var(--color-text-2); }
+.adv-next-lede strong { color: var(--color-text); }
+
+.adv-next-steps {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-text-2);
+}
+
+.adv-next-name { font-weight: 600; color: var(--color-text); }
+
+.ob-gen-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-text-3);
+}
+
+.ob-gen-note i { margin-top: 0.15rem; color: var(--brand-primary); }

@@ -1,0 +1,158 @@
+@if (session(); as s) {
+  <div class="detail-page">
+
+    <div class="detail-header">
+      <button class="back-btn" (click)="back()">
+        <i class="fa-solid fa-arrow-left"></i>
+        Session Details
+      </button>
+      @if (prefs.isPowerUser()) {
+        <div class="json-toggle">
+          <span class="toggle-label">FORM</span>
+          <button
+            class="toggle-switch"
+            [class.on]="showJson()"
+            (click)="showJson.update(v => !v)"
+            [attr.aria-pressed]="showJson()"
+            aria-label="Toggle JSON view">
+            <span class="toggle-thumb"></span>
+          </button>
+          <span class="toggle-label">JSON</span>
+        </div>
+      }
+    </div>
+
+    @if (showJson() && prefs.isPowerUser()) {
+      <div class="json-wrap">
+        <div class="section-card json-card">
+          <pre class="json-pre">{{ jsonString() }}</pre>
+        </div>
+      </div>
+    } @else {
+      <div class="detail-body">
+
+        <div class="detail-left section-card">
+
+          <div class="field-group">
+            <label class="field-label">ID</label>
+            <div class="field-copy-row">
+              <div class="field-input">{{ s.id }}</div>
+              <button
+                class="field-copy-btn"
+                (click)="copy('id', s.id)"
+                [title]="copiedField() === 'id' ? 'Copied!' : 'Copy to clipboard'">
+                <i [class]="copiedField() === 'id' ? 'fa-solid fa-check' : 'fa-regular fa-copy'"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">SERVICE NAME</label>
+            <div class="field-row">
+              <a class="field-pill" [routerLink]="['/services', s.serviceId]">{{ s.serviceName }}</a>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">IDENTITY NAME</label>
+            <div class="field-row">
+              <a class="field-pill" [routerLink]="['/identities', s.identityId]">{{ s.identityName }}</a>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">API SESSION ID</label>
+            <div class="field-copy-row">
+              <div class="field-input">{{ s.apiSessionId }}</div>
+              <button
+                class="field-copy-btn"
+                (click)="copy('apiSessionId', s.apiSessionId)"
+                [title]="copiedField() === 'apiSessionId' ? 'Copied!' : 'Copy to clipboard'">
+                <i [class]="copiedField() === 'apiSessionId' ? 'fa-solid fa-check' : 'fa-regular fa-copy'"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">TYPE</label>
+            <div class="field-input">{{ s.type }}</div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">CREATED AT</label>
+            <div class="field-input">{{ formatDate(s.createdAt) }}</div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">UPDATED AT</label>
+            <div class="field-input">{{ formatDate(s.updatedAt) }}</div>
+          </div>
+
+        </div>
+
+        <div class="detail-right">
+          <div class="section-card assoc-card">
+
+            <div class="assoc-header">
+              <span class="assoc-title">ASSOCIATED ENTITIES</span>
+            </div>
+
+            <div class="assoc-section">
+              <div class="assoc-section-header">
+                <span class="assoc-section-label">EDGE ROUTERS</span>
+                <span class="assoc-count">{{ s.edgeRouters.length }}</span>
+              </div>
+              @if (s.edgeRouters.length === 0) {
+                <p class="assoc-empty">no items to display...</p>
+              } @else {
+                <ul class="assoc-list">
+                  @for (router of s.edgeRouters; track router.id) {
+                    <li>
+                      <a class="assoc-link" [routerLink]="['/routers', router.id]">{{ router.name }}</a>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+
+            <div class="assoc-section">
+              <div class="assoc-section-header">
+                <span class="assoc-section-label">SERVICE POLICIES</span>
+                <span class="assoc-count">{{ s.servicePolicies.length }}</span>
+              </div>
+              @if (s.servicePolicies.length === 0) {
+                <p class="assoc-empty">no items to display...</p>
+              } @else {
+                <ul class="assoc-list">
+                  @for (policy of s.servicePolicies; track policy.id) {
+                    <li>
+                      <a class="assoc-link" [routerLink]="['/policies', policy.id]">{{ policy.name }}</a>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    }
+
+  </div>
+} @else {
+  <div class="detail-page">
+    <div class="detail-header">
+      <button class="back-btn" (click)="back()">
+        <i class="fa-solid fa-arrow-left"></i>
+        Session Details
+      </button>
+    </div>
+    <div class="not-found-wrap">
+      <div class="section-card not-found">
+        <i class="fa-solid fa-circle-exclamation"></i>
+        Session not found.
+      </div>
+    </div>
+  </div>
+}

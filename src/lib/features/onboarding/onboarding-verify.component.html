@@ -1,0 +1,161 @@
+<div class="ob-screen">
+  <div class="ob-step-panel">
+
+    <header class="ob-step-head">
+      <span class="ob-step-badge"><i class="fa-solid fa-circle-check"></i></span>
+      <div class="ob-step-head-text">
+        <h1>Verify</h1>
+        <p class="ob-step-tag">Confirm traffic flows end-to-end through your network.</p>
+      </div>
+      <button type="button" class="btn btn-secondary btn-sm ob-learn" (click)="openHelp()">
+        <i class="fa-solid fa-circle-info"></i> Learn more
+      </button>
+    </header>
+
+    @if (!finished()) {
+
+      <!-- Framing — verification happens outside the console; the IP change and
+           the revert together are the proof. -->
+      <div class="section-card vf-intro">
+        <p class="vf-intro-lede">
+          There's nothing to enter here. You verify the network from the
+          <strong>desktop tunneler app</strong> and a <strong>browser</strong> — the console
+          can't do it for you. Your public IP <strong>changing</strong> when the identity is
+          enabled, and <strong>reverting</strong> when you disable it, together prove your traffic
+          was intercepted, tunneled through the network, and egressed via the remote router.
+        </p>
+        <p class="vf-intro-note">
+          <i class="fa-solid fa-circle-info"></i>
+          Work through each step and tick it once you've confirmed it yourself.
+        </p>
+      </div>
+
+      <!-- Self-confirm checklist -->
+      <ol class="vf-list">
+        @for (item of checklist; track item.lead; let i = $index) {
+          <li class="vf-item" [class.is-done]="isChecked(i)">
+            <label class="vf-item-label">
+              <span class="vf-check">
+                <input type="checkbox" [checked]="isChecked(i)" (change)="toggle(i)" />
+                <span class="vf-check-box"><i class="fa-solid fa-check"></i></span>
+              </span>
+              <span class="vf-item-num">{{ i + 1 }}</span>
+              <span class="vf-item-text">
+                <span class="vf-item-lead">{{ item.lead }}</span>
+                <span class="vf-item-body">{{ item.body }}</span>
+                @if (item.link) {
+                  <a class="vf-item-link" [href]="item.link.href" target="_blank" rel="noopener noreferrer">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> {{ item.link.label }}
+                  </a>
+                }
+              </span>
+            </label>
+          </li>
+        }
+      </ol>
+
+      <!-- Low-key foreshadow so the completion-screen Save action isn't a surprise.
+           Gated to the path where it actually appears (Advanced only). -->
+      @if (canSaveTemplate()) {
+        <p class="vf-foreshadow">
+          <i class="fa-solid fa-bookmark"></i>
+          Once you've verified traffic flows, you'll be able to save this setup as a reusable template.
+        </p>
+      }
+
+    } @else {
+
+      <!-- ── Setup complete ───────────────────────────────────────────── -->
+      <div class="section-card ob-form-card vf-complete">
+        <div class="ob-saved-banner">
+          <span class="ob-saved-icon"><i class="fa-solid fa-circle-check"></i></span>
+          <div>
+            <p class="ob-saved-title">Setup complete</p>
+            <p class="ob-saved-sub">Your service is reachable end-to-end by the identities you allow, and verified.</p>
+          </div>
+        </div>
+
+        <div class="vf-built">
+          @for (b of built; track b.label; let last = $last) {
+            <span class="vf-built-item">
+              <span class="vf-built-icon"><i [class]="b.icon"></i></span>
+              {{ b.label }}
+            </span>
+            @if (!last) {
+              <span class="vf-built-arrow"><i class="fa-solid fa-arrow-right"></i></span>
+            }
+          }
+        </div>
+
+        <p class="ob-gen-note">
+          <i class="fa-solid fa-circle-info"></i>
+          You're all set — the full console is now unlocked. You can manage identities,
+          services, routers, and policies from the dashboard.
+        </p>
+      </div>
+
+    }
+
+    <!-- Navigation -->
+    @if (!finished()) {
+
+      <div class="ob-step-nav">
+        @if (hasBack) {
+          <button type="button" class="btn btn-secondary" (click)="back()">
+            <i class="fa-solid fa-arrow-left"></i> Back
+          </button>
+        } @else {
+          <span></span>
+        }
+        <button type="button" class="btn btn-primary" [disabled]="!allChecked()" (click)="finish()">
+          <i class="fa-solid fa-check"></i> Finish
+        </button>
+      </div>
+
+    } @else {
+
+      <!-- Completion actions: the OPTIONAL Save-as-template sits as a secondary
+           action opposite the primary exit, so the pair reads as "save before you
+           leave if you want — skipping straight to the dashboard is fine". -->
+      <div class="vf-complete-actions">
+        <div class="vf-save-slot">
+          @if (canSaveTemplate()) {
+            @if (savedTemplateName()) {
+              <p class="vf-save-tmpl-done">
+                <i class="fa-solid fa-circle-check"></i>
+                Saved “{{ savedTemplateName() }}” — find it under “Saved by you” next time you create a service.
+              </p>
+            } @else if (savingTemplate()) {
+              <div class="vf-save-tmpl-form">
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="templateName"
+                  (keydown.enter)="saveAsTemplate()"
+                  placeholder="Name this template"
+                  autocomplete="off" />
+                <button type="button" class="btn btn-primary btn-sm" [disabled]="!templateName.trim()" (click)="saveAsTemplate()">
+                  <i class="fa-solid fa-bookmark"></i> Save
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" (click)="cancelSaveTemplate()">
+                  Cancel
+                </button>
+              </div>
+            } @else {
+              <button type="button" class="btn btn-secondary" (click)="startSaveTemplate()">
+                <i class="fa-solid fa-bookmark"></i> Save as template
+              </button>
+              <span class="vf-save-tmpl-hint">Optional — reuse this setup to build another like it.</span>
+            }
+          }
+        </div>
+
+        <button type="button" class="btn btn-primary btn-lg" (click)="goToDashboard()">
+          Go to Dashboard <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+
+    }
+
+  </div>
+</div>

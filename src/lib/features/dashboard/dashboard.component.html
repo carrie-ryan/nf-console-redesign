@@ -1,0 +1,699 @@
+@if (!data.isOnboarded()) {
+
+  <!-- STATE 1: Onboarding checklist -->
+  <div class="onboarding-page">
+
+    <div class="section-card welcome-card">
+      <div class="welcome-logo">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+      <div class="welcome-text">
+        <h1 class="welcome-headline">Welcome to NetFoundry</h1>
+        <p class="welcome-sub">Zero trust connectivity for every user, device, and workload. No VPN required.</p>
+        <div class="welcome-links">
+          <a href="#" class="welcome-link">
+            <i class="fa-solid fa-mobile-screen"></i>
+            <span>Download Identity App</span>
+          </a>
+          <a href="#" class="welcome-link">
+            <i class="fa-solid fa-key"></i>
+            <span>Network JWT</span>
+          </a>
+          <a href="#" class="welcome-link">
+            <i class="fa-solid fa-book-open"></i>
+            <span>API Docs</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card checklist-card">
+      <div class="checklist-header">
+        <h2>Get Connected</h2>
+        <span class="checklist-badge">{{ completedCount() }}&nbsp;/&nbsp;{{ steps().length }} complete</span>
+      </div>
+
+      @if (allStepsComplete()) {
+        <div class="checklist-success">
+          <i class="fa-solid fa-circle-check"></i>
+          <span>You're connected! Your network is ready.</span>
+        </div>
+      }
+
+      <div class="checklist-steps">
+        @for (step of steps(); track step.id; let i = $index; let last = $last) {
+          <div class="checklist-step" [class.step-complete]="step.complete">
+            <div class="step-track">
+              <div class="step-circle" [class.circle-done]="step.complete">
+                @if (step.complete) {
+                  <i class="fa-solid fa-check"></i>
+                } @else {
+                  {{ i + 1 }}
+                }
+              </div>
+              @if (!last) {
+                <div class="step-connector" [class.connector-done]="step.complete"></div>
+              }
+            </div>
+            <div class="step-content">
+              <div class="step-title">{{ step.title }}</div>
+              <p class="step-desc">{{ step.description }}</p>
+              @if (!step.complete) {
+                @if (step.id === 'verify') {
+                  <button class="btn btn-primary btn-sm" (click)="verifyConnection()">
+                    {{ step.cta }} <i class="fa-solid fa-arrow-right"></i>
+                  </button>
+                } @else {
+                  <a [routerLink]="step.route" class="btn btn-primary btn-sm">
+                    {{ step.cta }} <i class="fa-solid fa-arrow-right"></i>
+                  </a>
+                }
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+  </div>
+
+} @else {
+
+  <!-- STATE 2: Operational dashboard -->
+  <div class="ops-page">
+
+    <div class="page-header">
+      <div>
+        <h1>Dashboard</h1>
+        <p>Overview of your NetFoundry network</p>
+      </div>
+
+      <!-- Compact stat strip (right side) — each item still links to detail -->
+      <div class="header-stat-strip">
+        <a routerLink="/policies" class="hstat">
+          <span class="hstat__top">
+            <i class="fa-solid fa-shield hstat__icon"></i>
+            <span class="hstat__value">{{ data.policies().length }}</span>
+          </span>
+          <span class="hstat__label">Service Policies</span>
+        </a>
+        <a routerLink="/services" class="hstat">
+          <span class="hstat__top">
+            <i class="fa-solid fa-network-wired hstat__icon"></i>
+            <span class="hstat__value">{{ onlineServices }}</span>
+            <span class="hstat__of">of {{ data.services().length }}</span>
+          </span>
+          <span class="hstat__label">Services Online</span>
+        </a>
+        <a routerLink="/identities" class="hstat">
+          <span class="hstat__top">
+            <i class="fa-solid fa-users hstat__icon"></i>
+            <span class="hstat__value">{{ onlineIdentities }}</span>
+            <span class="hstat__of">of {{ data.identities().length }}</span>
+          </span>
+          <span class="hstat__label">Identities Online</span>
+        </a>
+        <a routerLink="/routers" class="hstat">
+          <span class="hstat__top">
+            <i class="fa-solid fa-route hstat__icon"></i>
+            <span class="hstat__value">{{ onlineRouters }}</span>
+            <span class="hstat__of">of {{ data.routers().length }}</span>
+          </span>
+          <span class="hstat__label">Routers Online</span>
+        </a>
+        <a routerLink="/policies" class="hstat">
+          <span class="hstat__top">
+            <i class="fa-solid fa-sitemap hstat__icon"></i>
+            <span class="hstat__value">{{ data.routerPolicies().length }}</span>
+          </span>
+          <span class="hstat__label">Router Policies</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="ops-body">
+
+      <!-- Critical-signal row — actively-broken signals derived from dial data.
+           One consolidated failures banner today (it summarizes BOTH the total
+           failures and the no-terminator subset, and opens the unified drawer);
+           the row wrapper stays so future diagnostic signals can join it. -->
+      <div class="signals-row">
+
+        <!-- Signal: service dial failures (with no-terminator breakdown) -->
+        @if (failureCount() > 0) {
+          <button type="button" class="section-card alert-card alert-card--active" (click)="openServiceAlerts()">
+            <span class="alert-card__icon alert-card__icon--failure">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            </span>
+            <span class="alert-card__body">
+              <span class="alert-card__count">{{ failureCount() }} {{ failureCount() === 1 ? 'failure' : 'failures' }}</span>
+              <span class="alert-card__sub">
+                across {{ serviceCount() }} {{ serviceCount() === 1 ? 'service' : 'services' }}
+                @if (noTerminatorCount() > 0) {
+                  <span class="alert-card__sub-em">· {{ noTerminatorCount() }} with no {{ noTerminatorCount() === 1 ? 'terminator' : 'terminators' }}</span>
+                }
+                · view activity
+              </span>
+            </span>
+            <i class="fa-solid fa-chevron-right alert-card__chevron"></i>
+          </button>
+        } @else {
+          <div class="section-card alert-card alert-card--calm">
+            <span class="alert-card__icon alert-card__icon--calm">
+              <i class="fa-solid fa-circle-check"></i>
+            </span>
+            <span class="alert-card__body">
+              <span class="alert-card__count">No failures</span>
+              <span class="alert-card__sub">All services are dialing successfully</span>
+            </span>
+          </div>
+        }
+
+      </div>
+
+      <!-- Insights: ranked concern panels (worst-first, attention only) -->
+      <section class="dash-section">
+        <h2 class="dash-section-heading">Areas of Attention</h2>
+        <div class="insights-panels">
+
+          <!-- Reusable per-row dismiss cell: idle × swaps to an inline
+               confirm/cancel pair on first click (no modal, no window.confirm). -->
+          <ng-template #dismissCell let-id="id">
+            <td class="concern-action">
+              @if (isDismissPending(id)) {
+                <span class="concern-confirm">
+                  <span class="concern-confirm-label">Dismiss?</span>
+                  <button
+                    type="button"
+                    class="concern-btn concern-btn--yes"
+                    (click)="confirmDismiss(id)"
+                    aria-label="Confirm dismiss"
+                  ><i class="fa-solid fa-check"></i></button>
+                  <button
+                    type="button"
+                    class="concern-btn concern-btn--no"
+                    (click)="cancelDismiss()"
+                    aria-label="Cancel dismiss"
+                  ><i class="fa-solid fa-xmark"></i></button>
+                </span>
+              } @else {
+                <button
+                  type="button"
+                  class="concern-btn concern-btn--dismiss"
+                  (click)="requestDismiss(id)"
+                  aria-label="Dismiss concern"
+                ><i class="fa-solid fa-xmark"></i></button>
+              }
+            </td>
+          </ng-template>
+
+          <!-- Concern panel: high-latency fabric links -->
+          <div class="section-card insights-panel">
+            <div class="insights-panel-head">
+              <h3 class="panel-title">High Latency Links</h3>
+              @if (latencyDismissedCount() > 0) {
+                <span class="concern-dismissed-count">{{ latencyDismissedCount() }} dismissed</span>
+              }
+            </div>
+            @if (latencyConcerns().length === 0) {
+              <app-empty-state
+                icon="fa-solid fa-gauge-high"
+                title="No latency concerns"
+                message="All fabric links are performing within normal latency."
+              />
+            } @else {
+              <table class="data-table insights-table">
+                <thead>
+                  <tr><th>Link</th><th class="insights-th--value">Peak Latency</th><th class="concern-th--action"></th></tr>
+                </thead>
+                <tbody>
+                  <!-- TODO: scope to the specific link once per-link deep-linking
+                       is wired; for now every row lands on the fabric-latency page. -->
+                  @for (concern of latencyConcerns(); track concern.id) {
+                    <tr class="insights-row">
+                      <td [routerLink]="latencyRoute">{{ concern.source }} &rarr; {{ concern.destination }}</td>
+                      <td class="insights-value insights-value--danger" [routerLink]="latencyRoute">{{ concern.peakMs }} ms</td>
+                      <ng-container *ngTemplateOutlet="dismissCell; context: { id: concern.id }" />
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
+          </div>
+
+          <!-- Concern panel: high-utilization entities (mixed types) -->
+          <div class="section-card insights-panel">
+            <div class="insights-panel-head">
+              <h3 class="panel-title">High Utilization</h3>
+              <span class="insights-panel-head-actions">
+                @if (utilizationDismissedCount() > 0) {
+                  <span class="concern-dismissed-count">{{ utilizationDismissedCount() }} dismissed</span>
+                }
+                @if (utilizationHasMore()) {
+                  <button type="button" class="concern-show-more" (click)="openUtilizationList()">
+                    View all {{ utilizationFull().length }}
+                  </button>
+                }
+              </span>
+            </div>
+            @if (utilizationConcerns().length === 0) {
+              <app-empty-state
+                icon="fa-solid fa-gauge-high"
+                title="No utilization concerns"
+                message="All services, identities, and routers are within normal capacity."
+              />
+            } @else {
+              <table class="data-table insights-table">
+                <thead>
+                  <tr><th>Entity</th><th class="insights-th--value">Utilization</th><th class="concern-th--action"></th></tr>
+                </thead>
+                <tbody>
+                  <!-- TODO: wire clickable rows to a per-entity drill target
+                       (TBD, like the latency panel's per-link TODO). -->
+                  @for (concern of utilizationConcerns(); track concern.id) {
+                    <tr>
+                      <td>
+                        <span class="field-badge">{{ concern.typeLabel }}</span>
+                        <!-- TODO: navigate to this entity's detail page once it
+                             exists (destination TBD). Link-styled for now; no
+                             click handler. -->
+                        <button type="button" class="entity-name-link">{{ concern.entityName }}</button>
+                      </td>
+                      <td class="insights-value insights-value--danger">{{ concern.utilizationPct }}%</td>
+                      <ng-container *ngTemplateOutlet="dismissCell; context: { id: concern.id }" />
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
+          </div>
+
+          <!-- Concern panel: unhealthy entities (routers + identities) -->
+          <div class="section-card insights-panel">
+            <div class="insights-panel-head">
+              <h3 class="panel-title">Unhealthy Entities</h3>
+              <span class="insights-panel-head-actions">
+                @if (healthDismissedCount() > 0) {
+                  <span class="concern-dismissed-count">{{ healthDismissedCount() }} dismissed</span>
+                }
+                @if (healthHasMore()) {
+                  <button type="button" class="concern-show-more" (click)="openHealthList()">
+                    View all {{ healthFull().length }}
+                  </button>
+                }
+              </span>
+            </div>
+            @if (healthConcerns().length === 0) {
+              <app-empty-state
+                icon="fa-solid fa-heart-pulse"
+                title="No unhealthy entities"
+                message="All routers and identities are online."
+              />
+            } @else {
+              <table class="data-table insights-table">
+                <thead>
+                  <tr><th>Entity</th><th>Status</th><th class="insights-th--value">Last seen</th><th class="concern-th--action"></th></tr>
+                </thead>
+                <tbody>
+                  @for (concern of healthConcerns(); track concern.id) {
+                    <tr>
+                      <td>
+                        <span class="field-badge">{{ concern.typeLabel }}</span>
+                        <!-- TODO: navigate to this entity's detail page once it
+                             exists (destination TBD). Link-styled for now; no
+                             click handler. -->
+                        <button type="button" class="entity-name-link">{{ concern.entityName }}</button>
+                      </td>
+                      <td><app-pill [variant]="concern.status" /></td>
+                      <td class="insights-value">{{ concern.lastSeenLabel }}</td>
+                      <ng-container *ngTemplateOutlet="dismissCell; context: { id: concern.id }" />
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Network Overview: at-a-glance event feeds + usage charts -->
+      <section class="dash-section">
+        <h2 class="dash-section-heading">Network Overview</h2>
+
+        <!-- Asymmetric 2-up: Tx/Rx utilization (65%) + Active Identities (35%). -->
+        <div class="overview-2up">
+
+        <!-- Tx/Rx area chart with a 6h/24h/7d range toggle. -->
+        <div class="section-card util-card">
+          <div class="util-header">
+            <h3 class="panel-title">Network Utilization</h3>
+            <div class="tab-nav util-toggle">
+              @for (r of utilRanges; track r) {
+                <button
+                  class="tab-btn"
+                  [class.tab-active]="selectedUtilRange() === r"
+                  (click)="setUtilRange(r)"
+                >{{ r }}</button>
+              }
+            </div>
+          </div>
+
+          <svg
+            class="util-chart"
+            [attr.viewBox]="'0 0 ' + utilChart.vbW + ' ' + utilChart.vbH"
+            preserveAspectRatio="xMidYMid meet"
+            role="img"
+            aria-label="Transmit and receive throughput over the selected time range"
+          >
+            <!-- Y gridlines + labels -->
+            @for (t of utilYTicks(); track t.label) {
+              <line
+                class="util-gridline"
+                [attr.x1]="utilChart.padL"
+                [attr.x2]="utilChart.vbW - utilChart.padR"
+                [attr.y1]="t.y"
+                [attr.y2]="t.y"
+              />
+              <text
+                class="util-axis-label util-axis-label--y"
+                [attr.x]="utilChart.padL - 8"
+                [attr.y]="t.y + 3"
+                text-anchor="end"
+              >{{ t.label }}</text>
+            }
+
+            <!-- X time ticks -->
+            @for (t of utilXTicks(); track t.x) {
+              <text
+                class="util-axis-label util-axis-label--x"
+                [attr.x]="t.x"
+                [attr.y]="utilChart.vbH - utilChart.padB + 18"
+                text-anchor="middle"
+              >{{ t.label }}</text>
+            }
+
+            <!-- Tx (upper) then Rx (lower); semi-transparent fills so overlap reads -->
+            <path class="util-area util-area--tx" [attr.d]="utilTxArea()" />
+            <path class="util-area util-area--rx" [attr.d]="utilRxArea()" />
+            <polyline class="util-line util-line--tx" [attr.points]="utilTxLine()" fill="none" />
+            <polyline class="util-line util-line--rx" [attr.points]="utilRxLine()" fill="none" />
+          </svg>
+
+          <div class="util-legend">
+            <span class="util-legend-item">
+              <span class="util-swatch util-swatch--tx"></span>Tx
+            </span>
+            <span class="util-legend-item">
+              <span class="util-swatch util-swatch--rx"></span>Rx
+            </span>
+          </div>
+        </div>
+
+        <!-- Active endpoints per hour, static 7-day bar chart (no toggle). -->
+        <div class="section-card util-card">
+          <div class="util-header">
+            <h3 class="panel-title">Active Identities</h3>
+            <!-- STATIC label (NOT a toggle) — this panel is fixed at 7 days. -->
+            <span class="util-range-badge">7d</span>
+          </div>
+
+          <svg
+            class="util-chart"
+            [attr.viewBox]="'0 0 ' + actChart.vbW + ' ' + actChart.vbH"
+            preserveAspectRatio="xMidYMid meet"
+            role="img"
+            aria-label="Active endpoint count per hour over the last 7 days"
+          >
+            <!-- Y gridlines + labels -->
+            @for (t of actYTicks(); track t.label) {
+              <line
+                class="util-gridline"
+                [attr.x1]="actChart.padL"
+                [attr.x2]="actChart.vbW - actChart.padR"
+                [attr.y1]="t.y"
+                [attr.y2]="t.y"
+              />
+              <text
+                class="util-axis-label util-axis-label--y"
+                [attr.x]="actChart.padL - 8"
+                [attr.y]="t.y + 3"
+                text-anchor="end"
+              >{{ t.label }}</text>
+            }
+
+            <!-- X day ticks -->
+            @for (t of actXTicks(); track t.x) {
+              <text
+                class="util-axis-label util-axis-label--x"
+                [attr.x]="t.x"
+                [attr.y]="actChart.vbH - actChart.padB + 18"
+                text-anchor="middle"
+              >{{ t.label }}</text>
+            }
+
+            <!-- Bars -->
+            @for (b of actBars(); track $index) {
+              <rect
+                class="act-bar"
+                [attr.x]="b.x"
+                [attr.y]="b.y"
+                [attr.width]="b.width"
+                [attr.height]="b.height"
+              />
+            }
+          </svg>
+
+          <div class="util-legend">
+            <span class="util-legend-item">
+              <span class="util-swatch util-swatch--act"></span>Active Endpoints
+            </span>
+          </div>
+        </div>
+
+        </div>
+
+        <!-- 3 info panels: 2 event lists + billing -->
+        <div class="panels-row">
+
+        <div class="section-card panel-card">
+          <h3 class="panel-title">Management Events</h3>
+          @if (data.managementEvents().length === 0) {
+            <div class="empty-state">
+              <i class="fa-solid fa-inbox"></i>
+              <p>No recent management events</p>
+            </div>
+          } @else {
+            <ul class="event-list">
+              @for (ev of data.managementEvents(); track ev.id) {
+                <li class="event-item">
+                  <i [class]="eventClasses(ev.severity)"></i>
+                  <div class="event-body">
+                    <span class="event-msg">{{ ev.message }}</span>
+                    <span class="event-time">{{ formatTs(ev.timestamp) }}</span>
+                  </div>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+
+        <div class="section-card panel-card">
+          <h3 class="panel-title">Network Events</h3>
+          @if (data.networkEvents().length === 0) {
+            <div class="empty-state">
+              <i class="fa-solid fa-inbox"></i>
+              <p>No recent network events</p>
+            </div>
+          } @else {
+            <ul class="event-list">
+              @for (ev of data.networkEvents(); track ev.id) {
+                <li class="event-item">
+                  <i [class]="eventClasses(ev.severity)"></i>
+                  <div class="event-body">
+                    <span class="event-msg">{{ ev.message }}</span>
+                    <span class="event-time">{{ formatTs(ev.timestamp) }}</span>
+                  </div>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+
+        <div class="section-card panel-card">
+          <h3 class="panel-title">Billing Usage</h3>
+          @let billing = data.billingUsage();
+          <div class="billing-cycle">
+            <p class="billing-cycle-label">Current cycle: {{ billing.cycleStart }} &ndash; {{ billing.cycleEnd }}</p>
+            <span class="billing-days">{{ billing.daysRemaining }} days remaining</span>
+            <div class="billing-track">
+              <div class="billing-fill" [style.width.%]="billingFillPct()"></div>
+            </div>
+            <div class="billing-values">
+              <span class="billing-current" [style.left.%]="billingFillPct()">{{ billing.currentMb }} MB current</span>
+              <span class="billing-projected">{{ billingProjectedMb() }} MB projected</span>
+            </div>
+          </div>
+          <p class="chart-caption">Usage as of {{ billing.asOfLabel }}</p>
+        </div>
+
+        </div>
+      </section>
+
+      <!-- Activity tabs -->
+      <div class="section-card tabs-card">
+        <div class="tab-nav">
+          <button class="tab-btn" [class.tab-active]="activeTab === 'identities'" (click)="activeTab = 'identities'">Top Identities</button>
+          <button class="tab-btn" [class.tab-active]="activeTab === 'services'" (click)="activeTab = 'services'">Top Services</button>
+          <button class="tab-btn" [class.tab-active]="activeTab === 'routers'" (click)="activeTab = 'routers'">Top Edge Routers</button>
+          <button class="tab-btn" [class.tab-active]="activeTab === 'health'" (click)="activeTab = 'health'">Service Health</button>
+        </div>
+
+        <div class="tab-content">
+
+          @if (activeTab === 'identities') {
+            @if (identityUsage().slices.length === 0) {
+              <div class="empty-state">
+                <i class="fa-solid fa-users"></i>
+                <p>No identities yet. <a routerLink="/identities/new">Create one</a> to get started.</p>
+              </div>
+            } @else {
+              <div class="usage-breakdown">
+                <div class="usage-pie">
+                  <svg [attr.viewBox]="'0 0 ' + pieSize + ' ' + pieSize" class="pie-svg"
+                       role="img" aria-label="Data transfer share by identity">
+                    @for (slice of identityUsage().slices; track slice.name) {
+                      @if (slice.isFull) {
+                        <circle cx="80" cy="80" r="76" [attr.fill]="slice.color" />
+                      } @else {
+                        <path [attr.d]="slice.path" [attr.fill]="slice.color" />
+                      }
+                    }
+                  </svg>
+                </div>
+                <ul class="usage-list">
+                  @for (slice of identityUsage().slices; track slice.name) {
+                    <li class="usage-row">
+                      <span class="usage-dot" [style.background]="slice.color"></span>
+                      <span class="usage-name" [title]="slice.name">{{ slice.name }}</span>
+                      <span class="usage-pct">{{ slice.pct }}%</span>
+                      <span class="usage-value">{{ slice.usage }} GB</span>
+                    </li>
+                  }
+                  <li class="usage-total">
+                    <span>Total transfer</span>
+                    <span>{{ identityUsage().total }} GB</span>
+                  </li>
+                </ul>
+              </div>
+            }
+          }
+
+          @if (activeTab === 'services') {
+            @if (serviceUsage().slices.length === 0) {
+              <div class="empty-state">
+                <i class="fa-solid fa-network-wired"></i>
+                <p>No services configured. <a routerLink="/services/new">Add a service</a> to begin.</p>
+              </div>
+            } @else {
+              <div class="usage-breakdown">
+                <div class="usage-pie">
+                  <svg [attr.viewBox]="'0 0 ' + pieSize + ' ' + pieSize" class="pie-svg"
+                       role="img" aria-label="Data transfer share by service">
+                    @for (slice of serviceUsage().slices; track slice.name) {
+                      @if (slice.isFull) {
+                        <circle cx="80" cy="80" r="76" [attr.fill]="slice.color" />
+                      } @else {
+                        <path [attr.d]="slice.path" [attr.fill]="slice.color" />
+                      }
+                    }
+                  </svg>
+                </div>
+                <ul class="usage-list">
+                  @for (slice of serviceUsage().slices; track slice.name) {
+                    <li class="usage-row">
+                      <span class="usage-dot" [style.background]="slice.color"></span>
+                      <span class="usage-name" [title]="slice.name">{{ slice.name }}</span>
+                      <span class="usage-pct">{{ slice.pct }}%</span>
+                      <span class="usage-value">{{ slice.usage }} GB</span>
+                    </li>
+                  }
+                  <li class="usage-total">
+                    <span>Total transfer</span>
+                    <span>{{ serviceUsage().total }} GB</span>
+                  </li>
+                </ul>
+              </div>
+            }
+          }
+
+          @if (activeTab === 'routers') {
+            @if (routerUsage().slices.length === 0) {
+              <div class="empty-state">
+                <i class="fa-solid fa-route"></i>
+                <p>No edge routers deployed.</p>
+              </div>
+            } @else {
+              <div class="usage-breakdown">
+                <div class="usage-pie">
+                  <svg [attr.viewBox]="'0 0 ' + pieSize + ' ' + pieSize" class="pie-svg"
+                       role="img" aria-label="Data transfer share by edge router">
+                    @for (slice of routerUsage().slices; track slice.name) {
+                      @if (slice.isFull) {
+                        <circle cx="80" cy="80" r="76" [attr.fill]="slice.color" />
+                      } @else {
+                        <path [attr.d]="slice.path" [attr.fill]="slice.color" />
+                      }
+                    }
+                  </svg>
+                </div>
+                <ul class="usage-list">
+                  @for (slice of routerUsage().slices; track slice.name) {
+                    <li class="usage-row">
+                      <span class="usage-dot" [style.background]="slice.color"></span>
+                      <span class="usage-name" [title]="slice.name">{{ slice.name }}</span>
+                      <span class="usage-pct">{{ slice.pct }}%</span>
+                      <span class="usage-value">{{ slice.usage }} GB</span>
+                    </li>
+                  }
+                  <li class="usage-total">
+                    <span>Total transfer</span>
+                    <span>{{ routerUsage().total }} GB</span>
+                  </li>
+                </ul>
+              </div>
+            }
+          }
+
+          @if (activeTab === 'health') {
+            @if (data.services().length === 0) {
+              <div class="empty-state">
+                <i class="fa-solid fa-heart-pulse"></i>
+                <p>No services to monitor.</p>
+              </div>
+            } @else {
+              <table class="data-table">
+                <thead>
+                  <tr><th>Service</th><th>Protocol</th><th>Host Address</th><th>Health</th></tr>
+                </thead>
+                <tbody>
+                  @for (svc of data.services(); track svc.id) {
+                    <tr>
+                      <td>{{ svc.name }}</td>
+                      <td><span class="field-badge">{{ svc.protocol }}</span></td>
+                      <td>{{ svc.hostAddress }}</td>
+                      <td><app-pill [variant]="svc.status" /></td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
+          }
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+}

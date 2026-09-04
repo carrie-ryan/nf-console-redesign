@@ -1,0 +1,42 @@
+.list-body { padding: 1.5rem; }
+.table-card { padding: 0; overflow: hidden; }
+.name-cell { font-weight: 500; }
+.actions-cell { display: flex; gap: 0.375rem; justify-content: flex-end; }
+.mono { font-size: 0.8125rem; font-family: monospace; color: var(--color-text-2); }
+
+.proto-badge {
+  display: inline-block;
+  padding: 0.125rem 0.375rem;
+  background: var(--color-info-bg);
+  color: var(--color-info);
+  border: 1px solid var(--color-info-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.tab-bar {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--color-border);
+  padding: 0 1.5rem;
+  background: var(--color-surface);
+}
+
+.tab-btn {
+  padding: 0.625rem 1rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-3);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+  font-family: inherit;
+}
+
+.tab-btn.active { color: var(--brand-primary); border-bottom-color: var(--brand-primary); }
+.tab-btn:hover:not(.active) { color: var(--color-text-2); }

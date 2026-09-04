@@ -1,0 +1,50 @@
+<header class="app-header">
+  <!-- Left: logo -->
+  <div class="header-brand">
+    <div class="brand-logo">N</div>
+    <div class="brand-text">
+      <span class="brand-name">NetFoundry</span>
+      <span class="brand-sub">Console</span>
+    </div>
+  </div>
+
+  <!-- Right: actions -->
+  <div class="header-actions">
+    <button class="header-icon-btn" aria-label="Notifications">
+      <i class="fa-regular fa-bell"></i>
+    </button>
+
+    <div id="user-menu-container" class="user-menu-wrap">
+      <button class="avatar-btn" (click)="toggleUserMenu()" aria-label="User menu">
+        <span class="avatar">A</span>
+      </button>
+
+      @if (userMenuOpen) {
+        <div class="user-dropdown">
+          <div class="user-dropdown-identity">
+            <div class="avatar avatar-lg">A</div>
+            <div>
+              <p class="user-name">Admin</p>
+              <p class="user-email">admin&#64;netfoundry.io</p>
+            </div>
+          </div>
+          <div class="user-dropdown-divider"></div>
+          <div class="user-dropdown-item power-user-row">
+            <span>Power user mode</span>
+            <button
+              class="toggle-btn"
+              [class.on]="prefs.isPowerUser()"
+              (click)="prefs.togglePowerUser()"
+              [attr.aria-label]="prefs.isPowerUser() ? 'Disable power user' : 'Enable power user'">
+              <span class="toggle-thumb"></span>
+            </button>
+          </div>
+          <div class="user-dropdown-divider"></div>
+          <button type="button" class="user-dropdown-item" (click)="resetOnboarding()">Reset onboarding</button>
+          <div class="user-dropdown-divider"></div>
+          <a class="user-dropdown-item" routerLink="/login">Sign out</a>
+        </div>
+      }
+    </div>
+  </div>
+</header>

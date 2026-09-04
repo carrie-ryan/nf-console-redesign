@@ -1,0 +1,74 @@
+/* Canonical row-action kebab menu — lifted from routers.component.css so this is
+   now the single shared definition. Keep in sync here, not per-feature. */
+
+.action-menu { position: relative; display: flex; justify-content: flex-end; }
+
+.btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-md);
+  color: var(--color-text-3);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+  font-size: 0.875rem;
+}
+
+.btn-icon:hover { background: var(--color-surface-2); color: var(--color-text); }
+
+/* Absolute, right-aligned, opens downward. NOTE: an ancestor with
+   `overflow: hidden` (e.g. the alerts .table-card) will clip this — see the
+   consumer note. z-index keeps it above sibling rows. */
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 100;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  min-width: 148px;
+  padding: 0.25rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  color: var(--color-text);
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  transition: background var(--transition-fast);
+}
+
+.dropdown-item i { width: 1rem; text-align: center; font-size: 0.8125rem; color: var(--color-text-3); }
+.dropdown-item:hover { background: var(--color-surface-2); }
+
+.dropdown-item--danger { color: var(--color-danger); }
+.dropdown-item--danger i { color: var(--color-danger); }
+.dropdown-item--danger:hover { background: var(--color-danger-bg); }
+
+/* New capability the copied pattern lacked: greyed out, non-interactive, no hover. */
+.dropdown-item--disabled,
+.dropdown-item:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.dropdown-item--disabled:hover,
+.dropdown-item:disabled:hover { background: transparent; }
+
+.dropdown-divider { height: 1px; background: var(--color-border); margin: 0.25rem 0; }

@@ -1,0 +1,67 @@
+:host { display: block; }
+
+/* Secondary tab bar, below the page-level metrics tabs. */
+.subtab-bar {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.75rem 1.5rem 0;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+.subtab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.875rem;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-3);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color var(--transition-fast), border-color var(--transition-fast),
+    background var(--transition-fast);
+}
+.subtab i { font-size: 0.75rem; }
+.subtab:hover:not(.active) { color: var(--color-text-2); background: var(--color-surface-2); }
+.subtab.active {
+  color: var(--brand-primary);
+  border-bottom-color: var(--brand-primary);
+}
+
+/* ─── Flow map subtab ─────────────────────────────────────────────────── */
+.flow-body { padding: 1.5rem; }
+.flow-intro { margin-bottom: 1.25rem; }
+.intro-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--brand-accent);
+}
+.flow-intro h2 {
+  margin: 0.4rem 0 0.35rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+}
+.flow-intro p {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--color-text-2);
+  max-width: 44rem;
+}
+.flow-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}

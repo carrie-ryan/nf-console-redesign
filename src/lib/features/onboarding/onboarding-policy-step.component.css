@@ -1,0 +1,313 @@
+:host { display: block; flex: 1; }
+
+/* ─── Screen + two-column layout (mirrors onboarding-service-advanced) ─── */
+.ob-screen {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 3rem 2rem;
+}
+
+.pol-panel {
+  width: 100%;
+  max-width: 64rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  /* Query container for the form's OWN width, so the body reflows to the form
+     column (which the shell split can narrow), not the viewport. */
+  container-type: inline-size;
+  container-name: polpanel;
+}
+
+.pol-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 16rem;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.pol-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+/* Drop the Associated Entities rail below the form when the form column is too
+   narrow to seat it alongside — container-based, so it fires at the real width
+   regardless of viewport. Gives the type cards the full width to breathe. */
+@container polpanel (max-width: 48rem) {
+  .pol-body { grid-template-columns: 1fr; }
+}
+
+/* ─── Header (mirrors onboarding-service) ────────────────────────────── */
+.ob-step-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.ob-step-badge {
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-lg);
+  background: var(--brand-primary-light);
+  color: var(--brand-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.ob-step-head-text { flex: 1; min-width: 0; }
+.ob-step-head h1 { margin: 0; font-size: 1.5rem; font-weight: 700; color: var(--color-text); }
+.ob-step-tag { margin: 0.25rem 0 0; font-size: 0.8125rem; color: var(--color-text-2); }
+.ob-learn { flex-shrink: 0; }
+
+.ob-step-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+}
+
+/* ─── Section cards ──────────────────────────────────────────────────── */
+.ob-form-card { display: flex; flex-direction: column; gap: 1.25rem; }
+.ob-section-title { margin: 0; font-size: 1rem; font-weight: 600; color: var(--color-text); }
+.ob-section-note {
+  margin: -0.75rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-text-3);
+}
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ─── Type chooser (mirrors the Service step's branch choice) ─────────── */
+.ob-branch-choice {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+/* Type cards wrap intrinsically to the main column width — 3 across when there's
+   room, fewer as it narrows, never cramped into unreadable columns. */
+.pol-choice { grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); }
+
+.ob-branch {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 1.25rem;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  font-family: inherit;
+}
+
+.ob-branch:hover {
+  border-color: var(--brand-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.ob-branch-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-md);
+  background: var(--brand-primary-light);
+  color: var(--brand-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+
+.ob-branch-title { font-size: 1rem; font-weight: 600; color: var(--color-text); }
+.ob-branch-desc { font-size: 0.8125rem; line-height: 1.45; color: var(--color-text-2); }
+
+/* ─── Created-policies list (mirrors advanced service attachedConfigs) ── */
+.pol-created-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pol-created-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+/* Signal interactivity: the row lifts on hover; the edit/remove icons are the
+   actual triggers. The row being edited stays highlighted. */
+.pol-created-item:hover { border-color: var(--color-border-strong); }
+.pol-created-item.is-editing {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 1px var(--brand-primary);
+}
+
+.pol-created-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  background: var(--brand-primary-light);
+  color: var(--brand-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8125rem;
+}
+
+.pol-created-meta { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.pol-created-name { font-size: 0.875rem; font-weight: 600; color: var(--color-text); }
+.pol-created-type { font-size: 0.75rem; color: var(--color-text-3); }
+
+.pol-created-edit,
+.pol-created-remove {
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: none;
+  background: transparent;
+  color: var(--color-text-3);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast), background var(--transition-fast);
+}
+
+.pol-created-edit:hover { color: var(--brand-primary); background: var(--brand-primary-light); }
+.pol-created-remove:hover { color: var(--color-danger); background: var(--color-danger-bg); }
+
+.pol-empty {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.75rem 0.875rem;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  color: var(--color-text-3);
+}
+
+/* Coexistence note — advanced service has attributes (auto-created policies). */
+.pol-coexist-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: -0.5rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-text-3);
+}
+.pol-coexist-note i { margin-top: 0.15rem; color: var(--brand-primary); }
+
+/* Non-blocking completeness caution near Continue. */
+.pol-caution {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid var(--color-warning-border);
+  border-radius: var(--radius-md);
+  background: var(--color-warning-bg);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-text-2);
+}
+.pol-caution i { margin-top: 0.15rem; color: var(--color-warning); flex-shrink: 0; }
+
+/* ─── Authoring block (chooser → form) ───────────────────────────────── */
+.pol-authoring { display: flex; flex-direction: column; gap: 1rem; }
+
+.pol-authoring-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.pol-authoring-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.pol-authoring-type i { color: var(--brand-primary); }
+
+/* ─── Right rail: created-policies count + list ──────────────────────── */
+.pol-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  position: sticky;
+  top: 1rem;
+}
+
+.pol-rail-title {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-3);
+}
+
+.pol-rail-panel {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: 0.875rem 1rem;
+}
+
+.pol-rail-panel-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.pol-rail-count {
+  min-width: 1.5rem;
+  text-align: center;
+  padding: 0.05rem 0.4rem;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-2);
+  color: var(--color-text-2);
+  font-size: 0.75rem;
+}
+
+.pol-rail-empty { margin: 0.5rem 0 0; font-size: 0.75rem; color: var(--color-text-3); }
+
+.pol-rail-line {
+  margin: 0.5rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-2);
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.pol-rail-line-type {
+  font-size: 0.6875rem;
+  color: var(--color-text-3);
+  text-align: right;
+}

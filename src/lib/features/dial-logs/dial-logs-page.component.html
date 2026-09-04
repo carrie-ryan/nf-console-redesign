@@ -1,0 +1,16 @@
+<div class="page-header">
+  <div>
+    <h1>Dial Logs</h1>
+    <p>Service dial activity, grouped by service — CloudZiti fabric circuits (fixture)</p>
+  </div>
+</div>
+
+<div class="page-body">
+  @if (loading()) {
+    <div class="section-card">
+      <p>Loading dial activity…</p>
+    </div>
+  } @else {
+    <app-dial-logs-content [records]="records()" />
+  }
+</div>

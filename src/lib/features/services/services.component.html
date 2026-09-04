@@ -1,0 +1,94 @@
+<div class="page-header">
+  <div>
+    <h1>Services</h1>
+    <p>Define what resources to connect</p>
+  </div>
+  <a routerLink="/services/new" class="btn btn-primary">
+    <i class="fa-solid fa-plus"></i> New Service
+  </a>
+</div>
+
+@if (prefs.isPowerUser()) {
+  <div class="tab-bar">
+    <button class="tab-btn" [class.active]="activeTab === 'all'" (click)="activeTab = 'all'">All Services</button>
+    <button class="tab-btn" [class.active]="activeTab === 'configs'" (click)="activeTab = 'configs'">Configs</button>
+    <button class="tab-btn" [class.active]="activeTab === 'config-types'" (click)="activeTab = 'config-types'">Config Types</button>
+    <button class="tab-btn" [class.active]="activeTab === 'terminators'" (click)="activeTab = 'terminators'">Terminators</button>
+  </div>
+}
+
+<div class="list-body">
+  @if (activeTab === 'all' || !prefs.isPowerUser()) {
+    @if (data.services().length === 0) {
+      <app-empty-state
+        icon="fa-solid fa-server"
+        title="No services yet"
+        message="Define a service to specify what resources identities can reach." />
+    } @else {
+      <div class="section-card table-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              @if (prefs.isPowerUser()) {
+                <th class="col-id-toggle">ID</th>
+              }
+              <th>Name</th>
+              <th>Protocol</th>
+              <th>Intercept</th>
+              <th>Host</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (svc of data.services(); track svc.id) {
+              <tr>
+                @if (prefs.isPowerUser()) {
+                  <td class="col-id-toggle"><span class="id-value">{{ svc.id }}</span></td>
+                }
+                <td class="name-cell">{{ svc.name }}</td>
+                <td><span class="proto-badge">{{ svc.protocol }}</span></td>
+                <td class="mono">{{ svc.interceptAddress }}</td>
+                <td class="mono">{{ svc.hostAddress }}</td>
+                <td><app-pill [variant]="svc.status" /></td>
+                <td class="actions-cell">
+                  @if (prefs.isPowerUser()) {
+                    <button class="btn btn-secondary btn-sm">API</button>
+                  }
+                  <button class="btn btn-secondary btn-sm">Edit</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+
+  @if (prefs.isPowerUser() && activeTab === 'configs') {
+    <div class="section-card empty-card">
+      <app-empty-state
+        icon="fa-solid fa-file-code"
+        title="No service configs"
+        message="Service configs define reusable intercept and host configurations that can be attached to services." />
+    </div>
+  }
+
+  @if (prefs.isPowerUser() && activeTab === 'config-types') {
+    <div class="section-card empty-card">
+      <app-empty-state
+        icon="fa-solid fa-layer-group"
+        title="No config types"
+        message="Config types define the schema for service configurations. NetFoundry provides built-in types such as intercept.v1 and host.v1." />
+    </div>
+  }
+
+  @if (prefs.isPowerUser() && activeTab === 'terminators') {
+    <div class="section-card empty-card">
+      <app-empty-state
+        icon="fa-solid fa-arrow-right-to-bracket"
+        title="No terminators"
+        message="Terminators represent the hosting end of a service — where traffic is delivered when a dial request is fulfilled." />
+    </div>
+  }
+</div>

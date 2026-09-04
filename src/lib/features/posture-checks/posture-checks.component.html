@@ -1,0 +1,89 @@
+<div class="page-header">
+  <div class="page-header-content">
+    <div class="title-row">
+      <h1>Posture Checks</h1>
+      <span class="optional-badge">Optional for basic setup</span>
+    </div>
+    <p>Enforce device health requirements before granting access</p>
+  </div>
+  <a routerLink="/posture-checks/new" class="btn btn-primary">
+    <i class="fa-solid fa-plus"></i> New Posture Check
+  </a>
+</div>
+
+<div class="list-body" (click)="closeMenu()">
+  @if (data.postureChecks().length === 0) {
+    <div class="section-card empty-card">
+      <app-empty-state
+        icon="fa-solid fa-circle-check"
+        title="No posture checks configured"
+        message="Posture checks enforce device health requirements before granting access. They're optional but recommended for production networks.">
+        <a routerLink="/posture-checks/new" class="btn btn-primary">
+          <i class="fa-solid fa-plus"></i> Create a Posture Check
+        </a>
+      </app-empty-state>
+    </div>
+  } @else {
+    <div class="section-card table-card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            @if (prefs.isPowerUser()) {
+              <th class="col-id-toggle">ID</th>
+            }
+            <th>Name</th>
+            <th>Type</th>
+            <th>Attributes</th>
+            <th>Created At</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (check of data.postureChecks(); track check.id) {
+            <tr>
+              @if (prefs.isPowerUser()) {
+                <td class="col-id-toggle"><span class="id-value">{{ check.id }}</span></td>
+              }
+              <td class="name-cell">{{ check.name }}</td>
+              <td><span class="type-badge">{{ check.type }}</span></td>
+              <td class="attrs-cell">
+                <div class="attrs-wrap">
+                  @for (attr of check.attributes; track attr) {
+                    <span class="attr-tag">{{ attr }}</span>
+                  }
+                </div>
+              </td>
+              <td class="date-cell">{{ check.createdAt.slice(0, 10) }}</td>
+              <td class="actions-cell" (click)="$event.stopPropagation()">
+                <div class="action-menu">
+                  <button
+                    class="btn-icon"
+                    (click)="toggleMenu(check.id, $event)"
+                    [attr.aria-label]="'Actions for ' + check.name">
+                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                  </button>
+                  @if (openMenuId() === check.id) {
+                    <div class="dropdown-menu" role="menu">
+                      <button class="dropdown-item" role="menuitem">
+                        <i class="fa-solid fa-pen"></i> Edit
+                      </button>
+                      @if (prefs.isPowerUser()) {
+                        <button class="dropdown-item" role="menuitem">
+                          <i class="fa-solid fa-code"></i> View API
+                        </button>
+                      }
+                      <div class="dropdown-divider"></div>
+                      <button class="dropdown-item dropdown-item--danger" role="menuitem">
+                        <i class="fa-solid fa-trash"></i> Delete
+                      </button>
+                    </div>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

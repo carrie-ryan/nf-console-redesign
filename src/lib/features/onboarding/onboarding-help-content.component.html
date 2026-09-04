@@ -1,0 +1,29 @@
+@if (content(); as c) {
+  <div class="help">
+
+    <h2 class="help-lead">{{ c.lead }}</h2>
+
+    @for (para of c.intro; track $index) {
+      <p class="help-intro">{{ para }}</p>
+    }
+
+    <h3 class="help-section-heading">Key points</h3>
+    <ul class="help-points">
+      @for (point of c.keyPoints; track point.title) {
+        <li class="help-point">
+          <span class="help-point-icon"><i [class]="point.icon"></i></span>
+          <span class="help-point-text">
+            <span class="help-point-title">{{ point.title }}</span>
+            <span class="help-point-body">{{ point.body }}</span>
+          </span>
+        </li>
+      }
+    </ul>
+
+    <div class="help-fits">
+      <h3 class="help-section-heading">How it fits</h3>
+      <p>{{ c.howItFits }}</p>
+    </div>
+
+  </div>
+}

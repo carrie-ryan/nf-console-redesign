@@ -1,0 +1,40 @@
+<div class="ob-screen">
+
+  <div class="ob-overview">
+
+    <header class="ob-overview-head">
+      <span class="ob-eyebrow">Setup Overview</span>
+      <h1>Configure your zero-trust connection</h1>
+      <p class="ob-lede">
+        Enroll an identity, add a router, define a service, authorize it with
+        policies, and verify traffic flows end-to-end. By the end, you'll have a
+        service that's reachable only by the identities you allow.
+      </p>
+    </header>
+
+    <section class="ob-roadmap-section">
+      <h2 class="ob-roadmap-heading">Setup Roadmap</h2>
+      <div class="ob-roadmap">
+        @for (card of roadmap; track card.title; let i = $index; let last = $last) {
+          <div class="ob-roadmap-card section-card">
+            <span class="ob-roadmap-num">{{ i + 1 }}</span>
+            <span class="ob-roadmap-icon"><i [class]="card.icon"></i></span>
+            <span class="ob-roadmap-title">{{ card.title }}</span>
+            <span class="ob-roadmap-desc">{{ card.desc }}</span>
+          </div>
+          @if (!last) {
+            <span class="ob-roadmap-arrow"><i class="fa-solid fa-arrow-right"></i></span>
+          }
+        }
+      </div>
+    </section>
+
+    <div class="ob-overview-actions">
+      <button type="button" class="btn btn-primary btn-lg" (click)="start()">
+        Get Started <i class="fa-solid fa-arrow-right"></i>
+      </button>
+    </div>
+
+  </div>
+
+</div>

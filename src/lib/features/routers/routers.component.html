@@ -1,0 +1,383 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">{{ activeTab() === 'routers' ? 'Edge Routers' : 'Transit Routers' }}</h1>
+  </div>
+  @if (activeTab() === 'transit') {
+    <button class="btn btn-primary">
+      <i class="fa-solid fa-plus"></i> Add Transit Router
+    </button>
+  }
+</div>
+
+<div class="tab-bar">
+  <button class="tab-btn" [class.tab-btn--active]="activeTab() === 'routers'" (click)="setTab('routers')">
+    Routers
+  </button>
+  <button class="tab-btn" [class.tab-btn--active]="activeTab() === 'transit'" (click)="setTab('transit')">
+    Transit Routers
+  </button>
+</div>
+
+<div class="list-body" (click)="closeMenu()">
+
+  @if (activeTab() === 'routers') {
+
+    <div class="col-toggle-bar">
+      <i class="fa-regular fa-eye col-toggle-icon"></i>
+      <button class="col-toggle-chip" [class.col-toggle-chip--active]="visibleColumns().hostSize"
+        (click)="$event.stopPropagation(); toggleColumn('hostSize')">Host Size</button>
+      <button class="col-toggle-chip" [class.col-toggle-chip--active]="visibleColumns().ipAddress"
+        (click)="$event.stopPropagation(); toggleColumn('ipAddress')">IP Address</button>
+      <button class="col-toggle-chip" [class.col-toggle-chip--active]="visibleColumns().domainName"
+        (click)="$event.stopPropagation(); toggleColumn('domainName')">Domain Name</button>
+      <button class="col-toggle-chip" [class.col-toggle-chip--active]="visibleColumns().altDomain"
+        (click)="$event.stopPropagation(); toggleColumn('altDomain')">Alt. Domain</button>
+    </div>
+
+    @if (data.routers().length === 0) {
+      <div class="section-card empty-card">
+        <app-empty-state
+          icon="fa-solid fa-network-wired"
+          title="No edge routers yet"
+          message="Edge routers are the network infrastructure that routes traffic. NetFoundry provisions and manages routers for you under Infrastructure → Managed Components.">
+          <a routerLink="/managed-components" class="managed-link">
+            <i class="fa-solid fa-arrow-right"></i> View Managed Components
+          </a>
+        </app-empty-state>
+      </div>
+    } @else {
+
+      @if (selectedIds().size > 0) {
+        <div class="bulk-bar" (click)="$event.stopPropagation()">
+          <span class="bulk-count">{{ selectedIds().size }} selected</span>
+          <button class="btn btn-sm btn-danger" (click)="clearSelection()">
+            <i class="fa-solid fa-trash"></i> Delete
+          </button>
+          <button class="btn-text" (click)="clearSelection()">Cancel</button>
+        </div>
+      }
+
+      <div class="section-card table-card">
+        <div class="toolbar">
+          <div class="filter-wrap">
+            <i class="fa-solid fa-magnifying-glass filter-icon"></i>
+            <input class="filter-input" type="text" placeholder="Type to Filter"
+              [value]="filterText()"
+              (input)="setFilter($any($event.target).value)" />
+            @if (filterText()) {
+              <button class="filter-clear" (click)="setFilter('')" title="Clear filter">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            } @else {
+              <i class="fa-solid fa-filter filter-funnel"></i>
+            }
+          </div>
+          <div class="pager">
+            <span class="pager-info">{{ routerStart() }}–{{ routerEnd() }} of {{ routerTotal() }}</span>
+            <button class="pager-btn" (click)="firstPage()" [disabled]="page() === 0" title="First page">
+              <i class="fa-solid fa-angles-left"></i>
+            </button>
+            <button class="pager-btn" (click)="prevPage()" [disabled]="page() === 0" title="Prev page">
+              <i class="fa-solid fa-angle-left"></i>
+            </button>
+            <button class="pager-btn" (click)="nextPage(routerTotal())" [disabled]="isLastRouterPage()" title="Next page">
+              <i class="fa-solid fa-angle-right"></i>
+            </button>
+            <button class="pager-btn" (click)="lastPage(routerTotal())" [disabled]="isLastRouterPage()" title="Last page">
+              <i class="fa-solid fa-angles-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="col-check">
+                <input type="checkbox"
+                  [checked]="allPageRoutersSelected()"
+                  [indeterminate]="somePageRoutersSelected() && !allPageRoutersSelected()"
+                  (change)="selectAllPage(pagedRouters())" />
+              </th>
+              <th class="col-name sortable" (click)="sortBy('name')">
+                Name <i [class]="sortIconFor('name') + ' sort-icon'"></i>
+              </th>
+              <th class="col-attrs">Attributes</th>
+              <th class="col-provision sortable" (click)="sortBy('provisioningStatus')">
+                Status <i [class]="sortIconFor('provisioningStatus') + ' sort-icon'"></i>
+              </th>
+              <th class="col-bool">WSS</th>
+              <th class="col-type sortable" (click)="sortBy('cloudProvider')">
+                Type <i [class]="sortIconFor('cloudProvider') + ' sort-icon'"></i>
+              </th>
+              <th class="col-location sortable" (click)="sortBy('location')">
+                Location <i [class]="sortIconFor('location') + ' sort-icon'"></i>
+              </th>
+              <th class="col-registration">Registration</th>
+              <th class="col-version sortable" (click)="sortBy('version')">
+                Version <i [class]="sortIconFor('version') + ' sort-icon'"></i>
+              </th>
+              @if (visibleColumns().hostSize) { <th class="col-optional">Host Size</th> }
+              @if (visibleColumns().ipAddress) { <th class="col-optional">IP Address</th> }
+              @if (visibleColumns().domainName) { <th class="col-optional">Domain Name</th> }
+              @if (visibleColumns().altDomain) { <th class="col-optional">Alt. Domain</th> }
+              <th class="col-actions"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (router of pagedRouters(); track router.id) {
+              <tr class="data-row" [routerLink]="['/routers', router.id]">
+                <td class="col-check" (click)="$event.stopPropagation()">
+                  <input type="checkbox"
+                    [checked]="selectedIds().has(router.id)"
+                    (change)="toggleSelect(router.id)" />
+                </td>
+                <td class="name-cell">
+                  <span class="status-row">
+                    <span class="status-dot"
+                      [class.status-dot--online]="router.isOnline"
+                      [class.status-dot--offline]="!router.isOnline"
+                      [title]="router.isOnline ? 'Online' : 'Offline'"></span>
+                    <app-truncated-cell [value]="router.name" />
+                  </span>
+                </td>
+                <td class="col-attrs">
+                  <div class="attrs-wrap">
+                    @for (attr of router.attributes.slice(0, 2); track attr) {
+                      <span class="attr-tag">{{ attr }}</span>
+                    }
+                    @if (router.attributes.length > 2) {
+                      <span class="attr-overflow">+{{ router.attributes.length - 2 }}</span>
+                    }
+                    @if (router.attributes.length === 0) {
+                      <span class="text-muted">—</span>
+                    }
+                  </div>
+                </td>
+                <td class="col-provision">
+                  <app-pill [variant]="provisionVariant(router.provisioningStatus)" [label]="router.provisioningStatus" />
+                </td>
+                <td class="col-bool">
+                  @if (router.wssEnabled) {
+                    <i class="fa-solid fa-circle-check check-yes" title="WSS Enabled"></i>
+                  } @else {
+                    <span class="text-muted">—</span>
+                  }
+                </td>
+                <td class="col-type">{{ router.cloudProvider ?? '—' }}</td>
+                <td class="col-location">{{ router.location }}</td>
+                <td class="col-registration">
+                  <app-pill [variant]="router.verified ? 'active' : 'inactive'"
+                    [label]="router.verified ? 'Registered' : 'Unregistered'" />
+                </td>
+                <td class="col-version">v{{ router.version }}</td>
+                @if (visibleColumns().hostSize) {
+                  <td class="col-optional">{{ router.hostSize ?? '—' }}</td>
+                }
+                @if (visibleColumns().ipAddress) {
+                  <td class="col-optional">
+                    @if (router.ipAddress) { <app-truncated-cell [value]="router.ipAddress" /> }
+                    @else { <span class="text-muted">—</span> }
+                  </td>
+                }
+                @if (visibleColumns().domainName) {
+                  <td class="col-optional">
+                    @if (router.domainName) { <app-truncated-cell [value]="router.domainName" /> }
+                    @else { <span class="text-muted">—</span> }
+                  </td>
+                }
+                @if (visibleColumns().altDomain) {
+                  <td class="col-optional">
+                    @if (router.altDomain) { <app-truncated-cell [value]="router.altDomain" /> }
+                    @else { <span class="text-muted">—</span> }
+                  </td>
+                }
+                <td class="actions-cell" (click)="$event.stopPropagation()">
+                  <div class="action-menu">
+                    <button class="btn-icon" (click)="toggleMenu(router.id, $event)"
+                      [attr.aria-label]="'Actions for ' + router.name">
+                      <i class="fa-solid fa-ellipsis-vertical"></i>
+                    </button>
+                    @if (openMenuId() === router.id) {
+                      <div class="dropdown-menu" role="menu">
+                        <button class="dropdown-item" role="menuitem">
+                          <i class="fa-solid fa-pen"></i> Edit
+                        </button>
+                        <button class="dropdown-item" role="menuitem">
+                          <i class="fa-solid fa-download"></i> Download JWT
+                        </button>
+                        <div class="dropdown-divider"></div>
+                        <button class="dropdown-item dropdown-item--danger" role="menuitem">
+                          <i class="fa-solid fa-trash"></i> Delete
+                        </button>
+                      </div>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        @if (pagedRouters().length === 0 && filterText()) {
+          <div class="no-results">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            No routers match <strong>"{{ filterText() }}"</strong>
+          </div>
+        }
+      </div>
+    }
+
+  } @else {
+
+    @if (data.transitRouters().length === 0) {
+      <div class="section-card empty-card">
+        <app-empty-state
+          icon="fa-solid fa-route"
+          title="No transit routers"
+          message="Transit routers extend your network fabric. They differ from edge routers in that they don't terminate client connections — they only forward traffic between network segments.">
+          <button class="btn btn-primary">
+            <i class="fa-solid fa-plus"></i> Add Transit Router
+          </button>
+        </app-empty-state>
+      </div>
+    } @else {
+
+      @if (selectedIds().size > 0) {
+        <div class="bulk-bar" (click)="$event.stopPropagation()">
+          <span class="bulk-count">{{ selectedIds().size }} selected</span>
+          <button class="btn btn-sm btn-danger" (click)="clearSelection()">
+            <i class="fa-solid fa-trash"></i> Delete
+          </button>
+          <button class="btn-text" (click)="clearSelection()">Cancel</button>
+        </div>
+      }
+
+      <div class="section-card table-card">
+        <div class="toolbar">
+          <div class="filter-wrap">
+            <i class="fa-solid fa-magnifying-glass filter-icon"></i>
+            <input class="filter-input" type="text" placeholder="Type to Filter"
+              [value]="filterText()"
+              (input)="setFilter($any($event.target).value)" />
+            @if (filterText()) {
+              <button class="filter-clear" (click)="setFilter('')" title="Clear filter">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            } @else {
+              <i class="fa-solid fa-filter filter-funnel"></i>
+            }
+          </div>
+          <div class="pager">
+            <span class="pager-info">{{ transitStart() }}–{{ transitEnd() }} of {{ transitTotal() }}</span>
+            <button class="pager-btn" (click)="firstPage()" [disabled]="page() === 0" title="First page">
+              <i class="fa-solid fa-angles-left"></i>
+            </button>
+            <button class="pager-btn" (click)="prevPage()" [disabled]="page() === 0" title="Prev page">
+              <i class="fa-solid fa-angle-left"></i>
+            </button>
+            <button class="pager-btn" (click)="nextPage(transitTotal())" [disabled]="isLastTransitPage()" title="Next page">
+              <i class="fa-solid fa-angle-right"></i>
+            </button>
+            <button class="pager-btn" (click)="lastPage(transitTotal())" [disabled]="isLastTransitPage()" title="Last page">
+              <i class="fa-solid fa-angles-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="col-check">
+                <input type="checkbox"
+                  [checked]="allPageTransitSelected()"
+                  [indeterminate]="somePageTransitSelected() && !allPageTransitSelected()"
+                  (change)="selectAllPage(pagedTransit())" />
+              </th>
+              <th class="col-name sortable" (click)="sortBy('name')">
+                Name <i [class]="sortIconFor('name') + ' sort-icon'"></i>
+              </th>
+              <th class="col-bool sortable" (click)="sortBy('verified')">
+                Verified <i [class]="sortIconFor('verified') + ' sort-icon'"></i>
+              </th>
+              <th class="col-bool sortable" (click)="sortBy('isOnline')">
+                Online <i [class]="sortIconFor('isOnline') + ' sort-icon'"></i>
+              </th>
+              <th class="col-date sortable" (click)="sortBy('createdAt')">
+                Created At <i [class]="sortIconFor('createdAt') + ' sort-icon'"></i>
+              </th>
+              <th class="col-token">Token</th>
+              <th class="col-jwt">JWT</th>
+              <th class="col-actions"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (router of pagedTransit(); track router.id) {
+              <tr>
+                <td class="col-check" (click)="$event.stopPropagation()">
+                  <input type="checkbox"
+                    [checked]="selectedIds().has(router.id)"
+                    (change)="toggleSelect(router.id)" />
+                </td>
+                <td class="name-cell">
+                  <span class="status-row">
+                    <span class="status-dot"
+                      [class.status-dot--online]="router.isOnline"
+                      [class.status-dot--offline]="!router.isOnline"
+                      [title]="router.isOnline ? 'Online' : 'Offline'"></span>
+                    <app-truncated-cell [value]="router.name" />
+                  </span>
+                </td>
+                <td class="col-bool">
+                  @if (router.verified) {
+                    <i class="fa-solid fa-circle-check check-yes" title="Verified"></i>
+                  }
+                </td>
+                <td class="col-bool">
+                  @if (router.isOnline) {
+                    <i class="fa-solid fa-circle-check check-yes" title="Online"></i>
+                  }
+                </td>
+                <td class="col-date">{{ formatDate(router.createdAt) }}</td>
+                <td class="col-token">
+                  @if (router.token) { <app-truncated-cell [value]="router.token" /> }
+                  @else { <span class="text-muted">—</span> }
+                </td>
+                <td class="col-jwt">
+                  @if (router.jwt) { <app-truncated-cell [value]="router.jwt" /> }
+                  @else { <span class="text-muted">—</span> }
+                </td>
+                <td class="actions-cell" (click)="$event.stopPropagation()">
+                  <div class="action-menu">
+                    <button class="btn-icon" (click)="toggleMenu(router.id, $event)"
+                      [attr.aria-label]="'Actions for ' + router.name">
+                      <i class="fa-solid fa-ellipsis-vertical"></i>
+                    </button>
+                    @if (openMenuId() === router.id) {
+                      <div class="dropdown-menu" role="menu">
+                        <button class="dropdown-item" role="menuitem">
+                          <i class="fa-solid fa-pen"></i> Edit
+                        </button>
+                        <div class="dropdown-divider"></div>
+                        <button class="dropdown-item dropdown-item--danger" role="menuitem">
+                          <i class="fa-solid fa-trash"></i> Delete
+                        </button>
+                      </div>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        @if (pagedTransit().length === 0 && filterText()) {
+          <div class="no-results">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            No transit routers match <strong>"{{ filterText() }}"</strong>
+          </div>
+        }
+      </div>
+    }
+
+  }
+</div>

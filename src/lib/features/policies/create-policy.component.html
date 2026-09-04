@@ -1,0 +1,330 @@
+<!-- Wizard header -->
+<div class="wiz-header">
+  <div class="wiz-header-left">
+    <a routerLink="/policies" class="btn-back" title="Back to Policies">
+      <i class="fa-solid fa-arrow-left"></i>
+    </a>
+    <h1>Create New Service Policy</h1>
+  </div>
+</div>
+
+<!-- Wizard body -->
+<div class="wiz-body">
+
+  <!-- Left sidebar: numbered steps -->
+  <aside class="wiz-sidebar">
+    <p class="step-progress">Step {{ currentStep }} of {{ totalSteps }}</p>
+    <div class="step-list">
+      @for (step of steps; track step.id) {
+        <div
+          class="step-item"
+          [class.step-item--active]="step.id === currentStep"
+          [class.step-item--done]="step.id < currentStep"
+          (click)="goToStep(step.id)"
+          role="button"
+          [attr.aria-current]="step.id === currentStep ? 'step' : null">
+          <div class="step-num">
+            @if (step.id < currentStep) {
+              <i class="fa-solid fa-check"></i>
+            } @else {
+              {{ step.id }}
+            }
+          </div>
+          <div class="step-info">
+            <span class="step-name">{{ step.label }}</span>
+            @if (step.optional) {
+              <span class="step-opt-badge">Optional</span>
+            }
+          </div>
+        </div>
+        @if (!$last) {
+          <div class="step-connector" [class.step-connector--done]="step.id < currentStep"></div>
+        }
+      }
+    </div>
+  </aside>
+
+  <!-- Center: step content + nav footer -->
+  <main class="wiz-main">
+    <div class="step-panel" [class.step-panel--wide]="currentStep === 3">
+
+      <!-- ── Step 1: Policy Details ──────────────────────────────────── -->
+      @if (currentStep === 1) {
+        <h2 class="step-heading">Policy Details</h2>
+
+        <div class="form-group">
+          <div class="field-hdr">
+            <label class="form-label" for="pol-name">SERVICE POLICY NAME</label>
+            <span class="field-tag">REQUIRED</span>
+          </div>
+          <input
+            id="pol-name"
+            class="form-control"
+            [(ngModel)]="name"
+            placeholder="Name this service policy"
+            autocomplete="off" />
+        </div>
+
+        <div class="form-group">
+          <div class="field-hdr">
+            <label class="form-label" for="pol-type">TYPE</label>
+            <span class="field-tag">REQUIRED</span>
+          </div>
+          <select id="pol-type" class="form-control" [(ngModel)]="policyType">
+            <option value="dial">Dial</option>
+            <option value="bind">Bind</option>
+          </select>
+          <p class="type-desc">{{ typeDescriptions[policyType] }}</p>
+        </div>
+
+        <div class="form-group">
+          <div class="field-hdr">
+            <div class="field-hdr-label">
+              <label class="form-label" for="pol-semantic">SEMANTIC</label>
+              <span
+                class="info-tip"
+                title="AnyOf: identities matching any listed attribute get access. AllOf: identities must match ALL listed attributes."
+                aria-label="Semantic info">
+                <i class="fa-solid fa-circle-info"></i>
+              </span>
+            </div>
+            <span class="field-tag">REQUIRED</span>
+          </div>
+          <select id="pol-semantic" class="form-control" [(ngModel)]="semantic">
+            <option value="AnyOf">AnyOf</option>
+            <option value="AllOf">AllOf</option>
+          </select>
+        </div>
+      }
+
+      <!-- ── Step 2: Attributes ──────────────────────────────────────── -->
+      @if (currentStep === 2) {
+        <h2 class="step-heading">Attributes</h2>
+
+        <div class="form-group">
+          <div class="field-hdr">
+            <label class="form-label" for="svc-attrs">SELECT SERVICE ATTRIBUTES</label>
+            <span class="field-tag">OPTIONAL</span>
+          </div>
+          <div class="tag-input-wrap">
+            @for (attr of serviceAttrs(); track attr) {
+              <span class="tag-chip">
+                {{ attr }}
+                <button class="tag-chip-x" type="button" (click)="removeServiceAttr(attr)" aria-label="Remove attribute">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </span>
+            }
+            <input
+              id="svc-attrs"
+              class="tag-bare-input"
+              [(ngModel)]="serviceAttrInput"
+              (keydown)="onServiceAttrKeydown($event)"
+              [placeholder]="serviceAttrs().length === 0 ? 'Select service attributes' : ''"
+              autocomplete="off" />
+          </div>
+          <p class="field-hint">Press Enter or comma to add. Use #all to match everything.</p>
+        </div>
+
+        <div class="form-group">
+          <div class="field-hdr">
+            <label class="form-label" for="id-attrs">SELECT IDENTITY ATTRIBUTES</label>
+            <span class="field-tag">OPTIONAL</span>
+          </div>
+          <div class="tag-input-wrap">
+            @for (attr of identityAttrs(); track attr) {
+              <span class="tag-chip">
+                {{ attr }}
+                <button class="tag-chip-x" type="button" (click)="removeIdentityAttr(attr)" aria-label="Remove attribute">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </span>
+            }
+            <input
+              id="id-attrs"
+              class="tag-bare-input"
+              [(ngModel)]="identityAttrInput"
+              (keydown)="onIdentityAttrKeydown($event)"
+              [placeholder]="identityAttrs().length === 0 ? 'Select identity attributes' : ''"
+              autocomplete="off" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div class="field-hdr">
+            <label class="form-label" for="pc-attrs">SELECT POSTURE CHECK ATTRIBUTES</label>
+            <span class="field-tag">OPTIONAL</span>
+          </div>
+          <div class="tag-input-wrap">
+            @for (attr of postureAttrs(); track attr) {
+              <span class="tag-chip">
+                {{ attr }}
+                <button class="tag-chip-x" type="button" (click)="removePostureAttr(attr)" aria-label="Remove attribute">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </span>
+            }
+            <input
+              id="pc-attrs"
+              class="tag-bare-input"
+              [(ngModel)]="postureAttrInput"
+              (keydown)="onPostureAttrKeydown($event)"
+              [placeholder]="postureAttrs().length === 0 ? 'Select posture check attributes' : ''"
+              autocomplete="off" />
+          </div>
+        </div>
+      }
+
+      <!-- ── Step 3: Review ──────────────────────────────────────────── -->
+      @if (currentStep === 3) {
+        <h2 class="step-heading">Review</h2>
+
+        <!-- Summary card -->
+        <div class="review-card">
+          <div class="review-row">
+            <span class="review-label">Name</span>
+            <span class="review-value">{{ name || '—' }}</span>
+          </div>
+          <div class="review-row">
+            <span class="review-label">Type</span>
+            <span class="review-value">
+              <span class="type-badge" [class.type-badge--dial]="policyType === 'dial'" [class.type-badge--bind]="policyType === 'bind'">
+                {{ policyType === 'dial' ? 'Dial' : 'Bind' }}
+              </span>
+            </span>
+          </div>
+          <div class="review-row">
+            <span class="review-label">Semantic</span>
+            <span class="review-value">{{ semantic }}</span>
+          </div>
+          <div class="review-row">
+            <span class="review-label">Service Attributes</span>
+            <span class="review-value review-tags">
+              @if (serviceAttrs().length === 0) {
+                <span class="review-empty">None</span>
+              } @else {
+                @for (attr of serviceAttrs(); track attr) {
+                  <span class="role-tag">{{ attr }}</span>
+                }
+              }
+            </span>
+          </div>
+          <div class="review-row">
+            <span class="review-label">Identity Attributes</span>
+            <span class="review-value review-tags">
+              @if (identityAttrs().length === 0) {
+                <span class="review-empty">None</span>
+              } @else {
+                @for (attr of identityAttrs(); track attr) {
+                  <span class="role-tag">{{ attr }}</span>
+                }
+              }
+            </span>
+          </div>
+          <div class="review-row">
+            <span class="review-label">Posture Checks</span>
+            <span class="review-value review-tags">
+              @if (postureAttrs().length === 0) {
+                <span class="review-empty">None</span>
+              } @else {
+                @for (attr of postureAttrs(); track attr) {
+                  <span class="role-tag">{{ attr }}</span>
+                }
+              }
+            </span>
+          </div>
+        </div>
+
+        <!-- Associated panels -->
+        <div class="assoc-grid">
+          <div class="assoc-panel">
+            <div class="assoc-header">
+              <span class="assoc-title">Associated Services</span>
+              <span class="assoc-count">{{ associatedServices().length }}</span>
+            </div>
+            <div class="assoc-body">
+              @if (associatedServices().length === 0) {
+                <p class="assoc-empty">no items to display...</p>
+              } @else {
+                @for (svc of associatedServices(); track svc.id) {
+                  <div class="assoc-item">{{ svc.name }}</div>
+                }
+              }
+            </div>
+          </div>
+
+          <div class="assoc-panel">
+            <div class="assoc-header">
+              <span class="assoc-title">Associated Identities</span>
+              <span class="assoc-count">{{ associatedIdentities().length }}</span>
+            </div>
+            <div class="assoc-body">
+              @if (associatedIdentities().length === 0) {
+                <p class="assoc-empty">no items to display...</p>
+              } @else {
+                @for (ident of associatedIdentities(); track ident.id) {
+                  <div class="assoc-item">{{ ident.name }}</div>
+                }
+              }
+            </div>
+          </div>
+
+          <div class="assoc-panel">
+            <div class="assoc-header">
+              <span class="assoc-title">Associated Posture Checks</span>
+              <span class="assoc-count">{{ associatedPostureChecks().length }}</span>
+            </div>
+            <div class="assoc-body">
+              @if (associatedPostureChecks().length === 0) {
+                <p class="assoc-empty">no items to display...</p>
+              } @else {
+                @for (pc of associatedPostureChecks(); track pc.id) {
+                  <div class="assoc-item">{{ pc.name }}</div>
+                }
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+    </div><!-- /step-panel -->
+
+    <!-- Navigation footer -->
+    <div class="wiz-footer">
+      @if (currentStep > 1) {
+        <button class="btn btn-secondary" type="button" (click)="back()">
+          <i class="fa-solid fa-arrow-left"></i> Back
+        </button>
+      } @else {
+        <span></span>
+      }
+      <div class="wiz-footer-right">
+        <button class="btn btn-secondary" type="button" (click)="cancel()">Cancel</button>
+        @if (currentStep < totalSteps) {
+          <button class="btn btn-primary" type="button" (click)="next()" [disabled]="!canProceed">
+            Next <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        } @else {
+          <button class="btn btn-primary" type="button" (click)="save()" [disabled]="!name.trim()">
+            <i class="fa-solid fa-check"></i> Save Policy
+          </button>
+        }
+      </div>
+    </div>
+  </main>
+
+  <!-- Right: API Calls panel (power users only) -->
+  @if (prefs.isPowerUser()) {
+    <div class="dev-panel">
+      <div class="dev-panel-hdr">
+        <span class="dev-panel-title">API Calls</span>
+        <button class="btn btn-primary btn-sm" type="button" (click)="copyAsCLI()">Copy as CLI</button>
+      </div>
+      <div class="dev-panel-body">
+        <div class="api-url" [title]="apiUrl">{{ apiUrl }}</div>
+        <pre class="dev-json">{{ jsonPreview }}</pre>
+      </div>
+    </div>
+  }
+
+</div><!-- /wiz-body -->

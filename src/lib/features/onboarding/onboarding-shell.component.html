@@ -1,0 +1,73 @@
+<div class="ob-shell">
+
+  <!-- Left rail: vertical setup checklist (replaces the normal console nav) -->
+  <aside class="ob-rail">
+    <div class="ob-rail-brand">
+      <span class="ob-rail-logo"><i class="fa-solid fa-shield-halved"></i></span>
+      <div class="ob-rail-brand-text">
+        <span class="ob-rail-title">Guided Setup</span>
+        <span class="ob-rail-sub">Get connected end-to-end</span>
+      </div>
+    </div>
+
+    <nav class="ob-rail-steps">
+      @for (step of state.steps(); track step.id; let last = $last) {
+        @if (step.path) {
+          <a
+            class="ob-step"
+            [class.is-complete]="state.isComplete(step.id)"
+            [class.is-last]="last"
+            [routerLink]="['/onboarding', step.path]"
+            routerLinkActive="is-current"
+            [routerLinkActiveOptions]="{ exact: true }">
+            <span class="ob-step-track">
+              <span class="ob-step-marker">
+                @if (state.isComplete(step.id)) {
+                  <i class="fa-solid fa-check"></i>
+                } @else {
+                  <i [class]="step.icon"></i>
+                }
+              </span>
+            </span>
+            <span class="ob-step-label">{{ step.label }}</span>
+          </a>
+        } @else {
+          <!-- Greyed placeholder: the branch tail before Simple/Advanced is chosen -->
+          <div class="ob-step is-placeholder" [class.is-last]="last">
+            <span class="ob-step-track">
+              <span class="ob-step-marker"><i [class]="step.icon"></i></span>
+            </span>
+            <span class="ob-step-label">{{ step.label }}</span>
+            <span class="ob-step-hint">…</span>
+          </div>
+        }
+      }
+    </nav>
+
+    <!-- TODO(next increment): add a re-entry link (e.g. "Exit setup") so an
+         onboarded user can leave / re-enter the flow from the normal console. -->
+  </aside>
+
+  <!-- Workspace: the form column + the map region split the space beside the
+       rail. Both are shell-level (siblings of the router-outlet, NOT inside it),
+       so navigating between steps only swaps the outlet's content — the map
+       persists and never remounts. -->
+  <div class="ob-workspace">
+
+    <!-- Content column (~45%): the <router-outlet> where each step renders. -->
+    <main class="ob-content">
+      <router-outlet />
+    </main>
+
+    <!-- Map region (~55%, tall): the live network map's landscape home. -->
+    <aside class="ob-map-region">
+      <app-onboarding-map />
+    </aside>
+
+  </div>
+
+  <!-- Same shared drawer as the console shell, mounted here so drawer.open()
+       (e.g. per-step "Learn more" concepts) renders in the onboarding context. -->
+  <app-drawer />
+
+</div>

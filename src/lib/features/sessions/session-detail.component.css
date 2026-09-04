@@ -1,0 +1,277 @@
+/* ─── Page shell ─────────────────────────────────────────────────── */
+.detail-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ─── Header bar ─────────────────────────────────────────────────── */
+.detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1.5rem;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  transition: color var(--transition-fast);
+}
+
+.back-btn i { color: var(--color-text-2); font-size: 0.875rem; }
+.back-btn:hover { color: var(--brand-primary); }
+.back-btn:hover i { color: var(--brand-primary); }
+
+/* ─── FORM / JSON toggle ─────────────────────────────────────────── */
+.json-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.toggle-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--color-text-3);
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 2.5rem;
+  height: 1.375rem;
+  background: var(--color-text-3);
+  border-radius: var(--radius-full);
+  border: none;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.toggle-switch.on { background: var(--brand-primary); }
+
+.toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: calc(1.375rem - 4px);
+  height: calc(1.375rem - 4px);
+  background: #fff;
+  border-radius: 50%;
+  transition: transform var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+}
+
+.toggle-switch.on .toggle-thumb { transform: translateX(1.125rem); }
+
+/* ─── Two-column body ────────────────────────────────────────────── */
+.detail-body {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  flex: 1;
+  align-items: start;
+}
+
+/* ─── Left column fields ─────────────────────────────────────────── */
+.detail-left { display: flex; flex-direction: column; gap: 1.25rem; }
+
+.field-group { display: flex; flex-direction: column; gap: 0.3125rem; }
+
+.field-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-text-3);
+}
+
+.field-input {
+  padding: 0.5rem 0.75rem;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  color: var(--color-text);
+  font-family: inherit;
+  word-break: break-all;
+}
+
+.field-copy-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-surface-2);
+}
+
+.field-copy-row .field-input {
+  flex: 1;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.field-copy-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  border: none;
+  border-left: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-3);
+  cursor: pointer;
+  font-size: 0.8125rem;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.field-copy-btn:hover {
+  background: var(--brand-primary-light);
+  color: var(--brand-primary);
+}
+
+.field-row { display: flex; align-items: center; }
+
+.field-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  background: var(--brand-primary-light);
+  color: var(--brand-primary);
+  border-radius: var(--radius-full);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: background var(--transition-fast);
+}
+
+.field-pill:hover { background: #dce7ff; }
+
+/* ─── Right column — Associated Entities ────────────────────────── */
+.assoc-card { padding: 0; overflow: hidden; }
+
+.assoc-header {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+}
+
+.assoc-title {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-text-2);
+}
+
+.assoc-section { padding: 0.75rem 1rem; border-bottom: 1px solid var(--color-border); }
+.assoc-section:last-child { border-bottom: none; }
+
+.assoc-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.625rem;
+}
+
+.assoc-section-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-2);
+}
+
+.assoc-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.3125rem;
+  background: var(--color-text);
+  color: var(--color-text-inverse);
+  border-radius: var(--radius-full);
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
+.assoc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.assoc-link {
+  color: var(--brand-primary);
+  font-size: 0.875rem;
+  text-decoration: none;
+  display: block;
+  padding: 0.125rem 0;
+  transition: color var(--transition-fast);
+}
+
+.assoc-link:hover { color: var(--brand-primary-dark); text-decoration: underline; }
+
+.assoc-empty {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-3);
+  font-style: italic;
+}
+
+/* ─── JSON view ──────────────────────────────────────────────────── */
+.json-wrap { padding: 1.5rem; flex: 1; }
+.json-card { padding: 1rem; }
+
+.json-pre {
+  margin: 0;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.8125rem;
+  line-height: 1.65;
+  color: var(--color-text-2);
+  white-space: pre;
+  overflow-x: auto;
+}
+
+/* ─── Not found ──────────────────────────────────────────────────── */
+.not-found-wrap { padding: 1.5rem; }
+
+.not-found {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--color-text-2);
+  font-size: 0.9375rem;
+}
+
+.not-found i { color: var(--color-warning); font-size: 1.25rem; }

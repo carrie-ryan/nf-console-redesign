@@ -1,0 +1,27 @@
+<app-modal-shell (dismissed)="cancel()">
+  <span modal-title>Claim this alert</span>
+
+  <p class="claim-copy">
+    A claim takes ownership. It does not stop the paging: the alert still fires, still
+    expires, and still resolves on its own. Somebody who wants silence should create a mute.
+  </p>
+
+  <div class="claim-taking">
+    <span class="claim-taking-label">You are taking</span>
+    <span class="claim-taking-value">{{ takingLine() }}</span>
+  </div>
+
+  <label class="form-label" for="claim-note">Note <span class="claim-optional">(optional)</span></label>
+  <textarea
+    id="claim-note"
+    class="form-control"
+    rows="3"
+    [ngModel]="note()"
+    (ngModelChange)="note.set($event)"
+    placeholder="e.g. looking at the router now, replacement on order"></textarea>
+
+  <ng-container modal-footer>
+    <button class="btn btn-secondary" type="button" (click)="cancel()">Cancel</button>
+    <button class="btn btn-primary" type="button" (click)="claim()">Claim</button>
+  </ng-container>
+</app-modal-shell>

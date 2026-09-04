@@ -1,0 +1,905 @@
+/* ── STATE 1: Onboarding ─────────────────────────────────────────── */
+
+.onboarding-page {
+  padding: 2rem;
+  max-width: 680px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.welcome-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+}
+
+.welcome-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  background: var(--brand-primary-light);
+  color: var(--brand-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.625rem;
+  flex-shrink: 0;
+}
+
+.welcome-text { flex: 1; }
+
+.welcome-headline {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem;
+  color: var(--color-text);
+}
+
+.welcome-sub {
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+  color: var(--color-text-2);
+  line-height: 1.5;
+}
+
+.welcome-links {
+  display: flex;
+  gap: 0.625rem;
+  flex-wrap: wrap;
+}
+
+.welcome-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border: 1px solid #CBD5E1;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--brand-primary);
+  text-decoration: none;
+  background: var(--color-surface);
+  transition: var(--transition-base, 0.15s ease);
+}
+
+.welcome-link:hover {
+  background: var(--brand-primary-light);
+  border-color: var(--brand-primary);
+}
+
+/* Checklist */
+
+.checklist-card { }
+
+.checklist-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.checklist-header h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.checklist-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--brand-primary);
+  background: var(--brand-primary-light);
+  padding: 0.125rem 0.625rem;
+  border-radius: 999px;
+}
+
+.checklist-success {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #F0FDF4;
+  border: 1px solid #86EFAC;
+  border-radius: 8px;
+  color: var(--color-success);
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 1.25rem;
+}
+
+.checklist-steps {
+  display: flex;
+  flex-direction: column;
+}
+
+.checklist-step {
+  display: flex;
+  gap: 1rem;
+}
+
+.step-track {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 28px;
+}
+
+.step-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #CBD5E1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #94A3B8;
+  flex-shrink: 0;
+  background: var(--color-surface);
+}
+
+.step-circle.circle-done {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: white;
+  font-size: 0.6875rem;
+}
+
+.step-connector {
+  width: 2px;
+  flex: 1;
+  min-height: 20px;
+  background: #E2E8F0;
+  margin: 3px 0;
+}
+
+.step-connector.connector-done {
+  background: var(--brand-primary);
+}
+
+.step-content {
+  padding-bottom: 1.5rem;
+  flex: 1;
+  padding-top: 2px;
+}
+
+.checklist-step:last-child .step-content {
+  padding-bottom: 0;
+}
+
+.step-title {
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: var(--color-text);
+  margin-bottom: 0.25rem;
+}
+
+.step-complete .step-title {
+  color: var(--color-text-2);
+  text-decoration: line-through;
+  text-decoration-color: #CBD5E1;
+}
+
+.step-desc {
+  font-size: 0.8125rem;
+  color: var(--color-text-2);
+  margin: 0 0 0.75rem;
+  line-height: 1.5;
+}
+
+.step-complete .step-desc {
+  color: var(--color-text-3);
+}
+
+.btn-sm {
+  padding: 0.3125rem 0.75rem;
+  font-size: 0.8125rem;
+}
+
+/* ── STATE 2: Operational dashboard ──────────────────────────────── */
+
+.ops-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.ops-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ─── Compact stat strip in the page header (right side) ─────────────── */
+
+/* Dense, scannable micro-stats living in the shared .page-header. Wraps to a
+   second line before it can crowd the title block at narrow widths. Scoped to
+   the dashboard — the global .page-header rule is untouched. */
+.header-stat-strip {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: stretch;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.hstat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-md, 6px);
+  border: 1px solid transparent;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: var(--transition-base, 0.15s ease);
+}
+
+.hstat:hover {
+  border-color: var(--brand-primary);
+  background: var(--brand-primary-light);
+}
+
+.hstat__top {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+}
+
+.hstat__icon {
+  font-size: 0.75rem;
+  color: var(--brand-primary);
+  align-self: center;
+}
+
+.hstat__value {
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-text);
+}
+
+.hstat__of {
+  font-size: 0.6875rem;
+  color: var(--color-text-2);
+}
+
+.hstat__label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  color: var(--color-text-3);
+}
+
+/* ─── Critical-signal row ─────────────────────────────────────────────── */
+
+/* Flex-wrap so 2 cards today sit equal-width side by side and future signals
+   flow onto the row / wrap as width tightens. */
+.signals-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+/* Relax the full-width alert-card so it behaves as one equal card in the row. */
+.signals-row .alert-card {
+  width: auto;
+  flex: 1 1 280px;
+  min-width: 260px;
+}
+
+/* ─── Dashboard sections (shared heading + grouping) ─────────────────── */
+
+.dash-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.dash-section-heading {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+/* ─── Insights: ranked concern panels ────────────────────────────────── */
+
+/* auto-fill (not auto-fit) keeps empty tracks so a lone panel stays ~1/3
+   width instead of stretching full-width. The min track is the larger of
+   280px or a third of the row, which caps the flow at 3 across on wide
+   layouts and lets panels wrap to fewer columns as width tightens. */
+.insights-panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(max(280px, (100% - 1.5rem) / 3), 1fr));
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.insights-th--value,
+.insights-value {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Let long "source → dest" labels wrap to a second line at the narrower
+   panel width rather than truncate; single line when it fits. */
+.insights-table td:first-child {
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.insights-row {
+  cursor: pointer;
+}
+
+/* Link-styled entity name in the High Utilization panel — looks clickable +
+   keyboard-focusable. No navigation wired yet (see TODO in template); clicking
+   does nothing. Mirrors the drawer's service-name link treatment. */
+.entity-name-link {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  color: var(--brand-primary);
+  text-align: left;
+  cursor: pointer;
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+}
+.entity-name-link:hover {
+  text-decoration: underline;
+}
+.entity-name-link:focus-visible {
+  text-decoration: underline;
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.insights-value--danger {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+/* Panel header: title + (optional) static dismissed-count indicator. */
+.insights-panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.875rem; /* was on .panel-title; moved here */
+}
+.insights-panel-head .panel-title {
+  margin-bottom: 0;
+}
+
+/* Right-side header cluster: dismissed count + "show more". */
+.insights-panel-head-actions {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  white-space: nowrap;
+}
+
+/* Static, non-interactive "N dismissed" count (demo transparency only). */
+.concern-dismissed-count {
+  font-size: 0.6875rem;
+  color: var(--color-text-3);
+  white-space: nowrap;
+}
+
+/* "View all N" — opens the full-concern-list drawer (link-styled, not a pill). */
+.concern-show-more {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--brand-primary);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+.concern-show-more:hover {
+  text-decoration: underline;
+}
+.concern-show-more:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+/* Per-row dismiss action column — narrow, right-aligned. */
+.concern-th--action {
+  width: 1%;
+}
+.concern-action {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Icon buttons for the dismiss affordance (reuses existing color tokens;
+   no new global variables). */
+.concern-btn {
+  padding: 0.125rem 0.25rem;
+  border: none;
+  background: none;
+  color: var(--color-text-3);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  line-height: 1;
+}
+.concern-btn:hover {
+  color: var(--color-text);
+}
+.concern-btn:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+.concern-btn--dismiss:hover {
+  color: var(--color-danger);
+}
+
+/* Inline confirm/cancel pair (swaps in place of the × on first click). */
+.concern-confirm {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.concern-confirm-label {
+  font-size: 0.6875rem;
+  color: var(--color-text-2);
+}
+.concern-btn--yes:hover {
+  color: var(--color-success);
+}
+.concern-btn--no:hover {
+  color: var(--color-danger);
+}
+
+/* Panels row */
+
+.panels-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  align-items: start;
+}
+
+/* Network Overview — asymmetric 2-up: utilization (65%) + active identities (35%) */
+.overview-2up {
+  display: grid;
+  grid-template-columns: 65fr 35fr;
+  gap: 0.75rem;
+  align-items: stretch; /* both cards to equal (row) height */
+  margin-bottom: 0.75rem;
+}
+
+/* Network Utilization / Active Identities cards */
+.util-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.util-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.util-header .panel-title {
+  margin: 0;
+}
+
+/* Compact segmented toggle reusing .tab-nav / .tab-btn (no stretched border). */
+.util-toggle {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+/* Static (non-interactive) range label for panels with a fixed window — a muted
+   caption pill, deliberately unlike the interactive .tab-btn toggle: no border,
+   no hover/active state, default cursor. */
+.util-range-badge {
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  background: var(--color-surface-2);
+  color: var(--color-text-3);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  cursor: default;
+}
+
+.util-chart {
+  width: 100%;
+  height: auto;
+  max-height: 300px;
+  display: block;
+}
+
+.util-gridline {
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+
+.util-axis-label {
+  font-size: 11px;
+  fill: var(--color-text-3);
+}
+
+.util-area {
+  fill-opacity: 0.18;
+}
+
+.util-area--tx { fill: var(--brand-primary); }
+.util-area--rx { fill: var(--color-success); }
+
+.util-line {
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.util-line--tx { stroke: var(--brand-primary); }
+.util-line--rx { stroke: var(--color-success); }
+
+.util-legend {
+  display: flex;
+  gap: 1.25rem;
+  justify-content: center;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--color-text-2);
+}
+
+.util-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.util-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.util-swatch--tx { background: var(--brand-primary); }
+.util-swatch--rx { background: var(--color-success); }
+.util-swatch--act { background: var(--brand-primary); }
+
+/* Active Identities — bars (reuses utilization's Tx accent). */
+.act-bar { fill: var(--brand-primary); }
+
+.panel-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 200px;
+}
+
+.panel-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0 0 0.875rem;
+  color: var(--color-text);
+}
+
+/* Event lists */
+
+.event-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.event-item {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.event-icon {
+  font-size: 0.75rem;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.sev-info    { color: var(--color-info); }
+.sev-warning { color: var(--color-warning); }
+.sev-error   { color: var(--color-danger); }
+.sev-success { color: var(--color-success); }
+
+.event-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.event-msg {
+  font-size: 0.8125rem;
+  color: var(--color-text);
+  line-height: 1.4;
+}
+
+.event-time {
+  font-size: 0.6875rem;
+  color: var(--color-text-3);
+}
+
+/* Charts */
+
+.chart-area {
+  flex: 1;
+  min-height: 80px;
+  display: flex;
+  align-items: stretch;
+  margin-bottom: 0.25rem;
+}
+
+/* Billing Usage — cycle progress bar (current vs. projected). */
+.billing-cycle {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.375rem;
+}
+
+.billing-cycle-label {
+  font-size: 0.75rem;
+  color: var(--color-text-2);
+  margin: 0;
+}
+
+.billing-days {
+  font-size: 0.6875rem;
+  color: var(--color-text-3);
+}
+
+.billing-track {
+  position: relative;
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--color-surface-3);
+  overflow: hidden;
+}
+
+.billing-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: var(--brand-primary);
+}
+
+.billing-values {
+  position: relative;
+  height: 1.1rem;
+  font-size: 0.6875rem;
+}
+
+.billing-current {
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  color: var(--brand-primary);
+  font-weight: 600;
+}
+
+.billing-projected {
+  position: absolute;
+  right: 0;
+  white-space: nowrap;
+  color: var(--color-text-2);
+}
+
+.chart-caption {
+  font-size: 0.6875rem;
+  color: var(--color-text-3);
+  margin: 0;
+  text-align: center;
+}
+
+/* Activity tabs */
+
+.tabs-card { }
+
+.tab-nav {
+  display: flex;
+  border-bottom: 1px solid #E2E8F0;
+  margin-bottom: 1rem;
+}
+
+.tab-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-2);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  transition: color 0.15s ease;
+  white-space: nowrap;
+}
+
+.tab-btn:hover {
+  color: var(--color-text);
+}
+
+.tab-btn.tab-active {
+  color: var(--brand-primary);
+  border-bottom-color: var(--brand-primary);
+  font-weight: 600;
+}
+
+.tab-content { }
+
+/* ─── Usage pie + ranked breakdown (Network Overview tabs) ───────────── */
+
+.usage-breakdown {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.usage-pie {
+  flex-shrink: 0;
+}
+
+.pie-svg {
+  width: 160px;
+  height: 160px;
+  display: block;
+}
+
+/* 2px surface gap between adjacent slices (data-viz mark spec). */
+.pie-svg path,
+.pie-svg circle {
+  stroke: var(--color-surface);
+  stroke-width: 2;
+}
+
+.usage-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  min-width: 240px;
+}
+
+.usage-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.4375rem 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.875rem;
+}
+
+.usage-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.usage-name {
+  flex: 1;
+  min-width: 0;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.usage-pct {
+  color: var(--color-text-3);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  width: 3rem;
+}
+
+.usage-value {
+  color: var(--color-text);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+  min-width: 4.5rem;
+}
+
+/* Total row — sits below the ranked entities. */
+.usage-total {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+  padding-top: 0.625rem;
+  border-top: 2px solid var(--color-border-strong);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Service alerts summary card ────────────────────────────────────── */
+.alert-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 1rem 1.25rem;
+  text-align: left;
+  font-family: inherit;
+}
+.alert-card--active {
+  cursor: pointer;
+  border-color: var(--color-danger-border);
+  background: var(--color-danger-bg);
+  transition: box-shadow var(--transition-fast);
+}
+.alert-card--active:hover {
+  box-shadow: var(--shadow-md);
+}
+.alert-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  font-size: 1rem;
+}
+.alert-card__icon--failure {
+  color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+}
+.alert-card__icon--calm {
+  color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 12%, transparent);
+}
+.alert-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1;
+  min-width: 0;
+}
+.alert-card__count {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+.alert-card__sub {
+  font-size: 0.8125rem;
+  color: var(--color-text-2);
+}
+/* No-terminator breakdown clause within the consolidated failures banner. */
+.alert-card__sub-em {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+.alert-card__chevron {
+  color: var(--color-text-3);
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}

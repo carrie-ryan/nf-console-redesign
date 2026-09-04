@@ -1,0 +1,325 @@
+<div class="seg-body">
+  <!-- ══ PERSISTENT HEADER (shared through-line; does NOT toggle) ══════════ -->
+  <header class="seg-intro">
+    <div class="intro-text">
+      <span class="intro-eyebrow"><i class="fa-solid fa-diagram-project"></i> Microsegmentation</span>
+      <h2>Dial policy segment map</h2>
+      <p>
+        Nodes are identity and service segments (grouped by discovery attribute); edges are
+        <strong>dial service policies</strong> — the overlay/policy layer, not the fabric.
+        The graph shows shape (only real access); the matrix proves completeness (every cell,
+        isolation included). Rendered directly from the authorization resolver over the
+        post-discovery fixtures.
+      </p>
+    </div>
+    <div class="intro-stats">
+      <div class="stat">
+        <span class="stat-value">{{ pairCount() }}</span>
+        <span class="stat-label">authorized pairs</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value">{{ drawnEdgeCount() }}</span>
+        <span class="stat-label">real edge{{ drawnEdgeCount() === 1 ? '' : 's' }} drawn</span>
+      </div>
+      <div class="stat" [class.stat-ok]="conservationHolds()" [class.stat-bad]="!conservationHolds()">
+        <span class="stat-value">
+          <i class="fa-solid" [class.fa-circle-check]="conservationHolds()" [class.fa-triangle-exclamation]="!conservationHolds()"></i>
+          {{ rolledUpCount() }}
+        </span>
+        <span class="stat-label">rolled-up = pairs ({{ conservationHolds() ? 'conserved' : 'DROPPED' }})</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══ CONTROLS ROW: primary surface toggle + secondary fixture toggle ════ -->
+  <div class="seg-controls">
+    <!-- SEGMENTED CONTROL (primary) -->
+    <div class="seg-toggle" role="tablist" aria-label="Segment view surface">
+      <button
+        type="button"
+        role="tab"
+        class="seg-toggle-btn"
+        [class.active]="activeSurface() === 'graph'"
+        [attr.aria-selected]="activeSurface() === 'graph'"
+        (click)="activeSurface.set('graph')">
+        <i class="fa-solid fa-diagram-project"></i> Graph
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="seg-toggle-btn"
+        [class.active]="activeSurface() === 'matrix'"
+        [attr.aria-selected]="activeSurface() === 'matrix'"
+        (click)="activeSurface.set('matrix')">
+        <i class="fa-solid fa-table-cells"></i> Matrix
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="seg-toggle-btn"
+        [class.active]="activeSurface() === 'sankey'"
+        [attr.aria-selected]="activeSurface() === 'sankey'"
+        (click)="activeSurface.set('sankey')">
+        <i class="fa-solid fa-share-nodes"></i> Flow
+      </button>
+    </div>
+
+    <!-- FIXTURE TOGGLE (secondary / dev-demo affordance) -->
+    <div class="fixture-toggle" role="group" aria-label="Dataset fixture">
+      <span class="fixture-label"><i class="fa-solid fa-database"></i> Fixture</span>
+      <button
+        type="button"
+        class="fixture-btn"
+        [class.active]="fixtureSel() === 'small'"
+        [attr.aria-pressed]="fixtureSel() === 'small'"
+        (click)="fixtureSel.set('small')">
+        Small
+      </button>
+      <button
+        type="button"
+        class="fixture-btn"
+        [class.active]="fixtureSel() === 'ot'"
+        [attr.aria-pressed]="fixtureSel() === 'ot'"
+        (click)="fixtureSel.set('ot')">
+        OT
+      </button>
+      <span class="fixture-dims">{{ matrixRows().length }}×{{ matrixColLabels().length }} · {{ pairCount() }} pairs</span>
+    </div>
+  </div>
+
+  <!-- ══ A. SEGMENT GRAPH (full-width; default) ═══════════════════════════ -->
+  @if (activeSurface() === 'graph') {
+    <section class="section-card surface surface-graph" role="tabpanel">
+      <div class="surface-head">
+        <h3>Segment graph</h3>
+        <p>Identities → services. Only <strong>full</strong> and <strong>partial</strong> edges are drawn — <strong>{{ drawnEdgeCount() }}</strong> of {{ drawnEdgeCount() + noneEdgeCount() }}; the {{ noneEdgeCount() }} <em>none</em> cells live in the matrix.</p>
+      </div>
+
+      <div class="graph-scroll">
+        <svg
+          class="seg-svg"
+          [attr.viewBox]="'0 0 ' + svgWidth() + ' ' + svgHeight()"
+          [attr.width]="svgWidth()"
+          [attr.height]="svgHeight()"
+          preserveAspectRatio="xMidYMin meet"
+          role="img"
+          aria-label="Bipartite segment graph: identity segments on the left connected to service segments on the right by dial policy edges.">
+
+          <!-- full-canvas background (behind everything): a click on EMPTY space
+               clears any edge/node selection + hover. Drawn first so it only
+               catches clicks that miss a node or edge-hit (hit-testing picks the
+               topmost element), giving a reliable "dismiss" affordance. -->
+          <rect
+            class="graph-bg"
+            x="0"
+            y="0"
+            [attr.width]="svgWidth()"
+            [attr.height]="svgHeight()"
+            (click)="clearGraphSelection()" />
+
+          <!-- edges first (under nodes) -->
+          <g class="edges">
+            @for (e of graphEdges(); track e.key) {
+              <!-- invisible wide hit target (drawn first, behind): the clickable,
+                   focusable element; shows a halo on hover/focus -->
+              <path
+                class="edge-hit"
+                [class.edge-hit-selected]="selectedKey() === e.key"
+                [attr.d]="e.path"
+                role="button"
+                tabindex="0"
+                [attr.aria-label]="e.fromLabel + ' to ' + e.toLabel + ', ' + e.state + ' access — show authorizing policies'"
+                (click)="select(e.fromSegment, e.toSegment)"
+                (keydown.enter)="select(e.fromSegment, e.toSegment)"
+                (keydown.space)="$event.preventDefault(); select(e.fromSegment, e.toSegment)" />
+              <!-- visible edge on top, non-interactive (clicks fall to the hit path) -->
+              <path
+                class="edge"
+                [class.edge-full]="e.state === 'full'"
+                [class.edge-partial]="e.state === 'partial'"
+                [class.edge-selected]="selectedKey() === e.key"
+                [class.edge-dim]="hoveredNode() && selectedKey() !== e.key && !isIncident(e, hoveredNode())"
+                [attr.d]="e.path" />
+              @if (e.countLabel) {
+                <g
+                  class="edge-badge"
+                  [class.edge-dim]="hoveredNode() && selectedKey() !== e.key && !isIncident(e, hoveredNode())"
+                  [attr.transform]="'translate(' + e.midX + ',' + e.midY + ')'">
+                  <rect x="-17" y="-10" width="34" height="20" rx="10" />
+                  <text x="0" y="1" text-anchor="middle" dominant-baseline="middle">{{ e.countLabel }}</text>
+                </g>
+              }
+            }
+          </g>
+
+          <!-- nodes (compact: label only; kind encoded by border/fill + a corner dot) -->
+          <g class="nodes">
+            @for (n of graphNodes(); track n.side + n.segment) {
+              <g
+                [class]="'node node-' + n.kind + (isNodeIncident(n, hoveredNode()) ? '' : ' node-dim') + (selectedSegment()?.side === n.side && selectedSegment()?.segment === n.segment ? ' node-selected' : '')"
+                [attr.transform]="'translate(' + n.x + ',' + n.y + ')'"
+                role="button"
+                tabindex="0"
+                [attr.aria-label]="n.label + ', ' + (n.side === 'identity' ? 'identity' : 'service') + ' segment — show members and reach'"
+                (mouseenter)="hoveredNode.set({ side: n.side, segment: n.segment })"
+                (mouseleave)="hoveredNode.set(null)"
+                (click)="selectNode(n.side, n.segment)"
+                (keydown.enter)="selectNode(n.side, n.segment)"
+                (keydown.space)="$event.preventDefault(); selectNode(n.side, n.segment)">
+                <!-- native tooltip carries the full label + member count (face shows label only) -->
+                <title>{{ n.label }} · {{ n.countText }}{{ n.kind === 'isolated' ? ' · isolated, no access' : n.kind === 'unresolvable' ? ' · unresolvable, check config' : n.kind === 'ungrouped' ? ' · ungrouped catch-all' : '' }}</title>
+                <rect class="node-box" [attr.width]="n.w" [attr.height]="n.h" rx="6" />
+
+                <!-- side rail: identity vs service -->
+                <rect class="node-rail" [attr.x]="n.side === 'identity' ? 0 : n.w - 3" y="0" width="3" [attr.height]="n.h" />
+
+                <!-- single-line label, vertically centered, ellipsis on overflow -->
+                <foreignObject x="10" y="0" [attr.width]="n.w - 24" [attr.height]="n.h">
+                  <div xmlns="http://www.w3.org/1999/xhtml" class="node-label-fo">{{ n.label }}</div>
+                </foreignObject>
+
+                <!-- compact state marker: a small corner dot for the non-normal kinds (no text) -->
+                @if (n.kind !== 'normal') {
+                  <circle [attr.class]="'node-dot dot-' + n.kind" [attr.cx]="n.w - 7" cy="7" r="3.5" />
+                }
+              </g>
+            }
+          </g>
+        </svg>
+      </div>
+
+      <!-- graph legend (non-negotiable: every edge + node style mapped) -->
+      <div class="legend">
+        <div class="legend-group">
+          <span class="legend-title">Edges</span>
+          <span class="legend-item">
+            <svg width="34" height="12" class="lg-svg"><line x1="1" y1="6" x2="33" y2="6" class="edge edge-full" /></svg>
+            full — every pair authorized
+          </span>
+          <span class="legend-item">
+            <svg width="34" height="12" class="lg-svg"><line x1="1" y1="6" x2="33" y2="6" class="edge edge-partial" /></svg>
+            partial — some pairs (count badge)
+          </span>
+          <span class="legend-item legend-muted">
+            <svg width="34" height="12" class="lg-svg"><line x1="1" y1="6" x2="33" y2="6" class="edge edge-none-demo" /></svg>
+            none — not drawn (see matrix)
+          </span>
+        </div>
+        <div class="legend-group">
+          <span class="legend-title">Nodes</span>
+          <span class="legend-item"><span class="lg-chip chip-normal"></span> segment</span>
+          <span class="legend-item"><span class="lg-chip chip-ungrouped"></span> ungrouped catch-all</span>
+          <span class="legend-item"><span class="lg-chip chip-isolated"></span> isolated — no access</span>
+          <span class="legend-item"><span class="lg-chip chip-unresolvable"></span> unresolvable — check config</span>
+        </div>
+      </div>
+    </section>
+  }
+
+  <!-- ══ B. COMPANION MATRIX (full-width; every cell, none included) ══════ -->
+  @if (activeSurface() === 'matrix') {
+    <section class="section-card surface surface-matrix" role="tabpanel">
+      <div class="surface-head">
+        <h3>Companion matrix</h3>
+        <p>Identity segment × service segment — <strong>every</strong> cell, including all <em>none</em>. This is where isolation is proven.</p>
+      </div>
+
+      <div class="matrix-scroll">
+        <table class="seg-matrix">
+          <thead>
+            <tr>
+              <th class="corner" scope="col">id&nbsp;↓ / svc&nbsp;→</th>
+              @for (c of matrixColLabels(); track c.label) {
+                <th scope="col" [class.col-ungrouped]="c.isUngrouped">
+                  {{ c.label }}
+                  @if (c.isUngrouped) { <span class="catch-tag">catch-all</span> }
+                </th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of matrixRows(); track row.label) {
+              <tr [class.row-ungrouped]="row.isUngrouped">
+                <th scope="row" class="row-head" [attr.class]="'row-head row-head-' + row.kind">
+                  {{ row.label }}
+                  @if (row.kind === 'ungrouped') { <span class="catch-tag">catch-all</span> }
+                  @else if (row.kind === 'isolated') { <span class="reason-tag reason-isolated">isolated</span> }
+                  @else if (row.kind === 'unresolvable') { <span class="reason-tag reason-unresolvable">unresolvable</span> }
+                </th>
+                @for (cell of row.cells; track $index) {
+                  <td
+                    class="cell"
+                    [class.cell-full]="cell.state === 'full'"
+                    [class.cell-partial]="cell.state === 'partial'"
+                    [class.cell-none]="cell.state === 'none'"
+                    [class.cell-catchall]="cell.isCatchAll"
+                    [class.cell-selected]="selectedKey() === cell.key"
+                    tabindex="0"
+                    [attr.aria-label]="row.label + ' to ' + cell.toLabel + ', ' + cell.state + ' access — show authorizing policies'"
+                    [attr.title]="row.label + ' → ' + cell.state + ' (' + cell.countLabel + ')'"
+                    (click)="select(cell.fromSegment, cell.toSegment)"
+                    (keydown.enter)="select(cell.fromSegment, cell.toSegment)"
+                    (keydown.space)="$event.preventDefault(); select(cell.fromSegment, cell.toSegment)">
+                    <span class="cell-glyph">{{ cell.glyph }}</span>
+                    @if (cell.state !== 'none') {
+                      <span class="cell-count">{{ cell.countLabel }}</span>
+                    } @else {
+                      <span class="cell-count cell-count-none">0/{{ cell.totalCount }}</span>
+                    }
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- matrix legend (colorblind-safe: glyph + label, never color alone) -->
+      <div class="legend">
+        <div class="legend-group">
+          <span class="legend-title">Cells</span>
+          <span class="legend-item"><span class="lg-cell cell-full"><span class="cell-glyph">█</span></span> full</span>
+          <span class="legend-item"><span class="lg-cell cell-partial"><span class="cell-glyph">◪</span></span> partial (with count)</span>
+          <span class="legend-item"><span class="lg-cell cell-none"><span class="cell-glyph">·</span></span> none — isolated</span>
+          <span class="legend-item"><span class="lg-cell cell-catchall"></span> ungrouped catch-all row/col</span>
+        </div>
+      </div>
+    </section>
+  }
+
+  <!-- ══ C. AUTHORIZED-FLOW SANKEY (source segment → service → dest segment) ══ -->
+  @if (activeSurface() === 'sankey') {
+    <section class="section-card surface surface-sankey" role="tabpanel">
+      <div class="surface-head">
+        <h3>Authorized flow</h3>
+        <p>Identity segment → <strong>service</strong> → service segment, from the authorization resolver (authorized <strong>policy</strong>, not observed traffic). Ribbon thickness = authorized identity→service pairs; only <strong>full</strong> and <strong>partial</strong> flows appear (<em>none</em> lives in the matrix).</p>
+      </div>
+
+      <div class="graph-scroll">
+        <app-sankey-chart
+          [nodes]="sankeyChart().nodes"
+          [links]="sankeyChart().links"
+          [headers]="sankeyChart().headers"
+          ariaLabel="Sankey flow: identity segments on the left flow through individual services in the middle to service segments on the right, weighted by authorized pair count."
+          (nodeClick)="onSankeyNodeClick($event)"
+          (linkClick)="onSankeyLinkClick($event)"
+          (backgroundClick)="clearGraphSelection()" />
+      </div>
+
+      <!-- sankey legend -->
+      <div class="legend">
+        <div class="legend-group">
+          <span class="legend-title">Ribbons</span>
+          <span class="legend-item"><span class="lg-ribbon ribbon-full"></span> full — every pair authorized</span>
+          <span class="legend-item"><span class="lg-ribbon ribbon-partial"></span> partial — some pairs</span>
+          <span class="legend-item legend-muted"><span class="lg-ribbon ribbon-catchall"></span> touches ungrouped catch-all</span>
+        </div>
+        <div class="legend-group">
+          <span class="legend-title">Stages</span>
+          <span class="legend-item"><span class="lg-chip chip-normal"></span> identity segment → service → service segment</span>
+          <span class="legend-item">thickness = authorized pair count</span>
+        </div>
+      </div>
+    </section>
+  }
+</div>

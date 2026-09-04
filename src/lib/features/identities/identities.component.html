@@ -1,0 +1,98 @@
+<div class="page-header">
+  <div>
+    <h1>Identities</h1>
+    <p>Devices, apps, and users on your network</p>
+  </div>
+  <a routerLink="/identities/new" class="btn btn-primary">
+    <i class="fa-solid fa-plus"></i> New Identity
+  </a>
+</div>
+
+<div class="list-body" (click)="closeMenu()">
+  @if (data.identities().length === 0) {
+    <div class="section-card empty-card">
+      <app-empty-state
+        icon="fa-regular fa-users"
+        title="No identities yet"
+        message="Identities represent the devices, apps, and users that connect to your network. Create one before configuring services.">
+        <a routerLink="/identities/new" class="btn btn-primary">
+          <i class="fa-solid fa-plus"></i> Create your first Identity
+        </a>
+      </app-empty-state>
+    </div>
+  } @else {
+    <div class="section-card table-card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="col-status"></th>
+            @if (prefs.isPowerUser()) {
+              <th class="col-id-toggle">ID</th>
+            }
+            <th>Name</th>
+            <th>Type</th>
+            <th>Roles</th>
+            <th>Auth Policy</th>
+            <th>Created At</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (identity of data.identities(); track identity.id) {
+            <tr>
+              <td class="col-status">
+                <span
+                  class="status-dot"
+                  [class.status-dot--online]="identity.status === 'online' || identity.status === 'active'"
+                  [class.status-dot--pending]="identity.status === 'pending'"
+                  [class.status-dot--offline]="identity.status === 'offline' || identity.status === 'inactive' || identity.status === 'degraded'"
+                  [title]="identity.status">
+                </span>
+              </td>
+              @if (prefs.isPowerUser()) {
+                <td class="col-id-toggle"><span class="id-value">{{ identity.id }}</span></td>
+              }
+              <td class="name-cell">{{ identity.name }}</td>
+              <td class="type-cell">{{ identity.type }}</td>
+              <td class="attr-cell">
+                <div class="attr-wrap">
+                  @for (attr of identity.attributes; track attr) {
+                    <span class="attr-tag">{{ attr }}</span>
+                  }
+                </div>
+              </td>
+              <td class="policy-cell">{{ identity.authPolicy || 'Default' }}</td>
+              <td>{{ identity.createdAt | slice:0:10 }}</td>
+              <td class="actions-cell">
+                <div class="action-menu" (click)="$event.stopPropagation()">
+                  <button
+                    class="btn-icon"
+                    (click)="toggleMenu(identity.id, $event)"
+                    [attr.aria-label]="'Actions for ' + identity.name">
+                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                  </button>
+                  @if (openMenuId() === identity.id) {
+                    <div class="dropdown-menu" role="menu">
+                      <button class="dropdown-item" role="menuitem">
+                        <i class="fa-solid fa-pen"></i> Edit
+                      </button>
+                      @if (prefs.isPowerUser()) {
+                        <button class="dropdown-item" role="menuitem">
+                          <i class="fa-solid fa-code"></i> View API
+                        </button>
+                      }
+                      <div class="dropdown-divider"></div>
+                      <button class="dropdown-item dropdown-item--danger" role="menuitem">
+                        <i class="fa-solid fa-trash"></i> Delete
+                      </button>
+                    </div>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

@@ -1,0 +1,163 @@
+@if (showAllAlertsLink()) {
+  <button type="button" class="view-all-alerts" (click)="viewAllAlerts()">
+    View all alerts
+    <i class="fa-solid fa-arrow-right"></i>
+  </button>
+}
+
+@if (groups().length === 0) {
+  <div class="section-card">
+    <p>No dial activity.</p>
+  </div>
+} @else {
+  <!-- Live summary — tracks the active filters, not the entry point. -->
+  <p class="activity-summary">{{ subheading() }}</p>
+
+  <div class="filter-bars">
+    <div class="filter-bar">
+      @for (opt of statusOptions; track opt.id) {
+        <button type="button"
+          class="filter-btn"
+          [class.filter-btn--active]="statusFilter() === opt.id"
+          (click)="statusFilter.set(opt.id)">
+          {{ opt.label }}
+        </button>
+      }
+    </div>
+    <div class="filter-bar">
+      @for (opt of typeOptions; track opt.id) {
+        <button type="button"
+          class="filter-btn"
+          [class.filter-btn--active]="typeFilter() === opt.id"
+          (click)="typeFilter.set(opt.id)">
+          {{ opt.label }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="section-card table-card">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th class="col-chevron"></th>
+          <th>Service</th>
+          <th class="col-dials">Dials</th>
+          <th>Last Dial</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (visibleGroups().length === 0) {
+          <tr>
+            <td colspan="4" class="child-empty muted">No dials match the current filters.</td>
+          </tr>
+        }
+        @for (g of visibleGroups(); track g.key) {
+          <tr class="group-row" (click)="toggleGroup(g.key)">
+            <td class="col-chevron">
+              <i class="fa-solid fa-chevron-right chevron" [class.chevron--open]="isExpanded(g.key)"></i>
+            </td>
+            <td>
+              <!-- TODO: navigate to the service detail page once it's built
+                   (destination TBD). Link-styled for now; no click handler,
+                   so it does nothing beyond the row's expand toggle. -->
+              <button type="button" class="group-service">{{ groupLabel(g) }}</button>
+            </td>
+            <td class="col-dials">
+              @if (g.failedCount > 0) {
+                <div class="ratio-meter">
+                  <div class="ratio-meter__counts">
+                    <span class="ratio-meter__failed">{{ g.failedCount }}</span>
+                    <span class="ratio-meter__divider">/</span>
+                    <span class="ratio-meter__total">{{ g.count }}</span>
+                    <span class="ratio-meter__label">failed</span>
+                  </div>
+                  <div class="ratio-meter__bar">
+                    <div class="ratio-meter__fill" [style.width.%]="(g.failedCount / g.count) * 100"></div>
+                  </div>
+                </div>
+              } @else {
+                <div class="ratio-meter ratio-meter--clean">
+                  <i class="fa-solid fa-circle-check"></i>
+                  <span>{{ g.count }} successful</span>
+                </div>
+              }
+            </td>
+            <td><span class="group-when">{{ formatTimestamp(g.latestTimestampMs) }}</span></td>
+          </tr>
+
+          @if (isExpanded(g.key)) {
+            <tr class="child-header-row">
+              <td></td>
+              <td>When</td>
+              <td colspan="2">Event / Failure</td>
+            </tr>
+            @if (visibleChildren(g).length === 0) {
+              <tr class="child-row">
+                <td></td>
+                <td colspan="3" class="child-empty muted">No matching dials in this view.</td>
+              </tr>
+            }
+            @for (r of visibleChildren(g); track r.timestampMs + '|' + r.networkEventType + '|' + (r.endpointName ?? '')) {
+              <tr class="child-row" [class.child-row--failed]="r.success === false">
+                <td></td>
+                <td class="child-when">{{ formatTimestamp(r.timestampMs) }}</td>
+                <td colspan="2">
+                  @if (r.success === false) {
+                    <div class="child-failure">
+                      <div class="child-failure__head">
+                        <span class="event-chip event-chip--failure">
+                          <i class="fa-solid fa-circle-xmark"></i>Failed
+                        </span>
+                        <span class="failure-headline">{{ failureHeadline(r) }}</span>
+                        <span class="failure-code">{{ r.failureCause }}</span>
+                        <button type="button"
+                          class="expl-toggle"
+                          [class.expl-toggle--open]="isExplanationExpanded(r)"
+                          (click)="toggleExplanation(r)"
+                          [attr.aria-expanded]="isExplanationExpanded(r)">
+                          <i class="fa-solid fa-chevron-right"></i>
+                          {{ isExplanationExpanded(r) ? 'Hide' : 'Why?' }}
+                        </button>
+                      </div>
+                      <!-- Per-row terminator address: truthful to THIS record —
+                           a router error connected (has an address); a
+                           terminator error had nothing to connect to (shows —). -->
+                      <div class="child-addr">
+                        <span class="child-addr__label">Terminator address</span>
+                        @if (r.terminatorRemote) {
+                          <span class="group-addr">{{ r.terminatorRemote }}</span>
+                        } @else {
+                          <span class="muted">—</span>
+                        }
+                      </div>
+                      @if (isExplanationExpanded(r)) {
+                        <div class="failure-explanation">{{ failureExplanation(r) }}</div>
+                      }
+                    </div>
+                  } @else if (r.success === true) {
+                    <div class="child-success">
+                      <span class="event-chip event-chip--success">
+                        <i class="fa-solid fa-circle-check"></i>Success
+                      </span>
+                      @if (r.terminatorRemote) {
+                        <span class="child-addr child-addr--inline">
+                          <span class="child-addr__label">via</span>
+                          <span class="group-addr">{{ r.terminatorRemote }}</span>
+                        </span>
+                      }
+                    </div>
+                  } @else {
+                    <span class="event-chip event-chip--neutral">
+                      <i class="fa-solid fa-circle-dot"></i>{{ r.networkEventType }}
+                    </span>
+                  }
+                </td>
+              </tr>
+            }
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+}

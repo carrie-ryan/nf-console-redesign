@@ -1,0 +1,51 @@
+<div class="page-header">
+  <div>
+    <h1>New Service</h1>
+    <p>Define a resource to expose on the network</p>
+  </div>
+  <a routerLink="/services" class="btn btn-secondary">
+    <i class="fa-solid fa-arrow-left"></i> Back
+  </a>
+</div>
+
+<div class="form-body">
+  <div class="section-card">
+    <div class="form-group">
+      <label class="form-label">Name</label>
+      <input class="form-control" [(ngModel)]="name" placeholder="e.g. gitlab-internal" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Protocol</label>
+      <select class="form-control" [(ngModel)]="protocol">
+        <option value="tcp">TCP</option>
+        <option value="udp">UDP</option>
+        <option value="http">HTTP</option>
+        <option value="https">HTTPS</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Intercept Address</label>
+      <input class="form-control" [(ngModel)]="interceptAddress" placeholder="e.g. gitlab.corp:22" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Host Address</label>
+      <input class="form-control" [(ngModel)]="hostAddress" placeholder="e.g. 10.0.1.50:22" />
+    </div>
+    @if (prefs.isPowerUser()) {
+      <div class="form-group">
+        <button class="btn btn-secondary btn-sm" (click)="showJsonPreview = !showJsonPreview">
+          <i class="fa-solid fa-code"></i> {{ showJsonPreview ? 'Hide' : 'Show' }} JSON
+        </button>
+        @if (showJsonPreview) {
+          <pre class="json-preview">{{ jsonPreview }}</pre>
+        }
+      </div>
+    }
+  </div>
+  <div class="page-footer">
+    <a routerLink="/services" class="btn btn-secondary">Cancel</a>
+    <button class="btn btn-primary" (click)="save()" [disabled]="!name">
+      <i class="fa-solid fa-check"></i> Create Service
+    </button>
+  </div>
+</div>

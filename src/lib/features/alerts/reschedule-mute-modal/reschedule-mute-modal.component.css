@@ -1,0 +1,38 @@
+/* Reschedule body — the frame lives in modal-shell; these style the projected
+   content only. Pills mirror the mute-create modal. */
+
+.rs-copy {
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--color-text-2);
+}
+
+.rs-block { margin-bottom: 1rem; }
+.rs-block .form-label { display: block; margin-bottom: 0.375rem; }
+
+.rs-current {
+  font-size: 0.875rem;
+  color: var(--color-text);
+  padding: 0.5rem 0.75rem;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.pill-row { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+.pill {
+  padding: 0.3125rem 0.75rem;
+  font-size: 0.8125rem;
+  font-family: inherit;
+  color: var(--color-text-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill, 999px);
+  cursor: pointer;
+}
+.pill--active {
+  color: var(--color-text-inverse);
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+}

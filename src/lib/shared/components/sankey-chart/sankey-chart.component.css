@@ -1,0 +1,73 @@
+/* ─── generic Sankey chart ─────────────────────────────────────────────────
+   Styling is driven by generic classes the component emits:
+     • column position  : .pos-first / .pos-interior / .pos-last
+     • opaque node kind  : .node-kind-<kind>   (consumer-set, e.g. catch-all)
+     • opaque link state : .link-state-<state> (consumer-set, e.g. full/partial)
+     • link touches kind : .link-touches-<kind>
+   No domain semantics live here — the class names are opaque tags. */
+
+.seg-svg { display: block; max-width: 100%; height: auto; font-family: var(--font-sans); }
+.sankey-svg { font-family: var(--font-sans); }
+
+/* full-canvas background: catches empty-space clicks. transparent fill still
+   receives pointer events (fill is "painted", not none). */
+.graph-bg { fill: transparent; pointer-events: all; cursor: default; }
+
+/* ribbons: weight-driven stroke-width set inline. A NEUTRAL default stroke so a
+   stateless ribbon (observed traffic omits `state`) still paints — deliberately a
+   volume/flow gray, NOT --brand-primary, so observed ribbons don't falsely echo
+   microseg's "full authorization" color. The state/kind modifiers below override
+   it (declared after → equal specificity, later wins). Solid — dashing a
+   variable-width ribbon reads as broken. */
+.sankey-link {
+  fill: none;
+  stroke: var(--color-text-3);
+  stroke-opacity: 0.4;
+  stroke-linecap: butt;
+  cursor: pointer;
+  transition: stroke-opacity 0.1s ease;
+}
+.link-state-full { stroke: var(--brand-primary); }
+.link-state-partial { stroke: var(--color-warning); }
+/* a ribbon touching an ungrouped catch-all node is muted (must not read first-class) */
+.link-touches-catch-all { stroke: var(--color-text-3); stroke-opacity: 0.28; }
+.sankey-link:hover,
+.sankey-link:focus-visible { stroke-opacity: 0.68; outline: none; }
+/* hover-isolate: fade ribbons not incident to the hovered node */
+.sankey-link.sankey-dim { stroke-opacity: 0.06; }
+
+/* nodes — first/last columns share the primary fill, interior columns the accent */
+.sankey-node { stroke: var(--color-surface); stroke-width: 0.5; }
+.pos-first .sankey-node { fill: var(--brand-primary); }
+.pos-interior .sankey-node { fill: var(--brand-accent); }
+.pos-last .sankey-node { fill: var(--brand-primary); }
+.node-clickable { cursor: pointer; }
+.node-clickable:focus-visible { outline: none; }
+.node-clickable:focus-visible .sankey-node { stroke: var(--color-focus-ring); stroke-width: 2; }
+.node-clickable:hover .sankey-node { stroke: var(--color-text); stroke-width: 1; }
+/* ungrouped catch-all node: muted + dashed */
+.node-kind-catch-all .sankey-node { fill: var(--color-surface-2); stroke: var(--color-text-3); stroke-width: 1; stroke-dasharray: 3 2; }
+/* unenrolled (observed-only) source node: quiet, categorical — "unknown host",
+   NOT an alarm. Muted surface fill + a lighter dashed border, matching the table
+   badge's restrained tone. Generic class rule; no domain logic in the chart. */
+.node-kind-unenrolled .sankey-node { fill: var(--color-surface-2); stroke: var(--color-border-strong); stroke-width: 1; stroke-dasharray: 2 2; }
+.node-kind-unenrolled .sankey-label { fill: var(--color-text-2); }
+
+.sankey-label {
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--color-text);
+  pointer-events: none;
+}
+.pos-interior .sankey-label { font-weight: 500; fill: var(--color-text-2); }
+.node-kind-catch-all .sankey-label { fill: var(--color-text-3); font-style: italic; }
+
+/* per-column axis headers — muted + uppercase, distinct from data labels */
+.sankey-col-header {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  fill: var(--color-text-3);
+  pointer-events: none;
+}

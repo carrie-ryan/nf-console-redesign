@@ -1,0 +1,39 @@
+<nav class="side-nav">
+  <div class="nav-scroll">
+    @for (group of navGroups; track group.label) {
+      <p class="nav-group-label">{{ group.label }}</p>
+      @for (item of group.items; track item.path) {
+        <a
+          class="nav-item"
+          [routerLink]="item.path"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: false }">
+          <span class="nav-icon"><i [class]="item.icon"></i></span>
+          <span class="nav-label-wrap">
+            <span>{{ item.label }}</span>
+            <span class="nav-item-subtitle">{{ item.subtitle }}</span>
+          </span>
+        </a>
+      }
+    }
+  </div>
+
+  <div class="nav-footer">
+    <div class="nav-footer-divider"></div>
+    <button
+      class="power-toggle-row"
+      (click)="prefs.togglePowerUser()"
+      [attr.aria-pressed]="prefs.isPowerUser()"
+      aria-label="Toggle Power User Mode">
+      <div class="power-toggle-info">
+        <span class="power-toggle-label">Power User Mode</span>
+        <span class="power-toggle-sub">
+          {{ prefs.isPowerUser() ? 'Advanced features enabled' : 'Simplified view' }}
+        </span>
+      </div>
+      <span class="nav-toggle-btn" [class.on]="prefs.isPowerUser()">
+        <span class="nav-toggle-thumb"></span>
+      </span>
+    </button>
+  </div>
+</nav>

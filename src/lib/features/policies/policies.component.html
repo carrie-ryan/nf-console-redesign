@@ -1,0 +1,111 @@
+<div class="page-header">
+  <div>
+    <h1>Policies</h1>
+    <p>Control who can access what on your network</p>
+  </div>
+  <a routerLink="/policies/new" class="btn btn-primary">
+    <i class="fa-solid fa-plus"></i> New Policy
+  </a>
+</div>
+
+<div class="list-body" (click)="closeMenu()">
+  @if (data.policies().length === 0) {
+    <div class="section-card empty-card">
+      <app-empty-state
+        icon="fa-solid fa-shield-halved"
+        title="No policies yet"
+        message="Policies control which identities can access which services. You need at least one Identity and one Service before a policy is meaningful.">
+        <a routerLink="/policies/new" class="btn btn-primary">
+          <i class="fa-solid fa-plus"></i> Create a Policy
+        </a>
+      </app-empty-state>
+      <div class="dep-hint">
+        <span class="dep-label">Requires:</span>
+        <span class="dep-item" [class.dep-item--met]="data.identities().length > 0">
+          <i class="fa-solid" [class.fa-check]="data.identities().length > 0" [class.fa-xmark]="data.identities().length === 0"></i>
+          Identities
+        </span>
+        <span class="dep-item" [class.dep-item--met]="data.services().length > 0">
+          <i class="fa-solid" [class.fa-check]="data.services().length > 0" [class.fa-xmark]="data.services().length === 0"></i>
+          Services
+        </span>
+      </div>
+    </div>
+  } @else {
+    <div class="section-card table-card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            @if (prefs.isPowerUser()) {
+              <th class="col-id-toggle">ID</th>
+            }
+            <th>Name</th>
+            <th>Type</th>
+            <th>Semantic</th>
+            <th>Service Attributes</th>
+            <th>Identity Attributes</th>
+            <th>Created At</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (policy of data.policies(); track policy.id) {
+            <tr>
+              @if (prefs.isPowerUser()) {
+                <td class="col-id-toggle"><span class="id-value">{{ policy.id }}</span></td>
+              }
+              <td class="name-cell">{{ policy.name }}</td>
+              <td>
+                <span class="type-badge" [class.type-badge--dial]="policy.type === 'dial'" [class.type-badge--bind]="policy.type === 'bind'">
+                  {{ policy.type === 'dial' ? 'Dial' : 'Bind' }}
+                </span>
+              </td>
+              <td class="semantic-cell">{{ policy.semantic }}</td>
+              <td class="roles-cell">
+                <div class="roles-wrap">
+                  @for (role of policy.serviceRoles; track role) {
+                    <span class="role-tag">{{ role }}</span>
+                  }
+                </div>
+              </td>
+              <td class="roles-cell">
+                <div class="roles-wrap">
+                  @for (role of policy.identityRoles; track role) {
+                    <span class="role-tag">{{ role }}</span>
+                  }
+                </div>
+              </td>
+              <td class="date-cell">{{ policy.createdAt.slice(0, 10) }}</td>
+              <td class="actions-cell" (click)="$event.stopPropagation()">
+                <div class="action-menu">
+                  <button
+                    class="btn-icon"
+                    (click)="toggleMenu(policy.id, $event)"
+                    [attr.aria-label]="'Actions for ' + policy.name">
+                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                  </button>
+                  @if (openMenuId() === policy.id) {
+                    <div class="dropdown-menu" role="menu">
+                      <button class="dropdown-item" role="menuitem">
+                        <i class="fa-solid fa-pen"></i> Edit
+                      </button>
+                      @if (prefs.isPowerUser()) {
+                        <button class="dropdown-item" role="menuitem">
+                          <i class="fa-solid fa-code"></i> View API
+                        </button>
+                      }
+                      <div class="dropdown-divider"></div>
+                      <button class="dropdown-item dropdown-item--danger" role="menuitem">
+                        <i class="fa-solid fa-trash"></i> Delete
+                      </button>
+                    </div>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

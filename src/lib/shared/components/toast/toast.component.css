@@ -1,0 +1,36 @@
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-lg);
+  min-width: 280px;
+  max-width: 420px;
+  font-size: 0.875rem;
+}
+
+.toast[data-variant='success'] { border-left: 3px solid var(--color-success); }
+.toast[data-variant='success'] .toast-icon { color: var(--color-success); }
+.toast[data-variant='error']   { border-left: 3px solid var(--color-danger); }
+.toast[data-variant='error']   .toast-icon { color: var(--color-danger); }
+.toast[data-variant='warning'] { border-left: 3px solid var(--color-warning); }
+.toast[data-variant='warning'] .toast-icon { color: var(--color-warning); }
+.toast[data-variant='info']    { border-left: 3px solid var(--color-info); }
+.toast[data-variant='info']    .toast-icon { color: var(--color-info); }
+
+.toast-message { flex: 1; color: var(--color-text); }
+
+.toast-close {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--color-text-3);
+  padding: 0;
+  line-height: 1;
+  transition: color var(--transition-fast);
+}
+
+.toast-close:hover { color: var(--color-text-2); }

@@ -1,0 +1,14 @@
+{
+  "/core": {
+    "target": "https://gateway.staging.netfoundry.io",
+    "secure": true,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/reporting": {
+    "target": "https://gateway.staging.netfoundry.io",
+    "secure": true,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}

@@ -1,0 +1,7 @@
+<div class="toast" [attr.data-variant]="variant()">
+  <i [class]="iconMap[variant()]" class="toast-icon"></i>
+  <span class="toast-message">{{ message() }}</span>
+  <button class="toast-close" (click)="dismiss()" aria-label="Dismiss">
+    <i class="fa-solid fa-xmark"></i>
+  </button>
+</div>

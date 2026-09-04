@@ -1,0 +1,595 @@
+<div class="adv-screen">
+  <div class="adv-panel">
+
+    <header class="ob-step-head">
+      <span class="ob-step-badge"><i class="fa-solid fa-server"></i></span>
+      <div class="ob-step-head-text">
+        <h1>Create Service</h1>
+        <p class="ob-step-tag">Advanced — attach configurations by hand, then define the policies yourself.</p>
+      </div>
+      <button type="button" class="btn btn-secondary btn-sm ob-learn" (click)="openHelp()">
+        <i class="fa-solid fa-circle-info"></i> Learn more
+      </button>
+    </header>
+
+    @if (!saved()) {
+
+      <div class="adv-body">
+
+        <!-- ── Main form column ─────────────────────────────────────────── -->
+        <main class="adv-main">
+
+          <!-- Section 1: Service Details -->
+          <div class="section-card ob-form-card">
+            <h2 class="ob-section-title">Service Details</h2>
+
+            <div class="ob-field">
+              <label class="form-label" for="adv-svc-name">Service Name <span class="ob-required">Required</span></label>
+              <input
+                id="adv-svc-name"
+                class="form-control"
+                [class.is-error]="showError('name')"
+                type="text"
+                [(ngModel)]="serviceName"
+                (blur)="markTouched('name')"
+                placeholder="Name this service"
+                autocomplete="off" />
+              <p class="field-hint">A recognizable name for this service.</p>
+            </div>
+
+            <div class="ob-field">
+              <label class="form-label" for="adv-svc-attrs">Service Attributes <span class="ob-optional">Optional</span></label>
+              <div class="tag-input-wrap">
+                @for (attr of attributes(); track attr) {
+                  <span class="tag-chip">
+                    {{ attr }}
+                    <button class="tag-chip-x" type="button" (click)="removeAttribute(attr)" aria-label="Remove attribute">
+                      <i class="fa-solid fa-xmark"></i>
+                    </button>
+                  </span>
+                }
+                <input
+                  id="adv-svc-attrs"
+                  class="tag-bare-input"
+                  [(ngModel)]="attributeInput"
+                  (keydown)="onAttributeKeydown($event)"
+                  [placeholder]="attributes().length === 0 ? 'Add attributes to group services' : ''"
+                  autocomplete="off" />
+              </div>
+              <p class="field-hint">Add attributes and NetFoundry auto-creates the policies that authorize this service. Leave blank to define policies yourself on the next step. Press Enter or comma to add. Prefix with # for role attributes policies can target.</p>
+            </div>
+          </div>
+
+          <!-- Section 2: Add Configurations -->
+          <div class="section-card ob-form-card">
+            <h2 class="ob-section-title">Add Configurations</h2>
+            <p class="ob-section-note">
+              Attach the configs that define this service. An advanced service usually needs at least
+              an <strong>intercept</strong> (client access side) and a <strong>host</strong> (hosting side).
+              <span class="adv-req-hint">At least one is required.</span>
+            </p>
+
+            <!-- Attached configs -->
+            @if (attachedConfigs().length) {
+              <ul class="adv-config-list">
+                @for (c of attachedConfigs(); track c.id) {
+                  <li class="adv-config-item" [class.is-editing]="editingConfigId() === c.id">
+                    <span class="adv-config-icon"><i class="fa-solid fa-gear"></i></span>
+                    <div class="adv-config-meta">
+                      <span class="adv-config-name">{{ c.name }}</span>
+                      <span class="adv-config-type">{{ c.type }}</span>
+                    </div>
+                    <button type="button" class="adv-config-edit" (click)="startEditConfig(c)" aria-label="Edit configuration">
+                      <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button type="button" class="adv-config-remove" (click)="removeConfig(c.id)" aria-label="Remove configuration">
+                      <i class="fa-solid fa-xmark"></i>
+                    </button>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="adv-empty-configs" [class.is-error-text]="noConfigsError()">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                No configurations attached yet.
+              </p>
+            }
+
+            <!-- Add-config: explicit two-mode model (Create new / Attach existing).
+                 Deliberately NOT the console's single dropdown that overloads both.
+                 Hidden while editing — an edit stays on its config's own type. -->
+            @if (!editingConfigId()) {
+              <div class="ob-field">
+                <span class="form-label">Add a configuration</span>
+                <div class="adv-mode-toggle" role="tablist" aria-label="Add configuration mode">
+                  <button type="button" class="adv-mode-btn" role="tab"
+                    [class.is-active]="configMode === 'create'" [attr.aria-selected]="configMode === 'create'"
+                    (click)="setConfigMode('create')">
+                    <i class="fa-solid fa-plus"></i> Create new
+                  </button>
+                  <button type="button" class="adv-mode-btn" role="tab"
+                    [class.is-active]="configMode === 'existing'" [attr.aria-selected]="configMode === 'existing'"
+                    (click)="setConfigMode('existing')">
+                    <i class="fa-solid fa-link"></i> Attach existing
+                  </button>
+                </div>
+              </div>
+            }
+
+            <!-- CREATE NEW — the config type drives which schema fields appear -->
+            @if (configMode === 'create') {
+              @if (!editingConfigId()) {
+                <div class="ob-field">
+                  <label class="form-label" for="adv-cfg-type">Config Type</label>
+                  <select id="adv-cfg-type" class="form-control" [(ngModel)]="pickerType" (ngModelChange)="onTypeChange()">
+                    <option value="">Select a config type…</option>
+                    @for (t of configTypes; track t) {
+                      <option [value]="t">{{ t }}</option>
+                    }
+                  </select>
+                </div>
+              }
+
+              @if (pickerType) {
+                @if (editingConfigId()) {
+                  <div class="adv-edit-hdr">
+                    <span class="adv-edit-type"><i class="fa-solid fa-gear"></i> Editing {{ pickerType }} config</span>
+                    <span class="adv-edit-note">Type can't be changed — remove and create new to switch types.</span>
+                  </div>
+                }
+                <div class="adv-cfgdata">
+                  <p class="adv-cfgdata-title">{{ pickerType }} Configuration Data</p>
+
+                    <!-- intercept.v1 (fully built) -->
+                    @if (pickerType === 'intercept.v1') {
+                      <div class="ob-field">
+                        <label class="form-label" for="ic-ports">Port Ranges <span class="ob-required">Required</span></label>
+                        <input id="ic-ports" class="form-control" type="text" [(ngModel)]="ic_portRanges"
+                          placeholder="80 120-125 443 8080" autocomplete="off" />
+                        <p class="field-hint">Space-separated ports and ranges.</p>
+                      </div>
+                      <div class="ob-field">
+                        <label class="form-label" for="ic-addrs">Addresses <span class="ob-required">Required</span></label>
+                        <input id="ic-addrs" class="form-control" type="text" [(ngModel)]="ic_addresses"
+                          placeholder="myservice.ziti, 10.10.0.0/24" autocomplete="off" />
+                        <p class="field-hint">Comma-separated hostnames, IPs, or CIDRs.</p>
+                      </div>
+                      <div class="ob-field">
+                        <label class="form-label" for="ic-allowed">Allowed Source Addresses <span class="ob-optional">Optional</span></label>
+                        <input id="ic-allowed" class="form-control" type="text" [(ngModel)]="ic_allowedSource"
+                          placeholder="10.0.0.0/8" autocomplete="off" />
+                        <p class="field-hint">Comma-separated. Restrict which client source addresses may dial.</p>
+                      </div>
+
+                      <!-- Dial Options accordion -->
+                      <div class="ob-accordion ob-accordion--nested">
+                        <button type="button" class="ob-accordion-hdr" (click)="togglePanel('dialOptions')" [attr.aria-expanded]="isOpen('dialOptions')">
+                          <span class="ob-accordion-title">Dial Options <span class="ob-optional">Optional</span></span>
+                          <i class="fa-solid" [class.fa-chevron-down]="!isOpen('dialOptions')" [class.fa-chevron-up]="isOpen('dialOptions')"></i>
+                        </button>
+                        @if (isOpen('dialOptions')) {
+                          <div class="ob-accordion-body">
+                            <div class="ob-field">
+                              <span class="form-label">Protocols</span>
+                              <div class="adv-check-row">
+                                <label class="adv-check"><input type="checkbox" [(ngModel)]="ic_protoTcp" /> TCP</label>
+                                <label class="adv-check"><input type="checkbox" [(ngModel)]="ic_protoUdp" /> UDP</label>
+                              </div>
+                            </div>
+                            <div class="ob-field">
+                              <label class="form-label" for="ic-srcip">Source IP <span class="ob-optional">Optional</span></label>
+                              <input id="ic-srcip" class="form-control" type="text" [(ngModel)]="ic_sourceIp"
+                                placeholder="$src_ip" autocomplete="off" />
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    }
+
+                    <!-- host.v1 (fully built) -->
+                    @else if (pickerType === 'host.v1') {
+                      <div class="ob-addr-port-row">
+                        <div class="ob-field ob-proto-group">
+                          <label class="form-label" for="h-proto">Protocol <span class="ob-required">Required</span></label>
+                          <select id="h-proto" class="form-control" [(ngModel)]="h_protocol">
+                            <option value="tcp">TCP</option>
+                            <option value="udp">UDP</option>
+                          </select>
+                        </div>
+                        <div class="ob-field ob-addr-group">
+                          <label class="form-label" for="h-addr">Address <span class="ob-required">Required</span></label>
+                          <input id="h-addr" class="form-control" type="text" [(ngModel)]="h_address"
+                            placeholder="host.name" autocomplete="off" />
+                        </div>
+                        <div class="ob-field ob-port-group">
+                          <label class="form-label" for="h-port">Port <span class="ob-required">Required</span></label>
+                          <input id="h-port" class="form-control" type="number" [(ngModel)]="h_port"
+                            placeholder="443" min="1" max="65535" />
+                        </div>
+                      </div>
+
+                      <div class="adv-toggle-grid">
+                        <div class="ob-toggle-field">
+                          <div class="ob-toggle-text"><span class="form-label">Forward Protocol</span></div>
+                          <button type="button" class="ob-switch" role="switch" [class.on]="h_forwardProtocol()" [attr.aria-checked]="h_forwardProtocol()" (click)="toggle(h_forwardProtocol)"><span class="ob-switch-thumb"></span></button>
+                        </div>
+                        <div class="ob-toggle-field">
+                          <div class="ob-toggle-text"><span class="form-label">Forward Address</span></div>
+                          <button type="button" class="ob-switch" role="switch" [class.on]="h_forwardAddress()" [attr.aria-checked]="h_forwardAddress()" (click)="toggle(h_forwardAddress)"><span class="ob-switch-thumb"></span></button>
+                        </div>
+                        <div class="ob-toggle-field">
+                          <div class="ob-toggle-text"><span class="form-label">Forward Port</span></div>
+                          <button type="button" class="ob-switch" role="switch" [class.on]="h_forwardPort()" [attr.aria-checked]="h_forwardPort()" (click)="toggle(h_forwardPort)"><span class="ob-switch-thumb"></span></button>
+                        </div>
+                      </div>
+
+                      <div class="ob-field">
+                        <label class="form-label" for="h-allowed">Allowed Source Addresses <span class="ob-optional">Optional</span></label>
+                        <input id="h-allowed" class="form-control" type="text" [(ngModel)]="h_allowedSource"
+                          placeholder="10.0.0.0/8" autocomplete="off" />
+                        <p class="field-hint">Comma-separated.</p>
+                      </div>
+                      <div class="ob-field">
+                        <label class="form-label" for="h-fwd-trans">Forward Address Translations <span class="ob-optional">Optional</span></label>
+                        <input id="h-fwd-trans" class="form-control" type="text" [(ngModel)]="h_forwardTranslations"
+                          placeholder="from=to, from2=to2" autocomplete="off" />
+                        <p class="field-hint">Comma-separated.</p>
+                      </div>
+
+                      <!-- HTTP Checks -->
+                      <div class="ob-accordion ob-accordion--nested">
+                        <button type="button" class="ob-accordion-hdr" (click)="togglePanel('httpChecks')" [attr.aria-expanded]="isOpen('httpChecks')">
+                          <span class="ob-accordion-title">HTTP Checks <span class="ob-optional">Optional</span></span>
+                          <i class="fa-solid" [class.fa-chevron-down]="!isOpen('httpChecks')" [class.fa-chevron-up]="isOpen('httpChecks')"></i>
+                        </button>
+                        @if (isOpen('httpChecks')) {
+                          <div class="ob-accordion-body">
+                            <div class="ob-field">
+                              <label class="form-label" for="h-http-url">URL</label>
+                              <input id="h-http-url" class="form-control" type="text" [(ngModel)]="h_http_url" placeholder="http://host.name/health" autocomplete="off" />
+                            </div>
+                            <div class="ob-addr-port-row">
+                              <div class="ob-field ob-proto-group">
+                                <label class="form-label" for="h-http-method">Method</label>
+                                <select id="h-http-method" class="form-control" [(ngModel)]="h_http_method">
+                                  <option value="GET">GET</option>
+                                  <option value="POST">POST</option>
+                                  <option value="HEAD">HEAD</option>
+                                </select>
+                              </div>
+                              <div class="ob-field ob-port-group">
+                                <label class="form-label" for="h-http-status">Expect Status</label>
+                                <input id="h-http-status" class="form-control" type="number" [(ngModel)]="h_http_status" placeholder="200" />
+                              </div>
+                              <div class="ob-field ob-addr-group">
+                                <label class="form-label" for="h-http-interval">Interval</label>
+                                <input id="h-http-interval" class="form-control" type="text" [(ngModel)]="h_http_interval" placeholder="5s" autocomplete="off" />
+                              </div>
+                            </div>
+                          </div>
+                        }
+                      </div>
+
+                      <!-- Listen Options -->
+                      <div class="ob-accordion ob-accordion--nested">
+                        <button type="button" class="ob-accordion-hdr" (click)="togglePanel('listenOptions')" [attr.aria-expanded]="isOpen('listenOptions')">
+                          <span class="ob-accordion-title">Listen Options <span class="ob-optional">Optional</span></span>
+                          <i class="fa-solid" [class.fa-chevron-down]="!isOpen('listenOptions')" [class.fa-chevron-up]="isOpen('listenOptions')"></i>
+                        </button>
+                        @if (isOpen('listenOptions')) {
+                          <div class="ob-accordion-body">
+                            <div class="ob-toggle-field">
+                              <div class="ob-toggle-text"><span class="form-label">Bind Using Edge Identity</span></div>
+                              <button type="button" class="ob-switch" role="switch" [class.on]="h_listen_bindEdge()" [attr.aria-checked]="h_listen_bindEdge()" (click)="toggle(h_listen_bindEdge)"><span class="ob-switch-thumb"></span></button>
+                            </div>
+                            <div class="ob-field">
+                              <label class="form-label" for="h-listen-id">Identity</label>
+                              <input id="h-listen-id" class="form-control" type="text" [(ngModel)]="h_listen_identity" placeholder="$tunneler_id.name" autocomplete="off" />
+                            </div>
+                            <div class="ob-addr-port-row">
+                              <div class="ob-field ob-addr-group">
+                                <label class="form-label" for="h-listen-timeout">Connect Timeout</label>
+                                <input id="h-listen-timeout" class="form-control" type="text" [(ngModel)]="h_listen_connectTimeout" placeholder="5s" autocomplete="off" />
+                              </div>
+                              <div class="ob-field ob-port-group">
+                                <label class="form-label" for="h-listen-max">Max Connections</label>
+                                <input id="h-listen-max" class="form-control" type="number" [(ngModel)]="h_listen_maxConn" placeholder="3" />
+                              </div>
+                            </div>
+                          </div>
+                        }
+                      </div>
+
+                      <!-- Port Checks -->
+                      <div class="ob-accordion ob-accordion--nested">
+                        <button type="button" class="ob-accordion-hdr" (click)="togglePanel('portChecks')" [attr.aria-expanded]="isOpen('portChecks')">
+                          <span class="ob-accordion-title">Port Checks <span class="ob-optional">Optional</span></span>
+                          <i class="fa-solid" [class.fa-chevron-down]="!isOpen('portChecks')" [class.fa-chevron-up]="isOpen('portChecks')"></i>
+                        </button>
+                        @if (isOpen('portChecks')) {
+                          <div class="ob-accordion-body">
+                            <div class="ob-field">
+                              <label class="form-label" for="h-pc-addr">Address</label>
+                              <input id="h-pc-addr" class="form-control" type="text" [(ngModel)]="h_portcheck_address" placeholder="host.name:5432" autocomplete="off" />
+                            </div>
+                            <div class="ob-addr-port-row">
+                              <div class="ob-field ob-addr-group">
+                                <label class="form-label" for="h-pc-interval">Interval</label>
+                                <input id="h-pc-interval" class="form-control" type="text" [(ngModel)]="h_portcheck_interval" placeholder="5s" autocomplete="off" />
+                              </div>
+                              <div class="ob-field ob-addr-group">
+                                <label class="form-label" for="h-pc-timeout">Timeout</label>
+                                <input id="h-pc-timeout" class="form-control" type="text" [(ngModel)]="h_portcheck_timeout" placeholder="2s" autocomplete="off" />
+                              </div>
+                            </div>
+                          </div>
+                        }
+                      </div>
+
+                      <!-- Proxy -->
+                      <div class="ob-accordion ob-accordion--nested">
+                        <button type="button" class="ob-accordion-hdr" (click)="togglePanel('proxy')" [attr.aria-expanded]="isOpen('proxy')">
+                          <span class="ob-accordion-title">Proxy <span class="ob-optional">Optional</span></span>
+                          <i class="fa-solid" [class.fa-chevron-down]="!isOpen('proxy')" [class.fa-chevron-up]="isOpen('proxy')"></i>
+                        </button>
+                        @if (isOpen('proxy')) {
+                          <div class="ob-accordion-body">
+                            <div class="ob-addr-port-row">
+                              <div class="ob-field ob-proto-group">
+                                <label class="form-label" for="h-proxy-type">Type</label>
+                                <input id="h-proxy-type" class="form-control" type="text" [(ngModel)]="h_proxy_type" placeholder="http" autocomplete="off" />
+                              </div>
+                              <div class="ob-field ob-addr-group">
+                                <label class="form-label" for="h-proxy-addr">Address</label>
+                                <input id="h-proxy-addr" class="form-control" type="text" [(ngModel)]="h_proxy_address" placeholder="proxy.host:3128" autocomplete="off" />
+                              </div>
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    }
+
+                    <!-- Stubbed types -->
+                    @else {
+                      <div class="adv-stub">
+                        <i class="fa-solid fa-screwdriver-wrench"></i>
+                        <span>{{ pickerType }} configuration — coming soon</span>
+                        <p>This config type is selectable and attaches with a name; its data schema is not built out yet.</p>
+                      </div>
+                    }
+                </div>
+
+                <!-- Config Name — required to create -->
+                <div class="ob-field">
+                  <label class="form-label" for="adv-cfg-name">Config Name <span class="ob-required">Required</span></label>
+                  <input
+                    id="adv-cfg-name"
+                    class="form-control"
+                    [class.is-error]="showError('configName')"
+                    type="text"
+                    [(ngModel)]="newConfigName"
+                    (blur)="markTouched('configName')"
+                    placeholder="Name this config"
+                    autocomplete="off" />
+                </div>
+
+                <div class="ob-form-actions">
+                  @if (editingConfigId()) {
+                    <button type="button" class="btn btn-primary" (click)="saveConfigEdit()">
+                      <i class="fa-solid fa-check"></i> Save Changes
+                    </button>
+                    <button type="button" class="btn btn-secondary" (click)="cancelConfigEdit()">
+                      Cancel
+                    </button>
+                  } @else {
+                    <button type="button" class="btn btn-primary" (click)="createAndAttach()">
+                      <i class="fa-solid fa-plus"></i> Create &amp; Attach
+                    </button>
+                  }
+                </div>
+              }
+
+            } @else {
+
+              <!-- ATTACH EXISTING — a config that already exists (carries its type).
+                   In edit mode the picker is preselected and swapping it replaces
+                   the attached config (e.g. a wrong type picked by accident). -->
+              @if (editingConfigId()) {
+                <div class="adv-edit-hdr">
+                  <span class="adv-edit-type"><i class="fa-solid fa-link"></i> Editing attached config</span>
+                  <span class="adv-edit-note">Pick a different existing config to swap it, or cancel.</span>
+                </div>
+              }
+              @if (availableExisting().length) {
+                <div class="ob-field">
+                  <label class="form-label" for="adv-cfg-existing">Existing Config</label>
+                  <select id="adv-cfg-existing" class="form-control" [(ngModel)]="existingPick">
+                    <option value="">Select a config…</option>
+                    @for (ex of availableExisting(); track ex.id) {
+                      <option [value]="ex.id">{{ ex.name }} ({{ ex.type }})</option>
+                    }
+                  </select>
+                </div>
+                <div class="ob-form-actions">
+                  @if (editingConfigId()) {
+                    <button type="button" class="btn btn-primary" [disabled]="!existingPick" (click)="saveConfigEdit()">
+                      <i class="fa-solid fa-check"></i> Save Changes
+                    </button>
+                    <button type="button" class="btn btn-secondary" (click)="cancelConfigEdit()">
+                      Cancel
+                    </button>
+                  } @else {
+                    <button type="button" class="btn btn-primary" [disabled]="!existingPick" (click)="attachExisting()">
+                      <i class="fa-solid fa-link"></i> Attach
+                    </button>
+                  }
+                </div>
+              } @else {
+                <p class="adv-empty-configs">
+                  <i class="fa-solid fa-circle-info"></i>
+                  No existing configs available to attach.
+                </p>
+              }
+
+            }
+          </div>
+
+          <!-- Section 3: Show More Options (collapsed, OPTIONAL) -->
+          <div class="ob-accordion">
+            <button type="button" class="ob-accordion-hdr" (click)="togglePanel('showMore')" [attr.aria-expanded]="isOpen('showMore')">
+              <span class="ob-accordion-title">Show More Options <span class="ob-optional">Optional</span></span>
+              <i class="fa-solid" [class.fa-chevron-down]="!isOpen('showMore')" [class.fa-chevron-up]="isOpen('showMore')"></i>
+            </button>
+            @if (isOpen('showMore')) {
+              <div class="ob-accordion-body">
+                <div class="ob-field">
+                  <label class="form-label" for="adv-term">Terminator Strategy <span class="ob-optional">Optional</span></label>
+                  <select id="adv-term" class="form-control" [(ngModel)]="terminatorStrategy">
+                    <option value="">Default (smartrouting)</option>
+                    <option value="smartrouting">smartrouting</option>
+                    <option value="weighted">weighted</option>
+                    <option value="random">random</option>
+                    <option value="ha">ha</option>
+                  </select>
+                </div>
+
+                <div class="ob-toggle-field">
+                  <div class="ob-toggle-text">
+                    <span class="form-label">Encryption Required</span>
+                    <p class="field-hint">End-to-end encrypt traffic to this service (recommended).</p>
+                  </div>
+                  <button type="button" class="ob-switch" role="switch" [class.on]="encryptionRequired()" [attr.aria-checked]="encryptionRequired()" (click)="toggle(encryptionRequired)">
+                    <span class="ob-switch-thumb"></span>
+                  </button>
+                </div>
+
+                <div class="ob-field">
+                  <label class="form-label" for="adv-tags">Tags <span class="ob-optional">Optional</span></label>
+                  <div class="tag-input-wrap">
+                    @for (tag of tags(); track tag) {
+                      <span class="tag-chip">
+                        {{ tag }}
+                        <button class="tag-chip-x" type="button" (click)="removeTag(tag)" aria-label="Remove tag">
+                          <i class="fa-solid fa-xmark"></i>
+                        </button>
+                      </span>
+                    }
+                    <input id="adv-tags" class="tag-bare-input" [(ngModel)]="tagInput" (keydown)="onTagKeydown($event)"
+                      [placeholder]="tags().length === 0 ? 'Add tags' : ''" autocomplete="off" />
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Save -->
+          <div class="ob-form-actions adv-save-row">
+            <button type="button" class="btn btn-primary" (click)="save()">
+              <i class="fa-solid fa-check"></i> Save
+            </button>
+          </div>
+        </main>
+
+        <!-- ── Right rail: Associated Entities ──────────────────────────── -->
+        <aside class="adv-rail">
+          <h3 class="adv-rail-title">Associated Entities</h3>
+
+          <div class="adv-rail-panel">
+            <div class="adv-rail-panel-hdr">
+              <span>Configurations</span>
+              <span class="adv-rail-count">{{ attachedConfigs().length }}</span>
+            </div>
+            @if (attachedConfigs().length) {
+              @for (c of attachedConfigs(); track c.id) {
+                <p class="adv-rail-line">{{ c.name }} <span class="adv-rail-line-type">{{ c.type }}</span></p>
+              }
+            } @else {
+              <p class="adv-rail-empty">No items to display</p>
+            }
+          </div>
+
+          <div class="adv-rail-panel">
+            <div class="adv-rail-panel-hdr">
+              <span>Service Policies</span>
+              <span class="adv-rail-count">0</span>
+            </div>
+            <p class="adv-rail-empty">No items to display</p>
+          </div>
+
+          <div class="adv-rail-panel">
+            <div class="adv-rail-panel-hdr">
+              <span>Terminators</span>
+              <span class="adv-rail-count">0</span>
+            </div>
+            <p class="adv-rail-empty">No items to display</p>
+          </div>
+        </aside>
+
+      </div>
+
+    } @else {
+
+      <!-- ── Confirmation ─────────────────────────────────────────────── -->
+      <div class="section-card ob-form-card adv-confirm">
+        <div class="ob-saved-banner">
+          <span class="ob-saved-icon"><i class="fa-solid fa-circle-check"></i></span>
+          <div>
+            <p class="ob-saved-title">“{{ serviceName }}” created</p>
+            <p class="ob-saved-sub">
+              Service created with {{ attachedConfigs().length }}
+              {{ attachedConfigs().length === 1 ? 'configuration' : 'configurations' }} attached.
+            </p>
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm adv-edit" (click)="edit()">
+            <i class="fa-solid fa-pen"></i> Edit
+          </button>
+        </div>
+
+        <div class="adv-next">
+          @if (attributes().length) {
+            <p class="adv-next-lede">
+              Because this service has attributes, NetFoundry will
+              <strong>auto-create</strong> the policies it needs from them — there's
+              nothing to author by hand.
+            </p>
+          } @else {
+            <p class="adv-next-lede">
+              This service has no attributes, so its policies aren't auto-created.
+              You'll define them by hand on the <strong>Policy</strong> step next:
+            </p>
+            <ul class="adv-next-steps">
+              <li><span class="adv-next-name">Service Policy</span> — which identities may dial or bind this service.</li>
+              <li><span class="adv-next-name">Router Policy</span> — which edge routers those identities may use.</li>
+              <li><span class="adv-next-name">Service Edge Router Policy</span> — which routers may carry this service (optional).</li>
+            </ul>
+          }
+        </div>
+
+        <p class="ob-gen-note">
+          <i class="fa-solid fa-circle-info"></i>
+          @if (attributes().length) {
+            Continue to verify traffic flows end-to-end.
+          } @else {
+            Continue to the Policy step to authorize access.
+          }
+        </p>
+      </div>
+
+    }
+
+    <!-- Navigation -->
+    <div class="ob-step-nav">
+      @if (hasBack) {
+        <button type="button" class="btn btn-secondary" (click)="back()">
+          <i class="fa-solid fa-arrow-left"></i> Back
+        </button>
+      } @else {
+        <span></span>
+      }
+      <button type="button" class="btn btn-primary" [disabled]="!saved()" (click)="continue()">
+        Continue <i class="fa-solid fa-arrow-right"></i>
+      </button>
+    </div>
+
+  </div>
+</div>

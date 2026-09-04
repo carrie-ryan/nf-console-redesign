@@ -1,0 +1,166 @@
+<div class="ob-screen">
+
+  <div class="ob-step-panel">
+
+    <header class="ob-step-head">
+      <span class="ob-step-badge"><i class="fa-solid fa-user-plus"></i></span>
+      <div class="ob-step-head-text">
+        <h1>Enroll Identity</h1>
+        <p class="ob-step-tag">Represent a client — a device, user, or app — on the network.</p>
+      </div>
+      <button type="button" class="btn btn-secondary btn-sm ob-learn" (click)="openHelp()">
+        <i class="fa-solid fa-circle-info"></i> Learn more
+      </button>
+    </header>
+
+    <!-- In-console: create the identity (shallow — no persistence) -->
+    <div class="section-card ob-form-card">
+
+      <div class="ob-field">
+        <label class="form-label" for="ob-id-name">Identity Name <span class="ob-required">Required</span></label>
+        <input
+          id="ob-id-name"
+          class="form-control"
+          type="text"
+          [(ngModel)]="identityName"
+          [disabled]="saved()"
+          placeholder="Get started client"
+          autocomplete="off" />
+        <p class="field-hint">A recognizable name for this device, user, or workload.</p>
+      </div>
+
+      <div class="ob-field">
+        <label class="form-label" for="ob-id-attrs">Attributes</label>
+        <div class="tag-input-wrap">
+          @for (attr of attributes(); track attr) {
+            <span class="tag-chip">
+              {{ attr }}
+              @if (!saved()) {
+                <button class="tag-chip-x" type="button" (click)="removeAttribute(attr)" aria-label="Remove attribute">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              }
+            </span>
+          }
+          @if (!saved()) {
+            <input
+              id="ob-id-attrs"
+              class="tag-bare-input"
+              [(ngModel)]="attributeInput"
+              (keydown)="onAttributeKeydown($event)"
+              [placeholder]="attributes().length === 0 ? 'e.g. #get-started-client' : ''"
+              autocomplete="off" />
+          }
+        </div>
+        <p class="field-hint">Attributes let policies target this identity by group (e.g. #employees) instead of by name. Optional. Press Enter or comma to add. Prefix with # for role attributes policies can target.</p>
+      </div>
+
+      <div class="ob-field">
+        <label class="form-label" for="ob-id-auth">Auth Policy <span class="ob-optional">Optional</span></label>
+        <select
+          id="ob-id-auth"
+          class="form-control"
+          [(ngModel)]="authPolicy"
+          [disabled]="saved()">
+          <option value="Default">Default</option>
+        </select>
+        <p class="field-hint">Controls how this identity authenticates. Leave as Default to get started.</p>
+      </div>
+
+      <div class="ob-field">
+        <label class="form-label" for="ob-id-ext">External ID <span class="ob-optional">Optional</span></label>
+        <input
+          id="ob-id-ext"
+          class="form-control"
+          type="text"
+          [(ngModel)]="externalId"
+          [disabled]="saved()"
+          placeholder="Optional external ID"
+          autocomplete="off" />
+        <p class="field-hint">Maps this identity to a record in an external system, if you use one.</p>
+      </div>
+
+      @if (!saved()) {
+        <div class="ob-form-actions">
+          <button
+            type="button"
+            class="btn btn-primary"
+            [disabled]="!identityName.trim()"
+            (click)="createIdentity()">
+            <i class="fa-solid fa-plus"></i> Enroll Identity
+          </button>
+        </div>
+      } @else {
+        <!-- After save: the enrollment token affordance -->
+        <div class="ob-saved">
+          <div class="ob-saved-banner">
+            <span class="ob-saved-icon"><i class="fa-solid fa-circle-check"></i></span>
+            <div>
+              <p class="ob-saved-title">“{{ identityName }}” enrolled</p>
+              <p class="ob-saved-sub">Download its enrollment token to connect the client.</p>
+            </div>
+          </div>
+          <button type="button" class="btn btn-secondary ob-jwt-btn">
+            <i class="fa-solid fa-download"></i> Download JWT (enrollment token)
+          </button>
+        </div>
+      }
+    </div>
+
+    <!-- Outside-console: fake link-outs for the off-console enrollment steps -->
+    @if (saved()) {
+      <div class="section-card ob-outside">
+        <div class="ob-outside-head">
+          <span class="ob-outside-icon"><i class="fa-solid fa-arrow-up-right-from-square"></i></span>
+          <div>
+            <h2>Finish on the device</h2>
+            <p>These steps happen outside the console, on the client itself.</p>
+          </div>
+        </div>
+        <ol class="ob-outside-steps">
+          <li>
+            <span class="ob-outside-num">1</span>
+            <div>
+              <p class="ob-outside-step-title">Install a tunneler app on the device</p>
+              <a href="#" class="ob-fake-link" onclick="return false" aria-disabled="true">
+                Download the tunneler app <i class="fa-solid fa-arrow-right"></i>
+              </a>
+            </div>
+          </li>
+          <li>
+            <span class="ob-outside-num">2</span>
+            <div>
+              <p class="ob-outside-step-title">Enroll using the JWT you downloaded above</p>
+              <a href="#" class="ob-fake-link" onclick="return false" aria-disabled="true">
+                Learn how to enroll <i class="fa-solid fa-arrow-right"></i>
+              </a>
+            </div>
+          </li>
+          <li>
+            <span class="ob-outside-num">3</span>
+            <div>
+              <p class="ob-outside-step-title">Confirm the device shows online back in the console</p>
+              <span class="ob-outside-note">You'll verify this in the final step.</span>
+            </div>
+          </li>
+        </ol>
+      </div>
+    }
+
+    <!-- Shell-consistent Back / Continue -->
+    <div class="ob-step-nav">
+      @if (hasBack) {
+        <button type="button" class="btn btn-secondary" (click)="back()">
+          <i class="fa-solid fa-arrow-left"></i> Back
+        </button>
+      } @else {
+        <span></span>
+      }
+      <button type="button" class="btn btn-primary" (click)="continue()">
+        Continue <i class="fa-solid fa-arrow-right"></i>
+      </button>
+    </div>
+
+  </div>
+
+</div>

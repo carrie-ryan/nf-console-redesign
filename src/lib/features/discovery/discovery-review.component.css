@@ -1,0 +1,427 @@
+:host { display: block; }
+
+.review-body {
+  padding: 1.5rem;
+  max-width: 84rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ─── Intro (tight) + progress ───────────────────────────────────────── */
+.review-intro {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.intro-text { flex: 1; min-width: 20rem; }
+.intro-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--brand-accent);
+}
+.review-intro h2 {
+  margin: 0.4rem 0 0.35rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+}
+.review-intro p {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--color-text-2);
+  max-width: 38rem;
+}
+
+.progress-ledger {
+  flex-shrink: 0;
+  width: 15rem;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 0.875rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+.ledger-counts { display: flex; flex-direction: column; gap: 0.3rem; }
+.lc {
+  font-size: 0.75rem;
+  color: var(--color-text-2);
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+.lc strong {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+.lc.accent strong { color: var(--brand-primary); }
+.lc.muted strong { color: var(--color-text-3); }
+.progress-track {
+  height: 6px;
+  background: var(--color-surface-3);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--brand-primary), var(--brand-accent));
+  border-radius: var(--radius-full);
+  transition: width var(--transition-slow);
+}
+
+/* ─── Sections ───────────────────────────────────────────────────────── */
+.review-section { display: flex; flex-direction: column; gap: 0.75rem; }
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.section-head h3 {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--color-text);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.section-sub { font-size: 0.75rem; color: var(--color-text-3); }
+
+.table-card { padding: 0; overflow: hidden; }
+
+/* ─── Role table ─────────────────────────────────────────────────────── */
+.col-chevron { width: 2rem; text-align: center; color: var(--color-text-3); }
+.col-num { text-align: right; width: 5.5rem; white-space: nowrap; }
+.col-action { text-align: right; width: 14rem; }
+.col-action .btn { white-space: nowrap; }
+.role-table th { white-space: nowrap; }
+
+.chevron {
+  font-size: 0.6875rem;
+  color: var(--color-text-3);
+  transition: transform var(--transition-fast);
+}
+.chevron--open { transform: rotate(90deg); }
+
+.group-row { cursor: pointer; }
+.group-row:hover td { background: var(--color-surface-2); }
+.group-row.is-done td { background: color-mix(in srgb, var(--color-success) 5%, transparent); }
+
+.num { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--color-text); }
+
+/* Role chip (editable) */
+.col-role { min-width: 14rem; }
+.role-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.65rem;
+  border: 1px solid var(--brand-accent);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--brand-accent) 8%, transparent);
+  color: var(--brand-accent);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  cursor: pointer;
+}
+.role-chip:hover { background: color-mix(in srgb, var(--brand-accent) 16%, transparent); }
+.role-chip.provisional { border-style: dashed; }
+.role-chip-pen { font-size: 0.625rem; opacity: 0.65; }
+
+.role-edit { display: inline-flex; align-items: center; gap: 0.3rem; flex-wrap: wrap; }
+.role-edit-input {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--brand-primary);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  min-width: 11rem;
+}
+.role-edit-btn {
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  border-radius: var(--radius-sm);
+  width: 1.75rem;
+  height: 1.75rem;
+  cursor: pointer;
+  color: var(--color-text-2);
+}
+.role-edit-btn.ok { color: var(--color-success); border-color: var(--color-success); }
+.rename-error {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  color: var(--color-danger);
+  width: 100%;
+}
+
+/* Volume meter */
+.col-vol { min-width: 10rem; }
+.vol-meter { display: flex; flex-direction: column; gap: 0.3rem; }
+.vol-count { font-size: 0.75rem; color: var(--color-text-2); font-variant-numeric: tabular-nums; }
+.vol-count strong { color: var(--color-text); }
+.vol-bar {
+  height: 4px;
+  background: var(--color-surface-3);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  max-width: 10rem;
+}
+.vol-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--brand-primary), var(--brand-accent));
+  border-radius: var(--radius-full);
+}
+
+.status-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.status-tag.approved { color: var(--color-success); }
+
+/* ─── Expanded role detail ───────────────────────────────────────────── */
+.detail-row td { background: var(--color-surface-2); padding: 0; }
+.role-detail {
+  padding: 1rem 1.25rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+.detail-rationale {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: var(--color-text-2);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+.detail-rationale > i { color: var(--brand-accent); }
+.shared-dest {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-3);
+  color: var(--color-text-2);
+}
+/* Evidence sub-table */
+.evidence {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-surface);
+}
+.evidence-cap {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-3);
+  background: var(--color-surface-2);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.evidence-cap i { color: var(--brand-accent); }
+.evidence-scroll { overflow-x: auto; }
+/* Fixed layout + percentage column widths that sum to 100% → the table always
+   fills its container exactly (no forced overflow / scroll), and every column
+   keeps its own slice so values can never merge. */
+.evidence-table { width: 100%; font-size: 0.8125rem; table-layout: fixed; }
+.evidence-table th,
+.evidence-table td { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.evidence-table th {
+  text-align: left;          /* <th> defaults to center — force left so headers sit above their data */
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-3);
+}
+/* Column widths via <colgroup> — reliably scoped by Angular (unlike :is()) and
+   the canonical way to size a fixed-layout table. text-align for the numeric
+   columns stays on their .col-num th/td. */
+.evidence-table col.ec-ip { width: 12%; }
+.evidence-table col.ec-port { width: 9%; }
+.evidence-table col.ec-entity { width: 16%; }
+.evidence-table col.ec-egress { width: 19%; }
+.evidence-table col.ec-service { width: 23%; }
+.evidence-table col.ec-circuits { width: 9%; }
+.ev-entity { font-weight: 600; color: var(--color-text); }
+.ev-egress { color: var(--color-text-2); }
+/* Every evidence column is left-aligned so each header sits directly above its
+   data (Port is an identifier, not a quantity; Circuits reads fine left-aligned). */
+.evidence-table td.ev-port,
+.evidence-table td.ev-circuits { text-align: left; }
+.ev-ip,
+.ev-dest {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  color: var(--color-text-2);
+}
+.svc-name { font-weight: 500; }
+
+/* Quiet "N new" hint under the Services count (single stat, not a per-row pill). */
+.svc-new-hint {
+  display: block;
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--brand-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Detail notes */
+.detail-note {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
+}
+.detail-note.info { background: var(--color-info-bg); color: var(--color-text-2); }
+.detail-note.warn { background: var(--color-warning-bg); color: var(--color-text-2); }
+/* NEW (step 2): partial-materialize / needs-enrolling — a THIRD, distinct tone
+   (success/green) so it never reads as the amber outside-role warn or the blue
+   non-unanimous info. Positive consequence: the policy WAS created. */
+.detail-note.enroll { background: var(--color-success-bg); color: var(--color-text-2); }
+.detail-note i { align-self: center; }
+.detail-note.info i { color: var(--color-info); }
+.detail-note.warn i { color: var(--color-warning); }
+.detail-note.enroll i { color: var(--color-success); }
+.member-pill.enroll-pill {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  border-color: var(--color-success-border);
+  color: var(--color-text-2);
+}
+/* pre-creation row sub-line — "N unmanaged" beneath the managed count. Unmanaged
+   is a NEUTRAL discovery category, not a success, so it's muted (like the
+   .src-badge vocabulary), NOT green — green here read as a positive signal. */
+.enroll-hint {
+  display: block;
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--color-text-3);
+  font-variant-numeric: tabular-nums;
+}
+.partial-pill {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.6875rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+.member-pill {
+  display: inline-flex;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  font-size: 0.6875rem;
+  color: var(--color-text-2);
+}
+.member-pill.straggler { border-style: dashed; color: var(--color-text-3); }
+.straggler-list { display: inline-flex; flex-wrap: wrap; gap: 0.3rem; }
+
+/* ─── Ungrouped / low-confidence ─────────────────────────────────────── */
+.low-conf .section-head h3 { color: var(--color-text-2); }
+.low-conf .section-head h3 i { color: var(--color-warning); }
+.low-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  opacity: 0.94;
+}
+.low-block { display: flex; flex-direction: column; gap: 0.5rem; }
+.low-head {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--color-text);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.low-head i { color: var(--color-text-3); }
+.low-sub { margin: 0; font-size: 0.75rem; color: var(--color-text-3); line-height: 1.5; }
+.ungrouped-list { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+.lowvol-table { font-size: 0.8125rem; margin-top: 0.25rem; }
+.lowvol-table th {
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-3);
+}
+.low-dialers { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+
+/* ─── Deferred footer ────────────────────────────────────────────────── */
+.review-defer {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.875rem 1rem;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-text-3);
+  background: var(--color-surface);
+}
+.review-defer i { color: var(--color-text-3); padding-top: 0.15rem; }
+
+@media (max-width: 820px) {
+  .review-body { padding: 1rem; }
+  .progress-ledger { width: 100%; }
+  .review-intro { gap: 1rem; }
+}
+
+/* ─── enrolled/unenrolled source cue — quiet, categorical (NOT an alarm) ──────
+   Enrolled sources render as-is (the normal case); unenrolled (observed-only)
+   sources get a muted badge so the unknowns are what the eye catches. Same
+   treatment as the raw-traffic table, for cross-view consistency. */
+.src-unenrolled { color: var(--color-text-2); font-weight: 500; }
+.src-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.35rem;
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-2);
+  color: var(--color-text-3);
+  font-size: 0.5625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1.4;
+  white-space: nowrap;
+  vertical-align: middle;
+}

@@ -1,0 +1,324 @@
+:host { display: block; height: 100%; }
+
+.ob-map {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  height: 100%;
+  width: 100%;
+  max-width: 720px;
+  /* Left-align within the region so the map hugs the form side rather than
+     centring with dead space on its left on wide screens. */
+  margin-inline: 0;
+}
+
+/* ─── Header ──────────────────────────────────────────────────────────── */
+.ob-map-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.ob-map-eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-3);
+}
+
+.ob-map-path {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+/* ─── Schematic ───────────────────────────────────────────────────────── */
+.ob-map-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 68vh;
+}
+
+/* ─── Zones ───────────────────────────────────────────────────────────── */
+/* Very subtle tints so Access reads distinct from Transport without shouting. */
+.ob-zone-rect {
+  stroke: var(--color-border-strong);
+  stroke-width: 1.25;
+  stroke-dasharray: 6 4;
+}
+.ob-zone-access  .ob-zone-rect { fill: rgba(27, 79, 216, 0.035); }   /* faint blue  */
+.ob-zone-transport .ob-zone-rect { fill: rgba(15, 23, 42, 0.035); }  /* faint slate */
+
+.ob-zone-label {
+  fill: var(--color-text-3);
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  dominant-baseline: auto;
+}
+
+/* ─── Connectors + arrows (ghost dashed flows) ────────────────────────── */
+.ob-arrow,
+.ob-connector {
+  fill: none;
+  stroke: var(--color-border-strong);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+  stroke-linecap: round;
+  opacity: 0.7;
+  transition: stroke var(--transition-base), stroke-width var(--transition-base), opacity var(--transition-base);
+}
+
+.ob-map-arrowhead {
+  fill: var(--color-border-strong);
+  opacity: 0.85;
+}
+
+/* Small pill riding on an arrow (masks the line under the label) */
+.ob-arrow-pill rect {
+  fill: var(--color-surface);
+  stroke: var(--color-border-strong);
+  stroke-width: 1;
+  opacity: 0.95;
+  transition: stroke var(--transition-base);
+}
+.ob-arrow-pill text {
+  fill: var(--color-text-3);
+  font-family: var(--font-sans);
+  font-size: 8.5px;
+  font-weight: 600;
+  font-style: italic;
+  text-anchor: middle;
+  dominant-baseline: central;
+  transition: fill var(--transition-base);
+}
+
+/* ─── Entity nodes (ghost by default; solidify live — see solid block) ─── */
+.ob-node-ring {
+  fill: var(--color-surface);
+  stroke: var(--color-text-3);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+  transition: fill var(--transition-base), stroke var(--transition-base), stroke-width var(--transition-base);
+}
+
+.ob-node { opacity: 0.72; transition: opacity var(--transition-base); }
+
+.ob-node-icon {
+  fill: var(--color-text-3);
+  font-family: 'Font Awesome 7 Free';
+  font-weight: 900;
+  font-size: 15px;
+  text-anchor: middle;
+  dominant-baseline: central;
+  opacity: 0.9;
+  transition: fill var(--transition-base), opacity var(--transition-base);
+}
+
+.ob-node-label {
+  fill: var(--color-text-3);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  text-anchor: middle;
+  dominant-baseline: auto;
+  transition: fill var(--transition-base);
+}
+
+/* Secondary sub-label under a node name (router hosting type). Smaller + lighter
+   than the name; legible even in the ghost state — it conveys a REAL current
+   selection (self-hosted by default), not a placeholder. */
+.ob-node-sublabel {
+  fill: var(--color-text-3);
+  font-family: var(--font-sans);
+  font-size: 8px;
+  font-weight: 500;
+  text-anchor: middle;
+  dominant-baseline: auto;
+  transition: fill var(--transition-base);
+}
+
+/* ─── Hosting identity — SUBORDINATE node (simple branch only) ──────────────
+   A small rounded SQUARE, not a core circle, so it reads as a supporting
+   participant rather than a co-equal entity. Teal + identity glyph keep it
+   recognisable; it firms teal on solidify via the shared data-hue variables. */
+.ob-host-ring {
+  fill: var(--color-surface);
+  stroke: var(--color-text-3);
+  stroke-width: 1.25;
+  stroke-dasharray: 4 3;
+  transition: fill var(--transition-base), stroke var(--transition-base), stroke-width var(--transition-base);
+}
+.ob-host-icon {
+  fill: var(--color-text-3);
+  font-family: 'Font Awesome 7 Free';
+  font-weight: 900;
+  font-size: 11px;
+  text-anchor: middle;
+  dominant-baseline: central;
+  opacity: 0.9;
+  transition: fill var(--transition-base), opacity var(--transition-base);
+}
+.ob-node.is-solid .ob-host-ring {
+  fill: var(--sf);
+  stroke: var(--sc);
+  stroke-width: 1.5;
+  stroke-dasharray: none;
+}
+.ob-node.is-solid .ob-host-icon { fill: var(--sc); opacity: 1; }
+
+/* ─── Config annotations — short text set FLUSH ALONG the flow ───────────────
+   No box: just tiny muted text rotated onto the line, reading like an edge label on
+   a wire. A surface-coloured halo (paint-order: stroke) keeps it legible where the
+   dashed line runs behind it. Subordinate to the dial/bind pills and the nodes. */
+.ob-config-label {
+  fill: var(--color-text-3);
+  font-family: var(--font-sans);
+  font-size: 7.5px;
+  font-weight: 600;
+  font-style: italic;
+  letter-spacing: 0.02em;
+  text-anchor: middle;
+  dominant-baseline: central;
+  paint-order: stroke;
+  stroke: var(--color-surface);
+  stroke-width: 2.5px;
+  stroke-linejoin: round;
+  opacity: 0.9;
+  transition: fill var(--transition-base);
+}
+.ob-config-label.is-solid { fill: var(--color-text-2); }
+
+/* ─── Permission cards — a policy NAME + what it DOES, riding its edge ───── */
+/* Restrained by design: a subtle card that annotates its relationship. It must
+   read as quieter than the entity nodes — the nodes ARE the network; the cards
+   authorize them. */
+.ob-policy-card {
+  fill: var(--color-surface);
+  stroke: var(--color-text-3);
+  stroke-width: 1.25;
+  stroke-dasharray: 4 3;
+  transition: fill var(--transition-base), stroke var(--transition-base), stroke-width var(--transition-base);
+}
+.ob-policy-icon {
+  fill: var(--color-text-3);
+  font-family: 'Font Awesome 7 Free';
+  font-weight: 900;
+  font-size: 10px;
+  text-anchor: middle;
+  dominant-baseline: central;
+  transition: fill var(--transition-base);
+}
+/* NAME — bold top line (the created policy's real name, or the type name). */
+.ob-policy-name {
+  fill: var(--color-text-2);
+  font-family: var(--font-sans);
+  font-size: 9.5px;
+  font-weight: 700;
+  text-anchor: start;
+  dominant-baseline: auto;
+  transition: fill var(--transition-base);
+}
+/* PHRASE — muted second line: what the policy grants. */
+.ob-policy-phrase {
+  fill: var(--color-text-3);
+  font-family: var(--font-sans);
+  font-size: 8px;
+  font-weight: 500;
+  text-anchor: start;
+  dominant-baseline: auto;
+  transition: fill var(--transition-base);
+}
+.ob-policy { opacity: 0.72; transition: opacity var(--transition-base); }
+
+/* MANUAL — you build it: the neutral buildable-ghost treatment (above). */
+
+/* AUTO — NetFoundry creates it: accent-tinted, so it reads as "not yours to
+   build". Still ghosted (dashed) until its service exists; then it solidifies. */
+.ob-policy.is-auto { opacity: 0.85; }
+.ob-policy.is-auto .ob-policy-card {
+  fill: var(--brand-primary-light);
+  stroke: var(--brand-accent);
+}
+.ob-policy.is-auto .ob-policy-icon,
+.ob-policy.is-auto .ob-policy-name { fill: var(--brand-accent); }
+
+/* UNSET — no path chosen yet: faintest, undetermined. */
+.ob-policy.is-unset { opacity: 0.42; }
+
+/* ══ SOLID STATE (Part 3c) ════════════════════════════════════════════════
+   A part goes solid once its entity actually exists on the network. Ghost is
+   unchanged; solid reads as "real/present": filled ring, full-colour icon (per
+   the node's baked hue), un-dashed connectors. Transitions ease it in. */
+
+/* Node hues — resolved from the baked data-hue only in the solid state. */
+.ob-node.is-solid[data-hue='blue']   { --sc: var(--brand-primary);       --sf: var(--brand-primary-light); }
+.ob-node.is-solid[data-hue='teal']   { --sc: #0D9488; --sf: rgba(13, 148, 136, 0.10); }
+.ob-node.is-solid[data-hue='purple'] { --sc: #7C3AED; --sf: rgba(124, 58, 237, 0.10); }
+.ob-node.is-solid[data-hue='coral']  { --sc: #F97316; --sf: rgba(249, 115, 22, 0.10); }
+
+.ob-node.is-solid { opacity: 1; }
+.ob-node.is-solid .ob-node-ring {
+  fill: var(--sf);
+  stroke: var(--sc);
+  stroke-width: 2;
+  stroke-dasharray: none;
+}
+.ob-node.is-solid .ob-node-icon { fill: var(--sc); opacity: 1; }
+.ob-node.is-solid .ob-node-label { fill: var(--color-text); }
+/* Sub-label firms to secondary text (still muted below the name) once solid. */
+.ob-node.is-solid .ob-node-sublabel { fill: var(--color-text-2); }
+
+/* Arrows + connector — solid, un-dashed, brand-coloured once both endpoints exist. */
+.ob-arrow.is-solid,
+.ob-connector.is-solid {
+  stroke: var(--brand-primary);
+  stroke-width: 1.75;
+  stroke-dasharray: none;
+  opacity: 1;
+}
+.ob-map-arrowhead.is-solid { fill: var(--brand-primary); opacity: 1; }
+
+/* The dial/bind pill firms up with its arrow. */
+.ob-arrow-pill.is-solid rect { stroke: var(--brand-primary); opacity: 1; }
+.ob-arrow-pill.is-solid text { fill: var(--color-text-2); font-style: normal; }
+
+/* Permission cards — solid keeps the variant hue (manual = brand-primary, auto =
+   accent); unset never solidifies. The name firms to full-strength text; the
+   phrase stays muted so the card never shouts over the nodes. */
+.ob-policy.is-solid { opacity: 1; }
+.ob-policy.is-solid .ob-policy-card {
+  fill: var(--brand-primary-light);
+  stroke-width: 1.5;
+  stroke-dasharray: none;
+}
+.ob-policy.is-solid .ob-policy-phrase { fill: var(--color-text-2); }
+.ob-policy.is-manual.is-solid .ob-policy-card { stroke: var(--brand-primary); }
+.ob-policy.is-manual.is-solid .ob-policy-icon,
+.ob-policy.is-manual.is-solid .ob-policy-name { fill: var(--brand-primary); }
+.ob-policy.is-auto.is-solid .ob-policy-card { stroke: var(--brand-accent); }
+.ob-policy.is-auto.is-solid .ob-policy-icon,
+.ob-policy.is-auto.is-solid .ob-policy-name { fill: var(--brand-accent); }
+
+/* ─── NetFoundry-hosting choice marker ────────────────────────────────────
+   The NF logo rides the router node as its icon when NF-hosting is chosen. It is
+   a CHOICE MARKER: always full-colour (never the ghost desaturation), because it
+   lives outside the dimmed .ob-node group. */
+.ob-router-nf-logo {
+  opacity: 1;
+  pointer-events: none;
+}
+
+/* ─── Footnote ────────────────────────────────────────────────────────── */
+.ob-map-note {
+  margin: auto 0 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--color-text-3);
+}

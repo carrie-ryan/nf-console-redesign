@@ -1,0 +1,232 @@
+<!-- Header -->
+<div class="wiz-header">
+  <div class="wiz-header-left">
+    <a routerLink="/services/new" class="btn-back" title="Back">
+      <i class="fa-solid fa-arrow-left"></i>
+    </a>
+    <h1>Create Simple Service</h1>
+  </div>
+</div>
+
+<!-- Body -->
+<div class="simple-body">
+
+  <!-- Main form column -->
+  <main class="simple-main">
+    <div class="simple-scroll">
+
+      <!-- ── Section 1: Service Details ──────────────────────────── -->
+      <div class="section-group">
+        <h2 class="section-title section-title--light">Service Details</h2>
+
+        <div class="form-group">
+          <div class="field-hdr">
+            <label class="form-label" for="svc-name">SERVICE NAME</label>
+            <span class="field-tag">REQUIRED</span>
+          </div>
+          <input
+            id="svc-name"
+            class="form-control"
+            [(ngModel)]="name"
+            placeholder="Name this Service"
+            autocomplete="off" />
+        </div>
+
+        <div class="form-group" style="margin-bottom:0">
+          <div class="field-hdr">
+            <label class="form-label" for="svc-attrs">SELECT OR CREATE SERVICE ATTRIBUTES</label>
+            <span class="field-tag">OPTIONAL</span>
+          </div>
+          <div class="tag-input-wrap">
+            @for (attr of attributes(); track attr) {
+              <span class="tag-chip">
+                {{ attr }}
+                <button class="tag-chip-x" type="button" (click)="removeAttribute(attr)" aria-label="Remove">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </span>
+            }
+            <input
+              id="svc-attrs"
+              class="tag-bare-input"
+              [(ngModel)]="attributeInput"
+              (keydown)="onAttrKeydown($event)"
+              [placeholder]="attributes().length === 0 ? 'Add attributes to group Services' : ''"
+              autocomplete="off" />
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Section 2: Accessing Configuration ─────────────────── -->
+      <div class="section-group">
+        <h2 class="section-title section-title--light">Accessing Configuration</h2>
+
+        <div class="form-group">
+          <div class="field-hdr">
+            <label class="form-label" for="access-ids">WHAT IDENTITIES CAN ACCESS THIS SERVICE?</label>
+            <span class="field-tag">OPTIONAL</span>
+          </div>
+          <div class="tag-input-wrap">
+            @for (id of accessIdentities(); track id) {
+              <span class="tag-chip">
+                {{ id }}
+                <button class="tag-chip-x" type="button" (click)="removeAccessIdentity(id)" aria-label="Remove">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </span>
+            }
+            <input
+              id="access-ids"
+              class="tag-bare-input"
+              [(ngModel)]="accessIdentityInput"
+              (keydown)="onAccessIdentityKeydown($event)"
+              [placeholder]="accessIdentities().length === 0 ? 'Add identity attributes (e.g. #users)' : ''"
+              autocomplete="off" />
+          </div>
+          <p class="field-hint">Press Enter or comma to add role attributes.</p>
+        </div>
+
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">HOW WILL THE SERVICE BE ACCESSED?</label>
+          <div class="access-mode-row">
+            <div class="toggle-row toggle-row--inline">
+              <label class="toggle-switch">
+                <input type="checkbox" [(ngModel)]="sdkOnlyAccess">
+                <span class="toggle-track">
+                  <span class="toggle-knob"></span>
+                </span>
+              </label>
+              <span class="toggle-label">SDK Only</span>
+            </div>
+            @if (!sdkOnlyAccess) {
+              <div class="addr-port-row">
+                <div class="form-group" style="flex:1; margin-bottom:0">
+                  <label class="form-label" for="access-addr">ADDRESS</label>
+                  <input
+                    id="access-addr"
+                    class="form-control"
+                    [(ngModel)]="accessAddress"
+                    placeholder="host.name"
+                    autocomplete="off" />
+                </div>
+                <div class="form-group port-group" style="margin-bottom:0">
+                  <label class="form-label" for="access-port">PORT</label>
+                  <input
+                    id="access-port"
+                    type="number"
+                    class="form-control"
+                    [(ngModel)]="accessPort"
+                    min="1"
+                    max="65535" />
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Section 3: Hosting Configuration ───────────────────── -->
+      <div class="section-group">
+        <h2 class="section-title section-title--light">Hosting Configuration</h2>
+
+        <div class="form-group">
+          <div class="field-hdr">
+            <label class="form-label" for="host-ids">WHAT IDENTITIES CAN HOST THIS SERVICE?</label>
+            <span class="field-tag">OPTIONAL</span>
+          </div>
+          <div class="tag-input-wrap">
+            @for (id of hostIdentities(); track id) {
+              <span class="tag-chip">
+                {{ id }}
+                <button class="tag-chip-x" type="button" (click)="removeHostIdentity(id)" aria-label="Remove">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </span>
+            }
+            <input
+              id="host-ids"
+              class="tag-bare-input"
+              [(ngModel)]="hostIdentityInput"
+              (keydown)="onHostIdentityKeydown($event)"
+              [placeholder]="hostIdentities().length === 0 ? 'Add identity attributes (e.g. #servers)' : ''"
+              autocomplete="off" />
+          </div>
+          <p class="field-hint">Press Enter or comma to add role attributes.</p>
+        </div>
+
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">WHERE SHOULD TRAFFIC BE SENT?</label>
+          <div class="access-mode-row">
+            <div class="toggle-row toggle-row--inline">
+              <label class="toggle-switch">
+                <input type="checkbox" [(ngModel)]="sdkOnlyHost">
+                <span class="toggle-track">
+                  <span class="toggle-knob"></span>
+                </span>
+              </label>
+              <span class="toggle-label">SDK Only</span>
+            </div>
+            @if (!sdkOnlyHost) {
+              <div class="addr-port-row">
+                <div class="form-group" style="margin-bottom:0; min-width:7rem; max-width:9rem;">
+                  <label class="form-label" for="host-proto">PROTOCOL</label>
+                  <select id="host-proto" class="form-control" [(ngModel)]="hostProtocol">
+                    <option value="tcp">TCP</option>
+                    <option value="udp">UDP</option>
+                  </select>
+                </div>
+                <div class="form-group" style="flex:1; margin-bottom:0">
+                  <label class="form-label" for="host-addr">ADDRESS</label>
+                  <input
+                    id="host-addr"
+                    class="form-control"
+                    [(ngModel)]="hostAddress"
+                    placeholder="host.name"
+                    autocomplete="off" />
+                </div>
+                <div class="form-group port-group" style="margin-bottom:0">
+                  <label class="form-label" for="host-port">PORT</label>
+                  <input
+                    id="host-port"
+                    type="number"
+                    class="form-control"
+                    [(ngModel)]="hostPort"
+                    min="0"
+                    max="65535" />
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /simple-scroll -->
+
+    <!-- Footer -->
+    <div class="wiz-footer">
+      <span></span>
+      <div class="wiz-footer-right">
+        <button class="btn btn-secondary" type="button" (click)="cancel()">Cancel</button>
+        <button class="btn btn-primary" type="button" (click)="save()" [disabled]="!canSave">
+          <i class="fa-solid fa-check"></i> Save
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Dev Panel (power users) -->
+  @if (prefs.isPowerUser()) {
+    <div class="dev-panel">
+      <button class="dev-panel-hdr" type="button" (click)="devPanelOpen = !devPanelOpen">
+        <span class="dev-panel-title">Developer Tools</span>
+        <i class="fa-solid" [class.fa-chevron-up]="devPanelOpen" [class.fa-chevron-down]="!devPanelOpen"></i>
+      </button>
+      @if (devPanelOpen) {
+        <div class="dev-panel-body">
+          <pre class="dev-json">{{ jsonPreview }}</pre>
+        </div>
+      }
+    </div>
+  }
+
+</div><!-- /simple-body -->

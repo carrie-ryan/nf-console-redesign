@@ -1,0 +1,52 @@
+<app-metrics-nav pageTitle="Traffic Analysis" />
+
+<nav class="subtab-bar" role="tablist" aria-label="Traffic analysis views">
+  <button type="button" class="subtab" role="tab"
+    [class.active]="subtab() === 'flow'" [attr.aria-selected]="subtab() === 'flow'"
+    (click)="subtab.set('flow')">
+    <i class="fa-solid fa-share-nodes"></i> Flow map
+  </button>
+  <button type="button" class="subtab" role="tab"
+    [class.active]="subtab() === 'suggested'" [attr.aria-selected]="subtab() === 'suggested'"
+    (click)="subtab.set('suggested')">
+    <i class="fa-solid fa-wand-magic-sparkles"></i> Suggested roles
+  </button>
+  <button type="button" class="subtab" role="tab"
+    [class.active]="subtab() === 'raw'" [attr.aria-selected]="subtab() === 'raw'"
+    (click)="subtab.set('raw')">
+    <i class="fa-solid fa-table-list"></i> Raw traffic
+  </button>
+</nav>
+
+@if (subtab() === 'suggested') {
+  <app-discovery-review />
+} @else if (subtab() === 'raw') {
+  <app-raw-traffic />
+} @else {
+  <div class="flow-body">
+    <section class="section-card">
+      <header class="flow-intro">
+        <span class="intro-eyebrow"><i class="fa-solid fa-share-nodes"></i> Observed traffic</span>
+        <h2>Traffic flow map</h2>
+        <p>
+          CIDR block → source host → destination, from discovered flows over the last 4 weeks.
+          Ribbon thickness = circuit count (<strong>observed volume</strong>, not authorized policy).
+          <strong>Unmanaged hosts are marked</strong> (muted) — observed sources that aren't managed
+          identities. Hover a block for its host count, a source for its ports and management state, a
+          destination for its protocol and gateway. <strong>Click</strong> any block, host,
+          destination, or ribbon to see the observed flows behind it.
+        </p>
+      </header>
+
+      <div class="flow-scroll">
+        <app-sankey-chart
+          [nodes]="observedSankey().nodes"
+          [links]="observedSankey().links"
+          [headers]="observedSankey().headers"
+          (nodeClick)="onSankeyNodeClick($event)"
+          (linkClick)="onSankeyLinkClick($event)"
+          ariaLabel="Observed traffic flow map: CIDR /24 blocks on the left group the specific source hosts in the middle, which flow to observed destinations on the right, weighted by circuit count. Unmanaged source hosts are marked. Click any block, host, destination, or ribbon to see the flows behind it." />
+      </div>
+    </section>
+  </div>
+}

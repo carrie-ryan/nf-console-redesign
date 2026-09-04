@@ -1,0 +1,289 @@
+<div class="ob-screen">
+
+  <div class="ob-step-panel">
+
+    <header class="ob-step-head">
+      <span class="ob-step-badge"><i class="fa-solid fa-network-wired"></i></span>
+      <div class="ob-step-head-text">
+        <h1>Add Router</h1>
+        <p class="ob-step-tag">Confirm your NetFoundry-hosted router — and add another if you want one of your own.</p>
+      </div>
+      <button type="button" class="btn btn-secondary btn-sm ob-learn" (click)="openHelp()">
+        <i class="fa-solid fa-circle-info"></i> Learn more
+      </button>
+    </header>
+
+    <!-- ── Pre-provisioned NetFoundry router — informational; it already exists ── -->
+    <div class="ob-preprov-card">
+      <span class="ob-preprov-icon"><i class="fa-solid fa-network-wired"></i></span>
+      <span class="ob-preprov-text">
+        <span class="ob-preprov-name">
+          {{ preprovisioned().routerName }}
+          <span class="ob-nf-badge"><i class="fa-solid fa-cloud"></i> NetFoundry</span>
+        </span>
+        <span class="ob-preprov-sub">Provisioned by NetFoundry · Ready to use</span>
+      </span>
+      <span class="ob-preprov-status">
+        <i class="fa-solid fa-circle-check"></i> In use
+      </span>
+    </div>
+
+    @if (!hasSecond()) {
+      <!-- ── Add-another affordance — normal, available action (implies more) ── -->
+      <button type="button" class="ob-add-router" (click)="addSecondRouter()">
+        <span class="ob-add-router-icon"><i class="fa-solid fa-plus"></i></span>
+        <span class="ob-add-router-text">
+          <span class="ob-add-router-title">Add another router</span>
+          <span class="ob-add-router-sub">Deploy your own — self-hosted, or hosted by NetFoundry.</span>
+        </span>
+      </button>
+    } @else {
+
+      <!-- ── Second router — the classic create-then-choose-hosting flow ────── -->
+      <div class="section-card ob-form-card">
+
+        <div class="ob-second-head">
+          <span class="ob-second-title">Second router</span>
+          <button type="button" class="ob-second-remove" (click)="removeSecondRouter()">
+            <i class="fa-solid fa-xmark"></i> Remove
+          </button>
+        </div>
+
+        <div class="ob-field">
+          <label class="form-label" for="ob-rtr-name">Router Name <span class="ob-required">Required</span></label>
+          <input
+            id="ob-rtr-name"
+            class="form-control"
+            type="text"
+            [(ngModel)]="routerName"
+            [disabled]="saved()"
+            placeholder="Get started host"
+            autocomplete="off" />
+          <p class="field-hint">A recognizable name for this router.</p>
+        </div>
+
+        <div class="ob-field">
+          <label class="form-label" for="ob-rtr-attrs">Router Attributes <span class="ob-optional">Optional</span></label>
+          <div class="tag-input-wrap">
+            @for (attr of attributes(); track attr) {
+              <span class="tag-chip">
+                {{ attr }}
+                @if (!saved()) {
+                  <button class="tag-chip-x" type="button" (click)="removeAttribute(attr)" aria-label="Remove attribute">
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                }
+              </span>
+            }
+            @if (!saved()) {
+              <input
+                id="ob-rtr-attrs"
+                class="tag-bare-input"
+                [(ngModel)]="attributeInput"
+                (keydown)="onAttributeKeydown($event)"
+                [placeholder]="attributes().length === 0 ? 'e.g. #get-started-host' : ''"
+                autocomplete="off" />
+            }
+          </div>
+          <p class="field-hint">Attributes let policies target this router by group instead of individually. Optional. Press Enter or comma to add. Prefix with # for role attributes policies can target.</p>
+        </div>
+
+        @if (!saved()) {
+          <div class="ob-form-actions">
+            <button
+              type="button"
+              class="btn btn-primary"
+              [disabled]="!routerName.trim()"
+              (click)="createRouter()">
+              <i class="fa-solid fa-plus"></i> Add Router
+            </button>
+          </div>
+        } @else {
+
+          <!-- Saved-router panel: registration/deployment actions ALWAYS shown -->
+          <div class="ob-saved">
+            <div class="ob-saved-banner">
+              <span class="ob-saved-icon"><i class="fa-solid fa-circle-check"></i></span>
+              <div>
+                <p class="ob-saved-title">“{{ routerName }}” added</p>
+                <p class="ob-saved-sub">Register and deploy the router to bring it online.</p>
+              </div>
+            </div>
+
+            <div class="ob-regkey">
+              <code class="ob-regkey-value">RK-3F9A-C21B-7E44-9D0A</code>
+              <button type="button" class="btn btn-secondary btn-sm ob-regkey-copy">
+                <i class="fa-regular fa-copy"></i> Copy registration key
+              </button>
+            </div>
+
+            <div class="ob-actions-row">
+              <button type="button" class="btn btn-secondary btn-sm">
+                <i class="fa-solid fa-download"></i> Download enrollment JWT
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm">
+                <i class="fa-solid fa-envelope"></i> Send registration email
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm">
+                <i class="fa-solid fa-server"></i> Get the VM
+              </button>
+            </div>
+          </div>
+
+          <!-- Explicit hosting choice — drives deploy-it-yourself vs NetFoundry hosting -->
+          <div class="ob-field">
+            <label class="form-label">Hosting</label>
+            <div class="ob-hosting-choice">
+              <button
+                type="button"
+                class="ob-hosting-card"
+                [class.is-selected]="hostingType() === 'self'"
+                [attr.aria-pressed]="hostingType() === 'self'"
+                (click)="chooseHosting('self')">
+                <span class="ob-hosting-icon"><i class="fa-solid fa-server"></i></span>
+                <span class="ob-hosting-title">Self-hosted</span>
+                <span class="ob-hosting-desc">You deploy and run the router on your own machine.</span>
+              </button>
+              <button
+                type="button"
+                class="ob-hosting-card"
+                [class.is-selected]="hostingType() === 'netfoundry'"
+                [attr.aria-pressed]="hostingType() === 'netfoundry'"
+                (click)="chooseHosting('netfoundry')">
+                <span class="ob-hosting-icon"><i class="fa-solid fa-cloud"></i></span>
+                <span class="ob-hosting-title">Hosted by NetFoundry</span>
+                <span class="ob-hosting-desc">NetFoundry provisions and runs the router in its fabric.</span>
+              </button>
+            </div>
+          </div>
+
+          @if (hostingType() === 'netfoundry') {
+            <!-- NetFoundry hosting: the five Setup Hosting fields -->
+            <div class="ob-hosting-fields">
+              <div class="ob-field">
+                <label class="form-label" for="ob-rtr-cloud">Cloud Provider <span class="ob-required">Required</span></label>
+                <select id="ob-rtr-cloud" class="form-control" [(ngModel)]="cloudProvider">
+                  <option value="AWS">AWS</option>
+                  <option value="Azure">Azure</option>
+                  <option value="GCP">Google Cloud</option>
+                </select>
+              </div>
+              <div class="ob-field">
+                <label class="form-label" for="ob-rtr-loc">Location <span class="ob-required">Required</span></label>
+                <select id="ob-rtr-loc" class="form-control" [(ngModel)]="location">
+                  <option value="us-east-1">US East (N. Virginia)</option>
+                  <option value="us-west-2">US West (Oregon)</option>
+                  <option value="eu-west-1">EU West (Ireland)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="ob-toggle-field">
+              <div class="ob-toggle-text">
+                <span class="form-label">Link Listener</span>
+                <p class="field-hint">Allow other routers to form fabric links to this one.</p>
+              </div>
+              <button
+                type="button"
+                class="ob-switch"
+                role="switch"
+                [class.on]="linkListener()"
+                [attr.aria-checked]="linkListener()"
+                (click)="toggleLinkListener()">
+                <span class="ob-switch-thumb"></span>
+              </button>
+            </div>
+
+            <div class="ob-toggle-field">
+              <div class="ob-toggle-text">
+                <span class="form-label">WSS Listener</span>
+                <p class="field-hint">Accept browser-based (WebSocket Secure) connections.</p>
+              </div>
+              <button
+                type="button"
+                class="ob-switch"
+                role="switch"
+                [class.on]="wssListener()"
+                [attr.aria-checked]="wssListener()"
+                (click)="toggleWssListener()">
+                <span class="ob-switch-thumb"></span>
+              </button>
+            </div>
+
+            <div class="ob-field">
+              <label class="form-label" for="ob-rtr-dns">Custom DNS — Advertised Name <span class="ob-optional">Optional</span></label>
+              <input
+                id="ob-rtr-dns"
+                class="form-control"
+                type="text"
+                [(ngModel)]="advertisedName"
+                placeholder="e.g. router1.example.com"
+                autocomplete="off" />
+              <p class="field-hint">Override the address other routers use to reach this one.</p>
+            </div>
+          } @else if (hostingType() === 'self') {
+            <!-- Self-hosted: off-console deploy steps with fake link-outs (inline) -->
+            <div class="ob-outside">
+              <div class="ob-outside-head">
+                <span class="ob-outside-icon"><i class="fa-solid fa-arrow-up-right-from-square"></i></span>
+                <div>
+                  <h2>Deploy the router</h2>
+                  <p>These steps happen outside the console, on your own machine.</p>
+                </div>
+              </div>
+              <ol class="ob-outside-steps">
+                <li>
+                  <span class="ob-outside-num">1</span>
+                  <div>
+                    <p class="ob-outside-step-title">Install Docker on the VM that will host the router</p>
+                    <a href="#" class="ob-fake-link" onclick="return false" aria-disabled="true">
+                      Router deployment guide <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                  </div>
+                </li>
+                <li>
+                  <span class="ob-outside-num">2</span>
+                  <div>
+                    <p class="ob-outside-step-title">Run the router container with the registration key above</p>
+                    <a href="#" class="ob-fake-link" onclick="return false" aria-disabled="true">
+                      See the container command <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                  </div>
+                </li>
+                <li>
+                  <span class="ob-outside-num">3</span>
+                  <div>
+                    <p class="ob-outside-step-title">Confirm the router shows online back in the console</p>
+                    <span class="ob-outside-note">You'll verify this in the final step.</span>
+                  </div>
+                </li>
+              </ol>
+            </div>
+          }
+        }
+      </div>
+
+      <!-- Cap is a POC limit, not a wall — imply more routers are possible later. -->
+      <p class="ob-more-note">
+        <i class="fa-solid fa-circle-info"></i>
+        Need more? You can add additional routers anytime from the Routers page.
+      </p>
+    }
+
+    <!-- Shell-consistent Back / Continue -->
+    <div class="ob-step-nav">
+      @if (hasBack) {
+        <button type="button" class="btn btn-secondary" (click)="back()">
+          <i class="fa-solid fa-arrow-left"></i> Back
+        </button>
+      } @else {
+        <span></span>
+      }
+      <button type="button" class="btn btn-primary" (click)="continue()">
+        Continue <i class="fa-solid fa-arrow-right"></i>
+      </button>
+    </div>
+
+  </div>
+
+</div>

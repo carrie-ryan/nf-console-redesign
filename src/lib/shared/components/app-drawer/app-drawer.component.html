@@ -1,0 +1,61 @@
+@if (isOpen()) {
+  <div class="drawer-backdrop" (click)="close()"></div>
+}
+
+<aside class="drawer" [class.drawer--open]="isOpen()" role="dialog" aria-modal="true">
+  @if (entityRef(); as ref) {
+    <!-- Header (CC side-panel-header structure) -->
+    <header class="drawer-header">
+      @if (showBack()) {
+        <button type="button" class="drawer-icon-btn" (click)="back()" aria-label="Back">
+          <i class="fa-solid fa-arrow-left"></i>
+        </button>
+      }
+      <div class="drawer-avatar">
+        <i [class]="avatarIcon()"></i>
+      </div>
+      <div class="drawer-heading">
+        <span class="drawer-title">{{ ref.data.title }}</span>
+        @if (ref.data.subtitle) {
+          <span class="drawer-subtitle">{{ ref.data.subtitle }}</span>
+        }
+      </div>
+      <div class="drawer-actions">
+        <button type="button" class="drawer-icon-btn" (click)="close()" aria-label="Close">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Body -->
+    <div class="drawer-body">
+      @switch (ref.type) {
+        @case ('service-activity') {
+          <app-dial-logs-content
+            [records]="ref.data.records"
+            [initialStatus]="ref.data.defaultStatusFilter ?? 'all'"
+            [initialType]="ref.data.defaultTypeFilter ?? 'all'"
+            [showAllAlertsLink]="true" />
+        }
+        @case ('onboarding-help') {
+          <app-onboarding-help-content [topic]="ref.data.topic" />
+        }
+        @case ('policy-provenance') {
+          <app-policy-provenance-content [data]="ref.data" />
+        }
+        @case ('segment-provenance') {
+          <app-segment-provenance-content [data]="ref.data" />
+        }
+        @case ('service-provenance') {
+          <app-service-provenance-content [data]="ref.data" />
+        }
+        @case ('flow-detail') {
+          <app-flow-detail-content [data]="ref.data" />
+        }
+        @case ('concern-list') {
+          <app-concern-list-content [data]="ref.data" />
+        }
+      }
+    </div>
+  }
+</aside>

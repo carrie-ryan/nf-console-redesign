@@ -1,0 +1,42 @@
+<div class="type-page">
+
+  <div class="type-header">
+    <a routerLink="/services" class="btn-back" title="Back to Services">
+      <i class="fa-solid fa-arrow-left"></i>
+    </a>
+    <div>
+      <h1>Create Service</h1>
+      <p class="type-subtitle">Choose how you'd like to configure your service</p>
+    </div>
+  </div>
+
+  <div class="type-cards">
+
+    <button class="type-card" (click)="selectSimple()">
+      <div class="type-card-icon type-card-icon--simple">
+        <i class="fa-solid fa-bolt-lightning"></i>
+      </div>
+      <div class="type-card-body">
+        <h2 class="type-card-title">SIMPLE</h2>
+        <p class="type-card-desc">Fewer fields, only the most commonly used options</p>
+      </div>
+      <i class="fa-solid fa-chevron-right type-card-arrow"></i>
+    </button>
+
+    <button class="type-card" (click)="selectAdvanced()">
+      <span class="power-badge">
+        <i class="fa-solid fa-star"></i> Power User
+      </span>
+      <div class="type-card-icon type-card-icon--advanced">
+        <i class="fa-solid fa-sliders"></i>
+      </div>
+      <div class="type-card-body">
+        <h2 class="type-card-title">ADVANCED</h2>
+        <p class="type-card-desc">Full configuration access. Recommended for experienced users.</p>
+      </div>
+      <i class="fa-solid fa-chevron-right type-card-arrow"></i>
+    </button>
+
+  </div>
+
+</div>

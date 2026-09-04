@@ -1,0 +1,131 @@
+@if (role(); as role) {
+  <div class="dialog-backdrop" (click)="cancel()">
+    <div class="dialog-panel" (click)="$event.stopPropagation()" role="dialog" aria-modal="true"
+      aria-labelledby="rpm-title">
+
+      <!-- ─── Header ─────────────────────────────────────────────────── -->
+      <div class="dialog-header">
+        <span class="rpm-eyebrow"><i class="fa-solid fa-shield-halved"></i> Create dial policy</span>
+        <h2 class="dialog-title" id="rpm-title">Authorize a discovered role</h2>
+        <p class="rpm-lede">
+          Review the real objects below — new services are fully editable before they're created.
+          One dial policy will let this role reach every selected service.
+        </p>
+      </div>
+
+      <div class="dialog-body">
+
+        <!-- ─── Section 1: Role ─────────────────────────────────────── -->
+        <label class="field-label">Role</label>
+        <div class="role-row">
+          @if (editingName()) {
+            <div class="role-edit">
+              <input
+                class="role-edit-input"
+                [ngModel]="editValue()"
+                (ngModelChange)="editValue.set($event)"
+                (keydown.enter)="commitEdit()"
+                (keydown.escape)="cancelEdit()"
+                aria-label="Rename role" />
+              <button class="role-edit-btn ok" type="button" (click)="commitEdit()"
+                aria-label="Save"><i class="fa-solid fa-check"></i></button>
+              <button class="role-edit-btn" type="button" (click)="cancelEdit()"
+                aria-label="Cancel"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+          } @else {
+            <button class="role-chip" type="button" (click)="startEdit()"
+              [title]="'Rename ' + role.name + ' — propagates everywhere'">
+              {{ role.name }} <i class="fa-solid fa-pen role-chip-pen" aria-hidden="true"></i>
+            </button>
+          }
+          <span class="role-covers">
+            covers {{ managedCount() }} {{ managedCount() === 1 ? 'identity' : 'identities' }}
+            @if (unmanagedMembers().length) {
+              <span class="role-covers-muted">+ {{ unmanagedMembers().length }}
+                unmanaged {{ unmanagedMembers().length === 1 ? 'host' : 'hosts' }}</span>
+            }
+          </span>
+        </div>
+        @if (editError()) {
+          <span class="rename-error"><i class="fa-solid fa-triangle-exclamation"></i> {{ editError() }}</span>
+        }
+        <div class="member-list">
+          @for (m of members(); track m.id) {
+            <span class="member-pill" [class.src-unenrolled]="!m.managed">
+              {{ m.name }}
+              @if (!m.managed) {
+                <span class="src-badge" title="Observed source — not a managed identity">unmanaged</span>
+              }
+            </span>
+          }
+        </div>
+
+        <!-- ─── Section 2: Services (editable sub-cards) ────────────── -->
+        <label class="field-label">
+          Services <span class="field-hint">— {{ selectedProposals().length }} of {{ proposals().length }} selected</span>
+        </label>
+        <div class="svc-list">
+          @for (p of proposals(); track p.id) {
+            <app-service-card
+              [draft]="draftFor(p)"
+              (draftChange)="onDraftChange(p.id, $event)"
+              [isNew]="!p.matched"
+              [attribute]="svcRole(p)"
+              [volume]="p.totalCircuitCount"
+              [included]="isSelected(p.id)"
+              (includeToggled)="toggleService(p.id)" />
+          }
+        </div>
+
+        <!-- ─── Section 3: Policy (real shape) ──────────────────────── -->
+        <label class="field-label" for="rpm-name">Policy</label>
+        <div class="policy-card">
+          <div class="def-field">
+            <label class="def-label" for="rpm-name">Name</label>
+            <input id="rpm-name" class="def-input mono"
+              [ngModel]="policyName()" (ngModelChange)="setName($event)" aria-label="Policy name" />
+          </div>
+
+          <div class="grant">
+            <span class="grant-label">Grant</span>
+            <div class="grant-stmt">
+              <span class="grant-role">{{ role.name }}</span>
+              <span class="grant-verb">may <strong>DIAL</strong> →</span>
+              @if (selectedProposals().length) {
+                <span class="grant-svcs">
+                  @for (p of selectedProposals(); track p.id) {
+                    <span class="grant-svc">{{ serviceLabel(p) }}</span>
+                  }
+                </span>
+              } @else {
+                <span class="grant-empty">select at least one service</span>
+              }
+            </div>
+          </div>
+
+          <div class="policy-meta">
+            <span class="pm"><span class="pm-k">type</span> <span class="pm-v">dial</span></span>
+            <span class="pm"><span class="pm-k">semantic</span> <span class="pm-v">AnyOf</span></span>
+            <span class="pm"><span class="pm-k">identity roles</span> <span class="pm-v mono">{{ role.name }}</span></span>
+            <span class="pm"><span class="pm-k">service roles</span> <span class="pm-v">{{ selectedProposals().length }}</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── Footer ─────────────────────────────────────────────────── -->
+      <div class="dialog-footer">
+        <span class="consequence">
+          Creates {{ newCount() }} {{ newCount() === 1 ? 'service' : 'services' }} ·
+          tags {{ tagCount() }} existing ·
+          tags {{ managedCount() }} {{ managedCount() === 1 ? 'identity' : 'identities' }}@if (unmanagedMembers().length) {<span class="consequence-muted"> · {{ unmanagedMembers().length }} unmanaged not tagged</span>} · 1 policy
+        </span>
+        <div class="footer-actions">
+          <button class="btn btn-secondary" type="button" (click)="cancel()">Cancel</button>
+          <button class="btn btn-primary" type="button" (click)="confirm()" [disabled]="!selectedProposals().length">
+            <i class="fa-solid fa-check"></i> Create service policy
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,16 @@
+<nav class="page-header breadcrumb" aria-label="Breadcrumb">
+  @for (crumb of crumbs(); track crumb.path) {
+    @if (!$first) {
+      <span class="separator" aria-hidden="true">›</span>
+    }
+    @if (crumb.isLast) {
+      <span class="crumb crumb--active" [attr.title]="crumb.tooltip" aria-current="page">
+        {{ crumb.label }}
+      </span>
+    } @else {
+      <a class="crumb crumb--link" [routerLink]="crumb.path" [attr.title]="crumb.tooltip">
+        {{ crumb.label }}
+      </a>
+    }
+  }
+</nav>
