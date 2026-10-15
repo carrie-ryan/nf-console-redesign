@@ -5,6 +5,11 @@ import type {
   DialLogTypeFilter,
 } from '../../features/dial-logs/dial-logs.logic';
 import type { DiscoveredFlow } from '../../features/discovery/discovery.models';
+import type { Identity } from './mock-data.service';
+import type {
+  RosterHostRef,
+  RosterIdentityRef,
+} from '../../features/discovery/grouped-roster.adapter';
 import type { ConcernListData } from '../../features/dashboard/concern.models';
 
 /**
@@ -242,12 +247,98 @@ export interface FlowDetailData {
 }
 
 /**
+ * Payload for the 'roster-group' drawer — the members behind ONE circle on the
+ * grouped-roster view: an attribute tag-node, or either arm of its catch-all.
+ *
+ * Deliberately NOT 'segment-provenance', which looks similar: that payload's
+ * empty `reach` renders an affirmative "reaches nothing over the overlay"
+ * isolation statement, which would be a FALSE claim here — a tag-group has no
+ * reach data at all, and silence about reach is not evidence of isolation.
+ *
+ * The two row shapes stay apart exactly as the adapter keeps them apart: a tag /
+ * no-tag group fills `identities` (leaving `hosts` empty), an unmanaged group
+ * fills `hosts` (leaving `identities` empty). A host is an observed ADDRESS with
+ * no Identity behind it, so it never gets an id/name row.
+ *
+ * DISPLAY ONLY: rows carry no callback and no ids to navigate with. Identity
+ * detail and row drill-in are a later increment, so nothing here needs a drawer
+ * stack or a back affordance.
+ */
+export interface RosterGroupData {
+  /** Header name — the tag token, or the catch-all arm's name. */
+  title: string;
+  /** Header sub-line (e.g. "Attribute tag · 7 identities"). */
+  subtitle: string;
+  /** Which circle was clicked — drives the body's wording and chip styling. */
+  kind: 'tag' | 'no-tag' | 'unmanaged';
+  /** The group's member count (=== the rendered rows; nothing is capped). */
+  count: number;
+  /** Identity rows for a 'tag' / 'no-tag' group; empty for 'unmanaged'. Each row
+   *  carries the identity's FULL tag set so double-membership is legible. */
+  identities: readonly RosterIdentityRef[];
+  /** Host rows for an 'unmanaged' group; empty otherwise. Read-only — enrollment
+   *  is a deferred flow and is deliberately NOT offered here. */
+  hosts: readonly RosterHostRef[];
+}
+
+/**
+ * Payload for the 'identity-detail' drawer — ONE identity, read only.
+ *
+ * Both halves are RESOLVED BY THE CALLER, never fetched by the body: the caller
+ * holds the roster (a row it already rendered) and the capture, so it hands over
+ * the whole `Identity` record plus that identity's flows
+ * (`DISCOVERED_FLOWS.filter(f => f.dialingIdentityId === identity.id)`). The
+ * content component then reads nothing it was not given — same contract as
+ * 'flow-detail', whose `flows` are likewise resolved upstream.
+ *
+ * `flows` may be EMPTY, and when it is that is a fact about the data, not a
+ * missing fetch: the discovery identities and the managed estate both carry
+ * observed traffic, but the original demo block (id-001…id-021) is roster-only
+ * and has none. The body says so explicitly rather than rendering a bare
+ * "nothing here".
+ */
+export interface IdentityDetailData {
+  /** Header name — the identity's name. */
+  title: string;
+  /** Header sub-line (e.g. "Identity · device"). */
+  subtitle: string;
+  /** The full roster record. The body renders only the fields the seed actually
+   *  populates; never-populated optionals (externalId, isAdmin, hostingCost,
+   *  hostingPrecedence, tags, appData) are deliberately not shown, and neither is
+   *  totalUsage — it is populated on under half the roster, so a row for it would
+   *  read as "0 GB" for everyone else. */
+  identity: Identity;
+  /** This identity's observed flows, pre-filtered by the caller. Empty is normal. */
+  flows: readonly DiscoveredFlow[];
+  /**
+   * The EXACT drawer ref this identity was drilled from — carried so the body can
+   * offer a return path, by reopening it.
+   *
+   * This is a SCOPED back-reference, deliberately not a stack. `DrawerService`
+   * still holds one ref and `open()` still replaces it; going "back" is simply
+   * opening this ref again. Nothing is pushed, nothing is popped, and no other
+   * drawer type is affected — the shell's `showBack`/`back()` stay the
+   * gated-off defaults they are for the other seven types.
+   *
+   * OPTIONAL by design: identity-detail is valid with no origin (opened from
+   * anywhere that is not a roster group). Absent → the body renders no back
+   * control at all and the only exit is close. There is no error path.
+   *
+   * Depth is bounded at one by construction: only the roster-group body sets
+   * this, and it sets it to a 'roster-group' ref, which carries no origin of its
+   * own. A→B→A is the whole graph.
+   */
+  originGroupRef?: DrawerEntityRef;
+}
+
+/**
  * Discriminated entity reference the drawer renders. The `type` tag is the
  * extension point for drawer bodies; today 'service-activity' (dashboard),
  * 'onboarding-help' (onboarding concepts), 'policy-provenance' (a segment-pair
  * CELL/edge), 'segment-provenance' (a single segment NODE — its members +
  * reach), 'service-provenance' (a single SERVICE — its facts + who reaches it),
- * and 'flow-detail' (the observed flows behind a Sankey element).
+ * 'flow-detail' (the observed flows behind a Sankey element), and 'roster-group'
+ * (the members behind one grouped-roster circle).
  */
 export type DrawerEntityRef =
   | { type: 'service-activity'; data: ServiceActivityData }
@@ -256,6 +347,8 @@ export type DrawerEntityRef =
   | { type: 'segment-provenance'; data: SegmentProvenanceData }
   | { type: 'service-provenance'; data: ServiceProvenanceData }
   | { type: 'flow-detail'; data: FlowDetailData }
+  | { type: 'roster-group'; data: RosterGroupData }
+  | { type: 'identity-detail'; data: IdentityDetailData }
   | { type: 'concern-list'; data: ConcernListData };
 
 /**

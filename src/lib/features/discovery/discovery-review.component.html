@@ -6,18 +6,18 @@
       <span class="intro-eyebrow"><i class="fa-solid fa-wand-magic-sparkles"></i> Traffic analysis → policy</span>
       <h2>Turn observed traffic into policies</h2>
       <p>
-        Wildcard-intercepted identities were grouped by the destinations they share into the roles
-        below. Expand a role to see the observed flows behind it, then create one dial policy for the
-        whole group.
+        Wildcard-intercepted identities were grouped by the destinations they share. Each grouping
+        below becomes one role attribute and one dial service policy. Expand a suggestion to see
+        the observed flows behind it.
       </p>
     </div>
 
     <div class="progress-ledger" role="status" aria-live="polite">
       <div class="ledger-counts">
         <span class="lc accent"><strong>{{ policiesCreated() }}</strong> policies created</span>
-        <span class="lc muted"><strong>{{ rolesRemaining() }}</strong> roles to review</span>
+        <span class="lc muted"><strong>{{ rolesRemaining() }}</strong> suggestions to review</span>
       </div>
-      <div class="progress-track" [attr.aria-label]="reviewedPct() + '% of roles have a policy'">
+      <div class="progress-track" [attr.aria-label]="reviewedPct() + '% of suggestions have a policy'">
         <div class="progress-fill" [style.width.%]="reviewedPct()"></div>
       </div>
     </div>
@@ -26,8 +26,8 @@
   <!-- ─── Discovered-role table ────────────────────────────────────── -->
   <section class="review-section">
     <div class="section-head">
-      <h3>Discovered roles</h3>
-      <span class="section-sub">{{ totalRoles() }} groups · ranked by observed volume</span>
+      <h3>Discovered role attributes</h3>
+      <span class="section-sub">{{ totalRoles() }} suggestions · ranked by observed volume</span>
     </div>
 
     <div class="section-card table-card">
@@ -35,7 +35,7 @@
         <thead>
           <tr>
             <th class="col-chevron"></th>
-            <th>Role</th>
+            <th>Role attribute</th>
             <th class="col-num">Sources</th>
             <th class="col-num">Services</th>
             <th>Volume</th>
@@ -59,9 +59,9 @@
                       (ngModelChange)="editValue.set($event)"
                       (keydown.enter)="commitEdit(r.clusterId)"
                       (keydown.escape)="cancelEdit()"
-                      aria-label="Rename role" />
+                      aria-label="Rename role attribute" />
                     <button class="role-edit-btn ok" type="button" (click)="commitEdit(r.clusterId)"
-                      aria-label="Save role name"><i class="fa-solid fa-check"></i></button>
+                      aria-label="Save role attribute name"><i class="fa-solid fa-check"></i></button>
                     <button class="role-edit-btn" type="button" (click)="cancelEdit()"
                       aria-label="Cancel"><i class="fa-solid fa-xmark"></i></button>
                     @if (editError()) {
@@ -196,7 +196,7 @@
                     @if (r.stragglers.length) {
                       <p class="detail-note warn">
                         <i class="fa-solid fa-user-slash"></i>
-                        Also dialed by {{ r.stragglers.length }} source(s) outside this role — not
+                        Also dialed by {{ r.stragglers.length }} source(s) outside this grouping — not
                         covered by this policy, each needs its own (deferred):
                         <span class="straggler-list">
                           @for (s of r.stragglers; track s.id) {
@@ -253,8 +253,8 @@
           {{ ungroupedIdentities.length }} sources didn't cluster
         </div>
         <p class="low-sub">
-          Each cleared the similarity threshold with no one else — no shared-behaviour group to build a
-          role from. Individual policies are a later increment.
+          Each cleared the similarity threshold with no one else — no shared-behaviour grouping to build a
+          role attribute from. Individual policies are a later increment.
         </p>
         <div class="ungrouped-list">
           @for (u of ungroupedIdentities; track u.identityId) {

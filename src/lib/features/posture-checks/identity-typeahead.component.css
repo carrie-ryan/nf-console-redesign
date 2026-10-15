@@ -1,0 +1,45 @@
+.ita { position: relative; }
+.ita-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.75rem;
+  color: var(--color-text-3);
+  pointer-events: none;
+}
+.ita-input { padding-left: 2rem; }
+
+/* Fixed, not absolute: the mapping table's wrapper scrolls horizontally and would clip it. */
+.ita-menu {
+  position: fixed;
+  z-index: 1000;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0.25rem;
+  list-style: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+
+.ita-opt {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4375rem 0.625rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  color: var(--color-text);
+  cursor: pointer;
+}
+.ita-opt--active { background: var(--color-surface-2); }
+.ita-opt[aria-selected='true'] .ita-name { color: var(--brand-primary); font-weight: 500; }
+.ita-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ita-name mark { background: none; color: inherit; font-weight: 700; }
+.ita-kind { font-size: 0.8125rem; color: var(--color-text-3); text-transform: capitalize; }
+.ita-check { font-size: 0.6875rem; color: var(--brand-primary); }
+.ita-empty { padding: 0.5rem 0.625rem; font-size: 0.875rem; color: var(--color-text-3); }

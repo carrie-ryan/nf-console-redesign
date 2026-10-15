@@ -1,0 +1,183 @@
+<div class="rtf-header">
+  <a [routerLink]="returnLink" [queryParams]="returnQuery" class="btn-back" title="Back to Role Templates">
+    <i class="fa-solid fa-arrow-left"></i>
+  </a>
+  <div>
+    <h1>Add a Role Template</h1>
+    <p>Defines a role. It grants nothing until somebody is given it.</p>
+  </div>
+</div>
+
+<div class="rtf-body">
+  <div class="rtf-column">
+
+    <!-- ─── Details ──────────────────────────────────────────────── -->
+    <section class="section-card rtf-card">
+      <h2 class="card-heading">Details</h2>
+
+      <div class="form-group">
+        <div class="field-hdr">
+          <label class="form-label" for="rtf-name">NAME</label>
+          <span class="field-tag">REQUIRED</span>
+        </div>
+        <input
+          id="rtf-name"
+          class="form-control"
+          type="text"
+          [ngModel]="name()"
+          (ngModelChange)="name.set($event)"
+          placeholder="New template name"
+          autocomplete="off" />
+      </div>
+
+      <div class="form-group">
+        <div class="field-hdr">
+          <label class="form-label" for="rtf-desc">DESCRIPTION</label>
+        </div>
+        <input
+          id="rtf-desc"
+          class="form-control"
+          type="text"
+          [ngModel]="description()"
+          (ngModelChange)="description.set($event)"
+          placeholder="What this role is for"
+          autocomplete="off" />
+      </div>
+
+      <div class="form-group rtf-last-group">
+        <div class="field-hdr">
+          <span class="form-label">ANCHOR</span>
+          <span class="field-tag">REQUIRED</span>
+        </div>
+        <div class="anchor-row">
+          @for (option of anchors; track option.id) {
+            <label class="anchor-opt" [class.anchor-opt--active]="anchor() === option.id">
+              <input
+                type="radio"
+                name="rtf-anchor"
+                [checked]="anchor() === option.id"
+                (change)="anchor.set(option.id)" />
+              <span class="radio-mark" aria-hidden="true"></span>
+              <span class="anchor-body">
+                <span class="anchor-title">{{ option.id }}</span>
+                <span class="anchor-hint">{{ option.hint }}</span>
+              </span>
+            </label>
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── Actions ──────────────────────────────────────────────── -->
+    <section class="section-card rtf-card">
+      <div class="card-hdr">
+        <h2 class="card-heading">Actions</h2>
+        <span class="count-pill">{{ summary() }}</span>
+      </div>
+
+      <!-- The requirement is stated permanently rather than raised on a failed
+           submit: Save is disabled until it's met, so a submit-time error could
+           never fire, and a disabled button with no stated reason is worse. -->
+      <p class="card-hint" [class.card-hint--unmet]="totalActions() === 0">
+        Pick a resource, then choose which actions this role can perform on it.
+        <strong>At least one action is required.</strong>
+      </p>
+
+      <div class="picker">
+        <!-- Left: every resource, with its selected-action count -->
+        <div class="picker-list">
+          <div class="picker-filter">
+            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            <input
+              class="picker-filter-input"
+              type="text"
+              [ngModel]="filter()"
+              (ngModelChange)="filter.set($event)"
+              placeholder="Filter resources"
+              aria-label="Filter resources"
+              autocomplete="off" />
+            @if (filter()) {
+              <button class="picker-filter-clear" type="button" (click)="filter.set('')" title="Clear filter">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            }
+          </div>
+
+          <ul class="picker-items">
+            @for (resource of filteredResources(); track resource.id) {
+              <li>
+                <button
+                  type="button"
+                  class="picker-item"
+                  [class.picker-item--active]="activeId() === resource.id"
+                  [attr.aria-current]="activeId() === resource.id ? 'true' : null"
+                  (click)="activeId.set(resource.id)">
+                  <span class="picker-item-name">{{ resource.name }}</span>
+                  @if (countFor(resource.id) > 0) {
+                    <span class="picker-badge">{{ countFor(resource.id) }}</span>
+                  }
+                </button>
+              </li>
+            } @empty {
+              <li class="picker-empty">No resources match "{{ filter() }}".</li>
+            }
+          </ul>
+        </div>
+
+        <!-- Right: the active resource's actions -->
+        <div class="picker-detail">
+          <div class="detail-hdr">
+            <div>
+              <h3 class="detail-name">{{ activeResource().name }}</h3>
+              <span class="detail-api">{{ activeResource().id }}</span>
+            </div>
+            <span class="detail-count">
+              {{ countFor(activeResource().id) }} of {{ activeResource().actions.length }}
+            </span>
+          </div>
+
+          <div class="actions-block">
+            <!-- Bulk control over the rows below, so it's the same kind of
+                 control they are — just with the extra indeterminate state for
+                 a partial selection. Banded and un-indented to mark it as the
+                 parent of the indented rows beneath. -->
+            <label class="all-row">
+              <input
+                type="checkbox"
+                [checked]="allActiveSelected()"
+                [indeterminate]="someActiveSelected() && !allActiveSelected()"
+                (change)="toggleAllForActive()"
+                [attr.aria-label]="'All actions for ' + activeResource().name" />
+              <span class="check-box" aria-hidden="true"><i class="fa-solid fa-check"></i></span>
+              <span class="all-label">All actions</span>
+            </label>
+
+            <ul class="action-rows">
+              @for (action of activeResource().actions; track action) {
+                <li>
+                  <label class="action-row" [class.action-row--on]="isActionOn(activeResource().id, action)">
+                    <input
+                      type="checkbox"
+                      [checked]="isActionOn(activeResource().id, action)"
+                      (change)="toggleAction(activeResource().id, action)"
+                      [attr.aria-label]="action + ' ' + activeResource().name" />
+                    <span class="check-box" aria-hidden="true"><i class="fa-solid fa-check"></i></span>
+                    <span class="action-name">{{ action }}</span>
+                  </label>
+                </li>
+              }
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<div class="page-footer">
+  <button class="btn btn-secondary" type="button" (click)="cancel()">Cancel</button>
+  <button class="btn btn-primary" type="button" [disabled]="!canSave()" (click)="save()">
+    <i class="fa-solid fa-check"></i> Save
+  </button>
+</div>

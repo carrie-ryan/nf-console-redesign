@@ -101,7 +101,7 @@
   align-items: center;
   gap: 0.45rem;
 }
-.section-sub { font-size: 0.75rem; color: var(--color-text-3); }
+.section-sub { font-size: 0.875rem; color: var(--color-text-3); }
 
 .table-card { padding: 0; overflow: hidden; }
 
@@ -164,20 +164,20 @@
   cursor: pointer;
   color: var(--color-text-2);
 }
-.role-edit-btn.ok { color: var(--color-success); border-color: var(--color-success); }
+.role-edit-btn.ok { color: var(--color-success-text); border-color: var(--color-success); }
 .rename-error {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
   font-size: 0.75rem;
-  color: var(--color-danger);
+  color: var(--color-danger-text);
   width: 100%;
 }
 
 /* Volume meter */
 .col-vol { min-width: 10rem; }
 .vol-meter { display: flex; flex-direction: column; gap: 0.3rem; }
-.vol-count { font-size: 0.75rem; color: var(--color-text-2); font-variant-numeric: tabular-nums; }
+.vol-count { font-size: 0.875rem; color: var(--color-text-2); font-variant-numeric: tabular-nums; }
 .vol-count strong { color: var(--color-text); }
 .vol-bar {
   height: 4px;
@@ -196,10 +196,10 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
-.status-tag.approved { color: var(--color-success); }
+.status-tag.approved { color: var(--color-success-text); }
 
 /* ─── Expanded role detail ───────────────────────────────────────────── */
 .detail-row td { background: var(--color-surface-2); padding: 0; }
@@ -211,7 +211,7 @@
 }
 .detail-rationale {
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   line-height: 1.7;
   color: var(--color-text-2);
   display: flex;
@@ -237,7 +237,7 @@
 }
 .evidence-cap {
   padding: 0.5rem 0.75rem;
-  font-size: 0.6875rem;
+  font-size: 0.875rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -289,7 +289,7 @@
 /* Quiet "N new" hint under the Services count (single stat, not a per-row pill). */
 .svc-new-hint {
   display: block;
-  font-size: 0.625rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--brand-accent);
   font-variant-numeric: tabular-nums;
@@ -302,7 +302,7 @@
   align-items: baseline;
   flex-wrap: wrap;
   gap: 0.4rem;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   line-height: 1.5;
   padding: 0.5rem 0.75rem;
   border-radius: var(--radius-sm);
@@ -315,8 +315,8 @@
 .detail-note.enroll { background: var(--color-success-bg); color: var(--color-text-2); }
 .detail-note i { align-self: center; }
 .detail-note.info i { color: var(--color-info); }
-.detail-note.warn i { color: var(--color-warning); }
-.detail-note.enroll i { color: var(--color-success); }
+.detail-note.warn i { color: var(--color-warning-text); }
+.detail-note.enroll i { color: var(--color-success-text); }
 .member-pill.enroll-pill {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   border-color: var(--color-success-border);
@@ -327,14 +327,14 @@
    .src-badge vocabulary), NOT green — green here read as a positive signal. */
 .enroll-hint {
   display: block;
-  font-size: 0.625rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--color-text-3);
   font-variant-numeric: tabular-nums;
 }
 .partial-pill {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.6875rem;
+  font-size: 0.8125rem;
   padding: 0.1rem 0.4rem;
   border-radius: var(--radius-sm);
   background: var(--color-surface);
@@ -346,7 +346,7 @@
   border-radius: var(--radius-full);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  font-size: 0.6875rem;
+  font-size: 0.8125rem;
   color: var(--color-text-2);
 }
 .member-pill.straggler { border-style: dashed; color: var(--color-text-3); }
@@ -354,7 +354,7 @@
 
 /* ─── Ungrouped / low-confidence ─────────────────────────────────────── */
 .low-conf .section-head h3 { color: var(--color-text-2); }
-.low-conf .section-head h3 i { color: var(--color-warning); }
+.low-conf .section-head h3 i { color: var(--color-warning-text); }
 .low-card {
   display: flex;
   flex-direction: column;
@@ -371,7 +371,7 @@
   gap: 0.45rem;
 }
 .low-head i { color: var(--color-text-3); }
-.low-sub { margin: 0; font-size: 0.75rem; color: var(--color-text-3); line-height: 1.5; }
+.low-sub { margin: 0; font-size: 0.875rem; color: var(--color-text-3); line-height: 1.5; }
 .ungrouped-list { display: flex; flex-wrap: wrap; gap: 0.375rem; }
 .lowvol-table { font-size: 0.8125rem; margin-top: 0.25rem; }
 .lowvol-table th {
@@ -417,7 +417,7 @@
   border-radius: var(--radius-sm);
   background: var(--color-surface-2);
   color: var(--color-text-3);
-  font-size: 0.5625rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;

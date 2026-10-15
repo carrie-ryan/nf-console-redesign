@@ -85,12 +85,12 @@
 .ob-section-title { margin: 0; font-size: 1rem; font-weight: 600; color: var(--color-text); }
 .ob-section-note {
   margin: -0.75rem 0 0;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   line-height: 1.5;
   color: var(--color-text-3);
 }
 .ob-section-note strong { color: var(--color-text-2); font-weight: 600; }
-.adv-req-hint { color: var(--color-danger); font-weight: 500; }
+.adv-req-hint { color: var(--color-danger-text); font-weight: 500; }
 
 /* ─── Add-config mode selector (segmented control) ───────────────────── */
 .adv-mode-toggle {
@@ -128,7 +128,7 @@
   box-shadow: var(--shadow-sm);
 }
 
-.field-hint { margin: 0.375rem 0 0; font-size: 0.75rem; color: var(--color-text-3); }
+.field-hint { margin: 0.375rem 0 0; font-size: 0.875rem; color: var(--color-text-3); }
 
 .ob-form-actions { display: flex; gap: 0.75rem; }
 .adv-save-row { justify-content: flex-start; }
@@ -144,7 +144,7 @@
   color: var(--color-text);
 }
 .adv-edit-type i { color: var(--brand-primary); }
-.adv-edit-note { font-size: 0.75rem; color: var(--color-text-3); }
+.adv-edit-note { font-size: 0.875rem; color: var(--color-text-3); }
 
 select.form-control { cursor: pointer; }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -307,7 +307,7 @@ select.form-control { cursor: pointer; }
   line-height: 1.5;
 }
 
-.tag-bare-input::placeholder { color: var(--color-text-3); }
+.tag-bare-input::placeholder { color: var(--color-text-disabled); }
 
 /* ─── Accordion (Optional groups) ────────────────────────────────────── */
 .ob-accordion {
@@ -418,7 +418,7 @@ select.form-control { cursor: pointer; }
 }
 
 .adv-config-edit:hover { color: var(--brand-primary); background: var(--brand-primary-light); }
-.adv-config-remove:hover { color: var(--color-danger); background: var(--color-danger-bg); }
+.adv-config-remove:hover { color: var(--color-danger-text); background: var(--color-danger-bg); }
 
 .adv-empty-configs {
   display: flex;
@@ -428,12 +428,12 @@ select.form-control { cursor: pointer; }
   padding: 0.75rem 0.875rem;
   border: 1px dashed var(--color-border-strong);
   border-radius: var(--radius-md);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   color: var(--color-text-3);
 }
 
 .adv-empty-configs.is-error-text {
-  color: var(--color-danger);
+  color: var(--color-danger-text);
   border-color: var(--color-danger-border);
   background: var(--color-danger-bg);
 }
@@ -480,7 +480,7 @@ select.form-control { cursor: pointer; }
 
 .adv-stub i { font-size: 1.25rem; }
 .adv-stub span { font-size: 0.875rem; font-weight: 600; color: var(--color-text-2); }
-.adv-stub p { margin: 0; font-size: 0.75rem; max-width: 24rem; }
+.adv-stub p { margin: 0; font-size: 0.875rem; max-width: 24rem; }
 
 /* ─── Right rail: Associated Entities ────────────────────────────────── */
 .adv-rail {
@@ -523,10 +523,10 @@ select.form-control { cursor: pointer; }
   border-radius: var(--radius-full);
   background: var(--color-surface-2);
   color: var(--color-text-2);
-  font-size: 0.75rem;
+  font-size: 0.875rem;
 }
 
-.adv-rail-empty { margin: 0.5rem 0 0; font-size: 0.75rem; color: var(--color-text-3); }
+.adv-rail-empty { margin: 0.5rem 0 0; font-size: 0.875rem; color: var(--color-text-3); }
 .adv-rail-line {
   margin: 0.5rem 0 0;
   font-size: 0.8125rem;
@@ -554,9 +554,9 @@ select.form-control { cursor: pointer; }
   border-radius: var(--radius-md);
 }
 
-.ob-saved-icon { color: var(--color-success); font-size: 1.25rem; flex-shrink: 0; }
+.ob-saved-icon { color: var(--color-success-text); font-size: 1.25rem; flex-shrink: 0; }
 .ob-saved-title { margin: 0; font-size: 0.875rem; font-weight: 600; color: var(--color-text); }
-.ob-saved-sub { margin: 0.125rem 0 0; font-size: 0.8125rem; color: var(--color-text-2); }
+.ob-saved-sub { margin: 0.125rem 0 0; font-size: 0.875rem; color: var(--color-text-2); }
 
 /* Re-open the form from the confirmation (distinct from Back, which leaves). */
 .adv-edit { margin-left: auto; flex-shrink: 0; }
@@ -583,7 +583,7 @@ select.form-control { cursor: pointer; }
   align-items: flex-start;
   gap: 0.5rem;
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   line-height: 1.5;
   color: var(--color-text-3);
 }

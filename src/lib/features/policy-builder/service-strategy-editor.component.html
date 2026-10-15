@@ -1,0 +1,53 @@
+@if (service(); as s) {
+  <header class="pe-header">
+    <div class="pe-avatar" aria-hidden="true"><i class="fa-solid fa-sliders"></i></div>
+    <div class="pe-heading">
+      <h2 class="pe-title">Terminator strategy</h2>
+      <span class="pe-subtitle">{{ s.name }}@if (mark(); as m) { · {{ m }} in draft}</span>
+    </div>
+    <button type="button" class="pe-icon-btn" (click)="closed.emit()" aria-label="Close terminator strategy">
+      <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+    </button>
+  </header>
+
+  <div class="pe-body">
+    @if (editError(); as err) {
+      <p class="pe-error" role="alert"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> {{ err }}</p>
+    }
+
+    <fieldset class="pe-field sse-options" aria-describedby="sse-help">
+      <legend class="form-label">Strategy</legend>
+      <p class="pe-hint" id="sse-help">How traffic is shared among active hosts.</p>
+      @for (t of strategies; track t) {
+        <label class="sse-option" [class.on]="strategy() === t">
+          <input type="radio" name="sse-strategy" [value]="t" [checked]="strategy() === t" (change)="strategy.set(t)" />
+          <span>
+            <strong>{{ t }}</strong>
+            <span class="sse-desc">{{ help[t] }}</span>
+          </span>
+        </label>
+      }
+    </fieldset>
+
+    <p class="pce-observed">
+      <i class="fa-solid fa-satellite-dish" aria-hidden="true"></i>
+      @if (activeHosts().length) {
+        Active now: {{ activeHosts().join(', ') }} — from their terminators, reported by the hosts.
+      } @else {
+        No host is active now — terminators are reported by the hosts, not set here.
+      }
+    </p>
+
+    <div class="pe-actions">
+      <button type="button" class="btn btn-primary btn-sm" [disabled]="!dirty()" (click)="addToDraft()">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i> Add to draft
+      </button>
+      <button type="button" class="btn btn-secondary btn-sm" (click)="closed.emit()">Cancel</button>
+    </div>
+  </div>
+} @else {
+  <div class="pe-body">
+    <p class="pe-hint">This service isn't in the draft any more.</p>
+    <button type="button" class="btn btn-secondary btn-sm" (click)="closed.emit()">Close</button>
+  </div>
+}

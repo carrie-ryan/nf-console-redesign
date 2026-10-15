@@ -1,0 +1,143 @@
+@if (policy(); as p) {
+  <header class="pe-header">
+    <div class="pe-avatar" aria-hidden="true"><i class="fa-solid fa-route"></i></div>
+    <div class="pe-heading">
+      <h2 class="pe-title" id="rpe-title">{{ title() }}</h2>
+      <span class="pe-subtitle">
+        {{ p.id }}@if (system()) { · <span class="rpe-system-tag"><i class="fa-solid fa-lock" aria-hidden="true"></i> system</span>} @else if (isPending()) { · not in draft yet} @else if (mark(); as m) { · {{ m }} in draft}
+      </span>
+    </div>
+    <button type="button" class="pe-icon-btn" (click)="closed.emit()" aria-label="Close router policy editor">
+      <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+    </button>
+  </header>
+
+  <div class="pe-body">
+    @if (system()) {
+      <p class="rpe-system" role="note">
+        <i class="fa-solid fa-lock" aria-hidden="true"></i>
+        <span><strong>Created by Ziti for this router</strong>@if (systemRouter(); as r) { ({{ r }})}. It grants the router's
+          own identity that router, and can't be edited or deleted.</span>
+      </p>
+    }
+    @if (editError(); as err) {
+      <p class="pe-error" role="alert">
+        <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> That change can't be applied: {{ err }}
+      </p>
+    }
+
+    <div class="pe-field">
+      <label class="form-label" for="rpe-name">Name</label>
+      <input id="rpe-name" class="form-control" [value]="p.name" (input)="rename($any($event.target).value)"
+        autocomplete="off" [readOnly]="system()" />
+    </div>
+
+    <fieldset class="pe-field pe-semantic" aria-describedby="rpe-semantic-hint">
+      <legend class="form-label">Match attributes</legend>
+      <div class="pe-seg">
+        <label [class.on]="p.semantic === 'AllOf'">
+          <input type="radio" name="rpe-semantic" value="AllOf" [checked]="p.semantic === 'AllOf'"
+            (change)="setSemantic('AllOf')" [disabled]="system()" /> all of
+        </label>
+        <label [class.on]="p.semantic === 'AnyOf'">
+          <input type="radio" name="rpe-semantic" value="AnyOf" [checked]="p.semantic === 'AnyOf'"
+            (change)="setSemantic('AnyOf')" [disabled]="system()" /> any of
+        </label>
+      </div>
+      <p class="pe-hint" id="rpe-semantic-hint">Applies to both sides. Named entries are always included.</p>
+    </fieldset>
+
+    @for (m of sides(); track m.side) {
+      <ng-container *ngTemplateOutlet="sideTpl; context: { $implicit: m }" />
+    }
+
+    @if (isPending()) {
+      @if (missingSides().length) {
+        <p class="pe-hint" id="rpe-missing">Pick {{ missingSides().join(' and ') }} to add it.</p>
+      }
+      <div class="rpe-actions">
+        <button type="button" class="btn btn-primary btn-sm" (click)="addToDraft()" [disabled]="missingSides().length > 0"
+          [attr.aria-describedby]="missingSides().length ? 'rpe-missing' : null">
+          <i class="fa-solid fa-plus" aria-hidden="true"></i> Add to draft
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="closed.emit()">Cancel</button>
+      </div>
+    } @else if (!system()) {
+      <div class="pe-danger">
+        <button type="button" class="btn btn-secondary btn-sm pe-delete" (click)="deletePolicy()">
+          <i class="fa-solid fa-trash" aria-hidden="true"></i> Delete policy
+        </button>
+      </div>
+    }
+  </div>
+
+  <ng-template #sideTpl let-m>
+    @let n = m.noun;
+    <section class="pe-side" [attr.aria-labelledby]="'rpe-' + m.side + '-h'">
+      <h3 class="pe-side-h" [id]="'rpe-' + m.side + '-h'">{{ n.title }}</h3>
+
+      <div class="pe-sub">
+        <label class="pe-sub-h" [for]="'rpe-' + m.side + '-named'">Named {{ n.many }}</label>
+        <div class="tag-input-wrap">
+          @for (c of m.named; track c.role) {
+            <span class="tag-chip" [class.missing]="!c.found" [class.added]="isAdded(c.role)"
+              [title]="isAdded(c.role) ? 'Added by this fix' : c.found ? c.role : c.role + ' matches nothing'">
+              <i class="fa-solid" [class]="c.router ? 'fa-tower-broadcast' : n.icon" aria-hidden="true"></i>
+              {{ c.name }}
+              @if (isAdded(c.role)) {<span class="visually-hidden">(added by this fix)</span>}
+              @if (!system()) {
+                <button class="tag-chip-x" type="button" (click)="removeRole(m.side, c.role)" [attr.aria-label]="'Remove ' + c.name">
+                  <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+              }
+            </span>
+          }
+          @if (system() && !m.named.length) {<span class="rpe-none">none</span>}
+          @if (!system()) {
+          <app-search-picker [inputId]="'rpe-' + m.side + '-named'" [items]="m.nameItems" [selected]="m.chosen" [noun]="n.many"
+            [placeholder]="'Search ' + n.many + ' by name or attribute'" (picked)="addRole(m.side, $event)" />
+          }
+        </div>
+      </div>
+
+      <div class="pe-sub">
+        <label class="pe-sub-h" [for]="'rpe-' + m.side + '-terms'">Attribute rule</label>
+        <div class="tag-input-wrap">
+          @for (t of m.terms; track t) {
+            <span class="tag-chip" [class.added]="isAdded(t)" [title]="isAdded(t) ? 'Added by this fix' : t">
+              {{ t }}
+              @if (isAdded(t)) {<span class="visually-hidden">(added by this fix)</span>}
+              @if (!system()) {
+                <button class="tag-chip-x" type="button" (click)="removeRole(m.side, t)" [attr.aria-label]="'Remove ' + t">
+                  <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+              }
+            </span>
+          }
+          @if (system() && !m.terms.length) {<span class="rpe-none">none</span>}
+          @if (!system()) {
+          <app-search-picker [inputId]="'rpe-' + m.side + '-terms'" [items]="m.attrItems" [selected]="m.chosen" noun="attributes"
+            [allowFree]="true" placeholder="#attribute — Enter to add" (picked)="addRole(m.side, $event)" />
+          }
+        </div>
+      </div>
+
+      <p class="pe-count" aria-live="polite">
+        <strong>{{ m.count }}</strong>
+        @if (m.names.length) {
+          <span class="pe-sample">: {{ shownNames(m.side, m.names).join(', ') }}</span>
+          @if (m.more) {
+            <span class="pe-sample">{{ expandedSides().has(m.side) ? ' · ' : ', ' }}</span>
+            <button type="button" class="pe-more" [attr.aria-expanded]="expandedSides().has(m.side)"
+              (click)="toggleMatches(m.side)">{{ expandedSides().has(m.side) ? 'show fewer' : '+' + m.more + ' more' }}</button>
+          }
+        }
+      </p>
+    </section>
+  </ng-template>
+} @else {
+  <div class="pe-body">
+    <p class="pe-hint">This router policy isn't in the draft any more.</p>
+    <button type="button" class="btn btn-secondary btn-sm" (click)="closed.emit()">Close</button>
+  </div>
+}

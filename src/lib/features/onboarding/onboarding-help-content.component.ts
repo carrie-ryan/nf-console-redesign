@@ -52,7 +52,7 @@ const TOPICS: Record<HelpTopicKey, HelpTopic> = {
       },
       {
         icon: 'fa-solid fa-hashtag',
-        title: 'Attributes group identities',
+        title: 'Role attributes group identities',
         body: 'Role attributes (like #get-started-client) tag identities so policies can target a whole group by attribute instead of naming each one.',
       },
       {
@@ -104,7 +104,7 @@ const TOPICS: Record<HelpTopicKey, HelpTopic> = {
       },
       {
         icon: 'fa-solid fa-hashtag',
-        title: 'Attributes target policies',
+        title: 'Role attributes target policies',
         body: 'Role attributes on the service and on identities (like #prod-db or #db-clients) let policies grant access to a whole group at once, instead of naming each service or identity one by one.',
       },
       {
@@ -146,7 +146,7 @@ const TOPICS: Record<HelpTopicKey, HelpTopic> = {
     lead: 'What does the Policy step do?',
     intro: [
       'Policies are how a service is authorized: they decide which identities may use it and which routers may carry it. Nothing reaches a service until the right policies line up — on the Advanced path you create them by hand here.',
-      'You can add as many as you need, of three kinds. Each matches attributes on two sides, so a policy with an attribute on only one side (or neither) matches nothing and grants nothing.',
+      'You can add as many as you need, of three kinds. Each matches role attributes on two sides, so a policy with a role attribute on only one side (or neither) matches nothing and grants nothing.',
     ],
     keyPoints: [
       {
@@ -172,7 +172,7 @@ const TOPICS: Record<HelpTopicKey, HelpTopic> = {
     lead: 'What does a router policy do?',
     intro: [
       'A router policy (an edge router policy) decides which identities are allowed to use which edge routers. Identities connect to the overlay through a router, so until a policy grants an identity the right to use one, that identity has no on-ramp — it can be fully authorized for a service and still reach nothing.',
-      'It works by matching attributes on two sides: edge router attributes on one side, identity attributes on the other. Every identity that matches is granted the use of every router that matches. That is why both sides are needed — a policy with an attribute on only one side (or neither) matches nothing and grants nothing.',
+      'It works by matching role attributes on two sides: edge router role attributes on one side, identity role attributes on the other. Every identity that matches is granted the use of every router that matches. That is why both sides are needed — a policy with a role attribute on only one side (or neither) matches nothing and grants nothing.',
     ],
     keyPoints: [
       {
@@ -187,8 +187,8 @@ const TOPICS: Record<HelpTopicKey, HelpTopic> = {
       },
       {
         icon: 'fa-solid fa-hashtag',
-        title: 'Both attribute sides are required',
-        body: 'An edge router attribute picks the routers; an identity attribute picks the identities. A policy missing either side matches nothing — which is why onboarding requires both, even though the base form marks them optional.',
+        title: 'Both role attribute sides are required',
+        body: 'An edge router role attribute picks the routers; an identity role attribute picks the identities. A policy missing either side matches nothing — which is why onboarding requires both, even though the base form marks them optional.',
       },
     ],
     howItFits:

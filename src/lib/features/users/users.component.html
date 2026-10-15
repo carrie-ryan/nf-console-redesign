@@ -1,0 +1,258 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Users</h1>
+    <p>Console access, roles, and invitations for your organization</p>
+  </div>
+  <!-- The header is shared by all four subtabs, so each CTA is scoped to the
+       tab it acts on — a CTA above an unrelated tab would read as a bug. -->
+  @if (activeTab() === 'users') {
+    <button class="btn btn-primary" type="button" (click)="inviteOpen.set(true)">
+      <i class="fa-solid fa-user-plus"></i> Invite Users
+    </button>
+  } @else if (activeTab() === 'role-templates') {
+    <a routerLink="/users/role-templates/new" class="btn btn-primary">
+      <i class="fa-solid fa-plus"></i> Add Role Template
+    </a>
+  }
+</div>
+
+<nav class="tab-bar" role="tablist" aria-label="User management views">
+  @for (tab of tabs; track tab.id) {
+    <button
+      type="button"
+      class="tab-btn"
+      role="tab"
+      [class.tab-btn--active]="activeTab() === tab.id"
+      [attr.aria-selected]="activeTab() === tab.id"
+      (click)="setTab(tab.id)">
+      {{ tab.label }}
+    </button>
+  }
+</nav>
+
+<div class="list-body">
+
+  @if (activeTab() === 'users') {
+
+    @if (data.consoleUsers().length === 0) {
+      <div class="section-card empty-card">
+        <app-empty-state
+          icon="fa-solid fa-user-gear"
+          title="No users yet"
+          message="Users are the people who sign into this console. Invite a teammate to give them access." />
+      </div>
+    } @else {
+
+      @if (selectedIds().size > 0) {
+        <div class="bulk-bar">
+          <span class="bulk-count">{{ selectedIds().size }} selected</span>
+          <button class="btn btn-sm btn-danger" (click)="clearSelection()">
+            <i class="fa-solid fa-trash"></i> Remove
+          </button>
+          <button class="btn-text" (click)="clearSelection()">Cancel</button>
+        </div>
+      }
+
+      <div class="section-card table-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="col-check">
+                <input
+                  type="checkbox"
+                  aria-label="Select all users"
+                  [checked]="allSelected()"
+                  [indeterminate]="someSelected() && !allSelected()"
+                  (change)="selectAllPage(data.consoleUsers())" />
+              </th>
+              @if (prefs.isPowerUser()) {
+                <th class="col-id-toggle">ID</th>
+              }
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th class="col-status-pill">Status</th>
+              <th class="col-bool">MFA</th>
+              <th class="col-date">Last Login</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (user of data.consoleUsers(); track user.id) {
+              <tr>
+                <td class="col-check">
+                  <input
+                    type="checkbox"
+                    [attr.aria-label]="'Select ' + user.name"
+                    [checked]="selectedIds().has(user.id)"
+                    (change)="toggleSelect(user.id)" />
+                </td>
+                @if (prefs.isPowerUser()) {
+                  <td class="col-id-toggle"><span class="id-value">{{ user.id }}</span></td>
+                }
+                <td class="name-cell">{{ user.name }}</td>
+                <td class="email-cell">{{ user.email }}</td>
+                <td class="role-cell">
+                  <span class="role-text">{{ roleLabel(user) }}</span>
+                  <!-- One badge if ANY held role is grantable; the tooltip names
+                       which, since a user can hold several and grant only some. -->
+                  @if (grantableRoles(user).length > 0) {
+                    <span class="field-badge grant-badge"
+                      [title]="'Can grant: ' + grantableRoles(user).join(', ')">
+                      <i class="fa-solid fa-key" aria-hidden="true"></i> Can grant
+                    </span>
+                  }
+                </td>
+                <td class="col-status-pill">
+                  <app-pill [variant]="statusVariant(user.status)" [label]="statusLabel(user.status)" />
+                </td>
+                <td class="col-bool">
+                  @if (user.mfaEnabled) {
+                    <i class="fa-solid fa-check check-yes" title="MFA enabled"></i>
+                  } @else {
+                    <span class="check-no" title="MFA not enabled">—</span>
+                  }
+                </td>
+                <td class="col-date">{{ user.lastLoginAt ? (user.lastLoginAt | slice:0:10) : 'Never' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+  } @else if (activeTab() === 'roles') {
+    <div class="section-card table-card">
+      <div class="toolbar">
+        <div class="filter-wrap">
+          <i class="fa-solid fa-magnifying-glass filter-icon"></i>
+          <input
+            class="filter-input"
+            type="text"
+            placeholder="Type to Filter"
+            [value]="roleFilter()"
+            (input)="roleFilter.set($any($event.target).value)" />
+          @if (roleFilter()) {
+            <button class="filter-clear" type="button" (click)="roleFilter.set('')" title="Clear filter">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          } @else {
+            <i class="fa-solid fa-filter filter-funnel"></i>
+          }
+        </div>
+        <span class="pagination-info">
+          {{ filteredRoles().length === 0 ? '0' : '1' }}–{{ filteredRoles().length }}
+          of {{ data.orgRoles().length }}
+        </span>
+      </div>
+
+      <table class="data-table roles-table">
+        <thead>
+          <tr>
+            <th>Role Name</th>
+            <th>Resource Name</th>
+            <th>Strategy</th>
+            @if (prefs.isPowerUser()) {
+              <th>Role Type</th>
+            }
+            <th>Resource Type</th>
+            <th class="col-users">Users</th>
+            <th class="col-flag">Default Role</th>
+            <th class="col-flag">Grantable</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (role of filteredRoles(); track role.id) {
+            <tr>
+              <!-- The role name is the way into its options, matching the legacy
+                   console where it's the row's only interactive element. -->
+              <td>
+                <button class="role-link" type="button" (click)="editingRole.set(role)"
+                  [title]="'Edit options for ' + role.name">
+                  {{ role.name }} - {{ role.scope }}
+                </button>
+              </td>
+              <td class="muted-cell">{{ role.scope }}</td>
+              <td class="muted-cell">{{ role.strategy }}</td>
+              @if (prefs.isPowerUser()) {
+                <td class="muted-cell">{{ role.roleType }}</td>
+              }
+              <td class="muted-cell">{{ role.resourceType }}</td>
+              <td class="col-users">
+                @if (membersOf(role.id).length === 0) {
+                  <span class="muted-cell">0 User(s)</span>
+                } @else {
+                  <button class="disclosure" type="button" (click)="toggleRoleExpanded(role.id)"
+                    [attr.aria-expanded]="isRoleExpanded(role.id)">
+                    {{ isRoleExpanded(role.id) ? 'Hide' : 'Show ' + membersOf(role.id).length }} User(s)
+                    <i class="fa-solid" [class.fa-chevron-up]="isRoleExpanded(role.id)"
+                      [class.fa-chevron-down]="!isRoleExpanded(role.id)"></i>
+                  </button>
+                }
+              </td>
+              <td class="col-flag">
+                @if (role.isDefault) { <i class="fa-solid fa-circle-check flag-yes" title="Default role"></i> }
+                @else { <span class="flag-no">—</span> }
+              </td>
+              <td class="col-flag">
+                @if (role.grantableByDefault) { <i class="fa-solid fa-circle-check flag-yes" title="Grantable by default"></i> }
+                @else { <span class="flag-no">—</span> }
+              </td>
+            </tr>
+
+            <!-- Member sub-rows. The Grantable column carries a different meaning
+                 here: the role's default above, this person's ACTUAL grant below. -->
+            @if (isRoleExpanded(role.id)) {
+              @for (member of membersOf(role.id); track member.user.id) {
+                <tr class="member-row">
+                  <td class="member-email">{{ member.user.email }}</td>
+                  <td class="muted-cell">{{ member.user.name }}</td>
+                  <td [attr.colspan]="prefs.isPowerUser() ? 3 : 2"></td>
+                  <td class="col-users"></td>
+                  <td class="col-flag"></td>
+                  <td class="col-flag">
+                    @if (member.canGrant) {
+                      <i class="fa-solid fa-circle-check flag-yes"
+                        [title]="member.user.name + ' can grant this role to others'"></i>
+                    } @else { <span class="flag-no">—</span> }
+                  </td>
+                </tr>
+              }
+            }
+          }
+        </tbody>
+      </table>
+
+      @if (filteredRoles().length === 0) {
+        <p class="no-results"><i class="fa-solid fa-magnifying-glass"></i> No roles match "{{ roleFilter() }}".</p>
+      }
+    </div>
+
+  } @else if (activeTab() === 'invitations') {
+    <div class="section-card empty-card">
+      <app-empty-state
+        icon="fa-solid fa-envelope-open-text"
+        title="Invitations"
+        message="Pending invitations to join this organization appear here. This view is not built yet." />
+    </div>
+
+  } @else {
+    <div class="section-card empty-card">
+      <app-empty-state
+        icon="fa-solid fa-clipboard-list"
+        title="Role templates"
+        message="Reusable permission sets you can apply when creating a role. This view is not built yet." />
+    </div>
+  }
+
+</div>
+
+@if (inviteOpen()) {
+  <app-invite-users-modal (invited)="onInvited($event)" (cancelled)="inviteOpen.set(false)" />
+}
+
+@if (editingRole(); as role) {
+  <app-edit-role-options-modal
+    [role]="role"
+    (saved)="onRoleOptionsSaved($event)"
+    (cancelled)="editingRole.set(null)" />
+}

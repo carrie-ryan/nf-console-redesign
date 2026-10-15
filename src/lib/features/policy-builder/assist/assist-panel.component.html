@@ -1,0 +1,137 @@
+@if (assist.open() && !locked()) {
+  <section class="ap" id="ap-panel" role="dialog" aria-labelledby="ap-h" [class.expanded]="assist.expanded()"
+    (keydown.escape)="close()">
+    <header class="ap-head">
+      <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+      <h2 class="ap-h" id="ap-h">Policy Assistant</h2>
+      <button type="button" class="ap-icon" (click)="assist.expanded.set(!assist.expanded())"
+        [attr.aria-label]="assist.expanded() ? 'Shrink assistant' : 'Expand assistant'"
+        [title]="assist.expanded() ? 'Shrink' : 'Expand'">
+        <i class="fa-solid" [class.fa-up-right-and-down-left-from-center]="!assist.expanded()"
+          [class.fa-down-left-and-up-right-to-center]="assist.expanded()" aria-hidden="true"></i>
+      </button>
+      <button type="button" class="ap-icon" (click)="assist.clear(serviceId())" aria-label="Reset conversation" title="Reset conversation">
+        <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+      </button>
+      <button type="button" class="ap-icon" (click)="close()" aria-label="Close assistant" title="Close">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    </header>
+
+    <div class="ap-body" #log>
+      @if (!turns().length) {
+        <p class="ap-welcome">Describe who should host or dial this service, or start from an example below. Changes are proposed on the canvas before anything goes into your draft.</p>
+      } @else {
+        <ol class="ap-log" aria-live="polite">
+          @for (t of turns(); track t.id) {
+            @let st = status(t);
+            <li class="ap-turn">
+              <p class="ap-prompt">{{ t.prompt }}</p>
+
+              <div class="ap-reply" [class.ap-reply-proposed]="st === 'proposed'" [class.ap-reply-done]="st === 'added' || st === 'discarded'">
+                @switch (st) {
+                  @case ('thinking') {
+                    <p class="ap-muted">Thinking…</p>
+                  }
+                  @case ('failed') {
+                    <p class="ap-error"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> {{ t.error }}</p>
+                  }
+                  @default {
+                    @if (t.result; as r) {
+                      @if (r.summary.length) {
+                        <ul class="ap-summary">
+                          @for (line of r.summary; track $index) {
+                            <li>{{ line }}</li>
+                          }
+                        </ul>
+                      }
+                      @for (n of r.notes; track n.groupId) {
+                        <p class="ap-note">
+                          <i class="fa-solid fa-route" aria-hidden="true"></i>
+                          <span>{{ n.text }}</span>
+                          @if (canSetUp(t, n)) {
+                            <button type="button" class="ap-link" (click)="setUpRouting(n)">Set up routing</button>
+                          }
+                        </p>
+                      }
+                      @if (r.reply) {
+                        <p class="ap-answer-text">{{ r.reply }}</p>
+                      }
+                      @if (r.items.length) {
+                        <ul class="ap-items">
+                          @for (item of r.items; track $index) {<li>{{ item }}</li>}
+                        </ul>
+                      }
+                      @for (q of r.questions; track $index) {
+                        <p class="ap-question">{{ q }}</p>
+                      }
+                      @if (r.answers.length) {
+                        <div class="ap-answers" role="group" [attr.aria-label]="r.reply ? 'Suggested next steps' : 'Suggested answers'">
+                          @for (a of r.answers; track a) {
+                            <button type="button" class="ap-chip ap-answer" [disabled]="!isLatest(t)" (click)="send(a)">{{ a }}</button>
+                          }
+                        </div>
+                      }
+                    }
+                    @switch (st) {
+                      @case ('proposed') {
+                        <div class="ap-actions">
+                          <span class="ap-tag ap-tag-proposed">Proposed — shown on the canvas</span>
+                          <button type="button" class="btn btn-secondary btn-sm" (click)="assist.discardProposal()">Discard</button>
+                          <button type="button" class="btn btn-primary btn-sm" (click)="assist.accept()">
+                            <i class="fa-solid fa-plus" aria-hidden="true"></i> Add to draft
+                          </button>
+                        </div>
+                      }
+                      @case ('added') {
+                        <p class="ap-tag ap-tag-added"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Added to draft</p>
+                      }
+                      @case ('discarded') {
+                        <p class="ap-tag">Discarded</p>
+                      }
+                    }
+                  }
+                }
+              </div>
+            </li>
+          }
+        </ol>
+      }
+    </div>
+
+    <footer class="ap-foot">
+      <form class="ap-form" (submit)="$event.preventDefault(); send()">
+        <input #promptInput class="form-control ap-input" type="text" [value]="text()" (input)="text.set($any($event.target).value)"
+          placeholder="Describe who should host or dial this service" aria-label="Describe who should host or dial this service" />
+        <button type="submit" class="btn btn-primary btn-sm ap-send" [disabled]="!text().trim()" aria-label="Send">
+          <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+        </button>
+      </form>
+
+      <div class="ap-examples">
+        @if (turns().length) {
+          <button type="button" class="ap-examples-toggle" [attr.aria-expanded]="examplesOpen()"
+            aria-controls="ap-chips" (click)="examplesOpen.set(!examplesOpen())">
+            <i class="fa-solid fa-chevron-right ap-examples-chev" [class.open]="examplesOpen()" aria-hidden="true"></i>
+            Example prompts
+          </button>
+        } @else {
+          <p class="ap-examples-label" id="ap-examples-label">Example prompts</p>
+        }
+        @if (showChips()) {
+          <div class="ap-chips" id="ap-chips" role="group" aria-label="Example prompts">
+            @for (s of suggestions; track s) {
+              <button type="button" class="ap-chip" (click)="send(s)">{{ s }}</button>
+            }
+          </div>
+        }
+      </div>
+    </footer>
+  </section>
+}
+
+<button type="button" class="ap-fab" #fab (click)="toggle()" aria-controls="ap-panel" [disabled]="locked()"
+  [title]="locked() ? 'The draft is submitted for review — withdraw it to use the assistant' : ''"
+  [attr.aria-expanded]="assist.open()" [attr.aria-label]="locked() ? 'Assistant unavailable: the draft is submitted for review' : assist.open() ? 'Close assistant' : 'Open assistant'">
+  <i class="fa-solid" [class.fa-wand-magic-sparkles]="!assist.open()" [class.fa-chevron-down]="assist.open()" aria-hidden="true"></i>
+</button>

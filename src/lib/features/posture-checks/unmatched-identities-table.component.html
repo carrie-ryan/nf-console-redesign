@@ -1,0 +1,68 @@
+<div class="ut-hdr">
+  <div>
+    <h2 class="ut-heading">Unmatched identities</h2>
+    <span class="ut-count">Showing {{ rows().length | number }} of {{ scaledCount() | number }}</span>
+  </div>
+  <div class="ut-actions">
+    <button type="button" class="btn btn-secondary btn-sm" (click)="importNote.set(null); importOpen.set(true)"
+      [disabled]="!mappable().length">
+      <i class="fa-solid fa-file-import" aria-hidden="true"></i> Import CSV…
+    </button>
+  </div>
+</div>
+<p class="ut-hint">
+  @if (manualKey()) {
+    Map pins an identity to a provider device — it counts as matched right away.
+  } @else {
+    Map pins an identity to a provider device, overriding the automatic match — it counts as matched right away.
+  }
+</p>
+@if (importNote(); as note) {
+  <p class="ut-note" role="status"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> {{ note }}</p>
+}
+
+@if (rows().length) {
+  <div class="ut-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th scope="col">Ziti identity</th><th scope="col">Why unmatched</th><th scope="col">Resolve</th></tr>
+      </thead>
+      <tbody>
+        @for (row of rows(); track row.identity.id) {
+          @let id = row.identity.id;
+          <tr>
+            <td>
+              <span class="ut-name">{{ row.identity.name }}</span>
+              <span class="ut-kind">{{ row.identity.kind }}</span>
+            </td>
+            <td><span class="ut-reason">{{ row.label }}</span></td>
+            <td>
+              @if (row.identity.kind === 'service') {
+                <span class="ut-muted">No device to map</span>
+              } @else {
+                <form class="ut-resolve" (submit)="$event.preventDefault(); map(id)">
+                  <input class="form-control" placeholder="Device ID" autocomplete="off"
+                    [attr.aria-label]="'Device ID for ' + row.identity.name"
+                    [value]="value(id)" (input)="setDraft(id, $any($event.target).value)" />
+                  <button type="submit" class="btn btn-sm ut-map" [disabled]="!canMap(id)">
+                    {{ saved(id) ? 'Update' : 'Map' }}
+                  </button>
+                </form>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+} @else {
+  <div class="ut-empty" role="status">
+    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+    <div><strong>Every identity is matched</strong> — nothing to resolve for this connection.</div>
+  </div>
+}
+
+@if (importOpen()) {
+  <app-import-mappings-modal [identities]="mappableIdentities()" [providerLabel]="providerLabel()"
+    (imported)="onImported($event)" (dismissed)="importOpen.set(false)" />
+}

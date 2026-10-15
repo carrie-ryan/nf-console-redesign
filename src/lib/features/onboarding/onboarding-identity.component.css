@@ -48,7 +48,7 @@
 
 .field-hint {
   margin: 0.375rem 0 0;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   color: var(--color-text-3);
 }
 
@@ -127,7 +127,7 @@ select.form-control:disabled { cursor: not-allowed; opacity: 0.6; }
   line-height: 1.5;
 }
 
-.tag-bare-input::placeholder { color: var(--color-text-3); }
+.tag-bare-input::placeholder { color: var(--color-text-disabled); }
 
 /* ─── Saved state (JWT affordance) ──────────────────────────────────── */
 .ob-saved { display: flex; flex-direction: column; gap: 1rem; }
@@ -142,9 +142,9 @@ select.form-control:disabled { cursor: not-allowed; opacity: 0.6; }
   border-radius: var(--radius-md);
 }
 
-.ob-saved-icon { color: var(--color-success); font-size: 1.25rem; flex-shrink: 0; }
+.ob-saved-icon { color: var(--color-success-text); font-size: 1.25rem; flex-shrink: 0; }
 .ob-saved-title { margin: 0; font-size: 0.875rem; font-weight: 600; color: var(--color-text); }
-.ob-saved-sub { margin: 0.125rem 0 0; font-size: 0.8125rem; color: var(--color-text-2); }
+.ob-saved-sub { margin: 0.125rem 0 0; font-size: 0.875rem; color: var(--color-text-2); }
 .ob-jwt-btn { align-self: flex-start; }
 
 /* ─── Outside-console section ────────────────────────────────────────── */
@@ -212,4 +212,4 @@ select.form-control:disabled { cursor: not-allowed; opacity: 0.6; }
 .ob-fake-link:hover { text-decoration: underline; }
 .ob-fake-link i { font-size: 0.6875rem; }
 
-.ob-outside-note { font-size: 0.8125rem; color: var(--color-text-3); }
+.ob-outside-note { font-size: 0.875rem; color: var(--color-text-3); }

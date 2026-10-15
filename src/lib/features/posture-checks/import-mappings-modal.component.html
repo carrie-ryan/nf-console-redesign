@@ -1,0 +1,21 @@
+<app-modal-shell (dismissed)="dismissed.emit()">
+  <span modal-title>Import identity → device mappings</span>
+  <p class="im-copy">
+    Upload a CSV with two columns: <b>Ziti identity name</b>, and the {{ providerLabel() }} <b>device ID</b>.
+    Each row pins that identity to the device.
+  </p>
+  <div class="im-drop" aria-hidden="true">
+    <i class="fa-solid fa-file-csv"></i>
+    Drop a .csv here, or click to browse
+  </div>
+  <p class="im-mock">
+    Mock — no file is parsed. “Map {{ mappable().length }} pairs” pins the {{ mappable().length }} unmatched
+    device identities in this sample; service identities are skipped, since they have no device.
+  </p>
+  <ng-container modal-footer>
+    <button type="button" class="btn btn-secondary" (click)="dismissed.emit()">Cancel</button>
+    <button type="button" class="btn btn-primary" (click)="confirm()" [disabled]="!mappable().length">
+      Map {{ mappable().length }} pairs
+    </button>
+  </ng-container>
+</app-modal-shell>

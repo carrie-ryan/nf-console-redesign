@@ -6,17 +6,17 @@
       <!-- ─── Header ─────────────────────────────────────────────────── -->
       <div class="dialog-header">
         <span class="rpm-eyebrow"><i class="fa-solid fa-shield-halved"></i> Create dial policy</span>
-        <h2 class="dialog-title" id="rpm-title">Authorize a discovered role</h2>
+        <h2 class="dialog-title" id="rpm-title">Authorize a discovered role attribute</h2>
         <p class="rpm-lede">
           Review the real objects below — new services are fully editable before they're created.
-          One dial policy will let this role reach every selected service.
+          One dial service policy will let this role attribute reach every selected service.
         </p>
       </div>
 
       <div class="dialog-body">
 
         <!-- ─── Section 1: Role ─────────────────────────────────────── -->
-        <label class="field-label">Role</label>
+        <label class="field-label">Role attribute</label>
         <div class="role-row">
           @if (editingName()) {
             <div class="role-edit">
@@ -26,7 +26,7 @@
                 (ngModelChange)="editValue.set($event)"
                 (keydown.enter)="commitEdit()"
                 (keydown.escape)="cancelEdit()"
-                aria-label="Rename role" />
+                aria-label="Rename role attribute" />
               <button class="role-edit-btn ok" type="button" (click)="commitEdit()"
                 aria-label="Save"><i class="fa-solid fa-check"></i></button>
               <button class="role-edit-btn" type="button" (click)="cancelEdit()"

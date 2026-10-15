@@ -1,0 +1,70 @@
+<button type="button" class="btn btn-secondary demo-btn" aria-haspopup="true" [attr.aria-expanded]="open()"
+  aria-controls="demo-panel" (click)="toggle()">
+  <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Demo
+</button>
+
+@if (open()) {
+  <div class="demo-panel" id="demo-panel" role="region" aria-labelledby="demo-panel-h">
+    <header class="demo-head">
+      <h2 class="demo-title" id="demo-panel-h">Demo controls</h2>
+      <button type="button" class="demo-x" aria-label="Close demo controls" (click)="close(true)">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    </header>
+    <p class="demo-hint">Changes made to live from outside the builder, as they would arrive for real.</p>
+
+    <ul class="demo-list">
+      @for (s of scenarios; track s.id) {
+        <li>
+          <button type="button" class="demo-run" [attr.data-scenario]="s.id" (click)="run(s)">
+            <i [class]="'fa-solid ' + s.icon" aria-hidden="true"></i>
+            <span class="demo-run-text">
+              <span class="demo-run-label">{{ s.label }}</span>
+              <span class="demo-run-detail">{{ s.detail }}</span>
+            </span>
+          </button>
+        </li>
+      }
+    </ul>
+
+    <label class="demo-toggle">
+      <input type="checkbox" class="demo-bind-toggle" [checked]="binding.enabled()"
+        (change)="binding.enabled.set($any($event.target).checked)" />
+      <span class="demo-run-text">
+        <span class="demo-run-label">Hosts bind after commit</span>
+        <span class="demo-run-detail">About 3 s after a commit (demo clock), hosts it made ready start serving — recorded as Ziti.</span>
+      </span>
+    </label>
+
+    <label class="demo-toggle">
+      <input type="checkbox" class="demo-review-toggle" [checked]="approval.required()"
+        (change)="approval.setRequired($any($event.target).checked)" />
+      <span class="demo-run-text">
+        <span class="demo-run-label">Require review before commit</span>
+        <span class="demo-run-detail">The author submits the draft; someone else approves it before it can be committed.</span>
+      </span>
+    </label>
+
+    <fieldset class="demo-view-as">
+      <legend class="demo-run-label">View as</legend>
+      <div class="demo-seg">
+        <label [class.on]="approval.viewer() === 'author'">
+          <input type="radio" name="demo-view-as" value="author" [checked]="approval.viewer() === 'author'"
+            (change)="approval.viewer.set('author')" /> You (author)
+        </label>
+        <label [class.on]="approval.viewer() === 'reviewer'">
+          <input type="radio" name="demo-view-as" value="reviewer" [checked]="approval.viewer() === 'reviewer'"
+            (change)="approval.viewer.set('reviewer')" /> Dana (reviewer)
+        </label>
+      </div>
+    </fieldset>
+
+    <p class="demo-clock">
+      <i class="fa-regular fa-clock" aria-hidden="true"></i>
+      Demo time {{ time() | date: 'HH:mm' }}@if (advanced()) {&ngsp;<span class="demo-ahead">+{{ advanced() }} h</span>}
+    </p>
+    <p class="demo-last" role="status" aria-live="polite">
+      @if (lastRun(); as r) {<i class="fa-solid fa-check" aria-hidden="true"></i> {{ r }}}
+    </p>
+  </div>
+}

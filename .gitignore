@@ -45,3 +45,5 @@ Thumbs.db
 
 # Local secrets — real-data layer. NEVER commit the Auth0 token.
 /src/environments/environment.local.ts
+serve.log
+serve.log

@@ -1,0 +1,319 @@
+/* The shell is a fixed 32rem — too tight for role rows that carry a toggle.
+   ::ng-deep is the only way in; the shell exposes no size input. */
+:host ::ng-deep .dialog-panel { max-width: 36rem; }
+
+/* The footer slot is justify-content: flex-end, so push the buttons right by
+   letting the consequence line take the slack. */
+.consequence {
+  font-size: 0.875rem;
+  color: var(--color-text-3);
+  margin-right: auto;
+  flex: 1;
+  min-width: 10rem;
+}
+
+/* ─── Header ─────────────────────────────────────────────────────── */
+.ium-title { display: inline-flex; align-items: center; gap: 0.625rem; }
+
+.ium-illus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-full);
+  background: var(--brand-primary-light);
+  color: var(--brand-primary);
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.ium-lede {
+  margin: 0 0 1.25rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-text-2);
+}
+
+/* ─── Field scaffolding (mirrors the create-* wizards) ───────────── */
+.form-group { display: flex; flex-direction: column; gap: 0.375rem; margin-bottom: 1.25rem; }
+.form-group:last-of-type { margin-bottom: 0; }
+
+.field-hdr { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.field-tag { font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.05em; color: var(--color-text-3); }
+.field-hint { margin: 0.25rem 0 0; font-size: 0.875rem; color: var(--color-text-3); line-height: 1.5; }
+
+.field-error {
+  margin: 0.25rem 0 0;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  color: var(--color-danger-text);
+}
+
+/* ─── Email chip input ───────────────────────────────────────────── */
+.tag-input-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.625rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  min-height: 2.5rem;
+  cursor: text;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.tag-input-wrap:focus-within { border-color: var(--brand-primary); box-shadow: 0 0 0 3px var(--color-focus-ring); }
+.tag-input-wrap.is-error { border-color: var(--color-danger); }
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem 0.2rem 0.625rem;
+  background: var(--brand-primary-light);
+  border: 1px solid rgba(27, 79, 216, 0.25);
+  border-radius: var(--radius-full);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--brand-primary);
+  line-height: 1;
+}
+
+.tag-chip-x {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--brand-primary);
+  font-size: 0.625rem;
+  padding: 0;
+  border-radius: 50%;
+  opacity: 0.7;
+  transition: opacity var(--transition-fast), background var(--transition-fast);
+}
+
+.tag-chip-x:hover { opacity: 1; background: rgba(27, 79, 216, 0.12); }
+
+.tag-bare-input {
+  flex: 1;
+  min-width: 8rem;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 0.875rem;
+  font-family: inherit;
+  color: var(--color-text);
+  padding: 0;
+  line-height: 1.5;
+}
+
+.tag-bare-input::placeholder { color: var(--color-text-disabled); }
+.tag-bare-input:disabled { cursor: not-allowed; }
+
+/* ─── "Use default roles" checkbox ───────────────────────────────── */
+.default-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  color: var(--color-text-2);
+  cursor: pointer;
+  user-select: none;
+}
+
+.default-check input { position: absolute; opacity: 0; pointer-events: none; }
+
+.check-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: 4px;
+  background: var(--color-surface);
+  color: #fff;
+  font-size: 0.625rem;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.default-check input:checked + .check-box { background: var(--brand-primary); border-color: var(--brand-primary); }
+.default-check input:not(:checked) + .check-box i { display: none; }
+.default-check input:focus-visible + .check-box { box-shadow: 0 0 0 3px var(--color-focus-ring); }
+
+/* ─── Role picker ────────────────────────────────────────────────── */
+.role-picker {
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  overflow: hidden;
+  transition: opacity var(--transition-fast);
+}
+
+/* Disabled rather than hidden — the selection stays visible so turning the
+   default-roles shortcut back off doesn't look like it ate the choices. */
+.role-picker.is-disabled { opacity: 0.5; pointer-events: none; }
+
+.role-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.625rem;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+}
+
+.role-search.is-open { border-bottom-color: var(--brand-primary); }
+.role-search-icon { color: var(--color-text-3); font-size: 0.75rem; }
+
+.role-list { list-style: none; margin: 0; padding: 0; }
+
+.role-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.625rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.role-row:last-child { border-bottom: none; }
+
+/* Truncate rather than overflow: the toggle label and the remove button are
+   fixed-width, so a long role name or scope must give way, not push them out. */
+.role-name {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text);
+  overflow: hidden;
+}
+
+.role-name,
+.role-scope {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.role-scope { font-size: 0.6875rem; font-weight: 400; color: var(--color-text-3); overflow: hidden; }
+
+.grant-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.grant-label { font-size: 0.75rem; color: var(--color-text-2); white-space: nowrap; }
+
+.role-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--color-text-3);
+  font-size: 0.75rem;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.role-remove:hover { background: var(--color-surface-2); color: var(--color-danger-text); }
+
+.role-empty {
+  margin: 0;
+  padding: 0.625rem;
+  font-size: 0.875rem;
+  color: var(--color-text-3);
+  font-style: italic;
+}
+
+.default-role {
+  display: inline-block;
+  margin-left: 0.25rem;
+  padding: 0.05rem 0.375rem;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.6875rem;
+  color: var(--color-text-2);
+}
+
+/* ─── Toggle switch (same block as the create-* wizards) ─────────── */
+.toggle-switch { position: relative; display: inline-flex; cursor: pointer; }
+.toggle-switch input { display: none; }
+
+.toggle-track {
+  display: block;
+  width: 2.25rem;
+  height: 1.25rem;
+  background: var(--color-text-3);
+  border-radius: var(--radius-full);
+  position: relative;
+  transition: background var(--transition-fast);
+}
+
+.toggle-switch input:checked ~ .toggle-track { background: var(--brand-primary); }
+
+.toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: calc(1.25rem - 4px);
+  height: calc(1.25rem - 4px);
+  background: #fff;
+  border-radius: 50%;
+  transition: transform var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+}
+
+.toggle-switch input:checked ~ .toggle-track .toggle-knob { transform: translateX(1rem); }
+
+/* ─── Role dropdown ──────────────────────────────────────────────── */
+.role-menu {
+  /* Fixed, not absolute: anchored to the viewport so the modal's scrollable
+     body can't clip it. top/left/width/max-height are measured in TS. */
+  position: fixed;
+  z-index: 1000;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0.25rem;
+  list-style: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-lg);
+}
+
+.role-opt {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.role-opt:hover { background: var(--brand-primary-light); }
+.role-opt-head { display: flex; align-items: baseline; gap: 0.5rem; }
+.role-opt-name { font-size: 0.8125rem; font-weight: 500; color: var(--color-text); }
+.role-opt-desc { font-size: 0.875rem; color: var(--color-text-3); line-height: 1.4; }

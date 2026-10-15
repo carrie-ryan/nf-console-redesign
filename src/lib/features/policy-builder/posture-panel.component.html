@@ -1,0 +1,115 @@
+<header class="rg-header">
+  <div class="rg-avatar pp-avatar" aria-hidden="true"><i class="fa-solid fa-shield-halved"></i></div>
+  <div class="rg-heading">
+    <h2 class="rg-title">Posture</h2>
+    <span class="rg-subtitle">{{ subtitle() }}</span>
+  </div>
+  <button type="button" class="rg-icon-btn" (click)="closed.emit()" aria-label="Close posture">
+    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+  </button>
+</header>
+
+<div class="rg-body">
+  @if (panel(); as p) {
+    <p class="pp-checks">
+      @if (p.checkNames.length) {
+        {{ p.group.policyName }} requires
+        @for (k of p.group.checks; track k.id) {
+          <button type="button" class="pp-chip" (click)="viewCheck.emit(k.id)" [attr.aria-label]="'Posture check ' + k.name + ' — details'">
+            <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>{{ k.name }}
+          </button>
+        }
+      } @else {
+        {{ p.group.policyName }} requires no posture checks.
+      }
+    </p>
+    <p class="pp-note">{{ p.group.lane === 'dial' ? 'A dialer' : 'A host' }} passes if any one granting policy's checks all pass.</p>
+
+    @if (p.blocked.length) {
+      <section aria-labelledby="pp-blocked-h">
+        <h3 class="rg-h" id="pp-blocked-h">Blocked by posture ({{ p.blocked.length }})</h3>
+        @for (bg of p.blockedGroups; track bg.key) {
+          @let n = shown()[bg.key] ?? 0;
+          <article class="pp-bgroup">
+            <button type="button" class="pp-bgroup-head" [attr.aria-expanded]="n > 0" (click)="toggleGroup(bg)">
+              <i class="fa-solid fa-chevron-right pp-chev" [class.open]="n > 0" aria-hidden="true"></i>
+              <span>{{ bg.text }}</span>
+            </button>
+            @for (line of bg.deviceLines; track line) {
+              <p class="pp-device"><i class="fa-solid fa-laptop" aria-hidden="true"></i>{{ line }}</p>
+            }
+            @if (n > 0) {
+              <div class="pp-bgroup-members">
+                @for (m of bg.members.slice(0, n); track m.identityId) {
+                  <article class="rg-row pp-member" [attr.aria-label]="m.name">
+                    <p class="rg-who"><strong>{{ m.name }}</strong></p>
+                    <ul class="pp-grants">
+                      @for (g of m.grants; track g.policyId) {
+                        <li>
+                          granted through
+                          <button type="button" class="rg-via-link" (click)="editPolicy.emit(g.policyId)" [attr.aria-label]="'Edit ' + g.policyName">{{ g.policyName }}</button>
+                          @if (g.failingCheckNames.length) {
+                            — fails {{ g.failingCheckNames.join(', ') }}
+                          }
+                        </li>
+                      }
+                    </ul>
+                  </article>
+                }
+                @if (bg.members.length > n) {
+                  <button type="button" class="pp-more" (click)="showMore(bg)">
+                    {{ moreText(bg.members.length - n) }}
+                  </button>
+                }
+              </div>
+            }
+          </article>
+        }
+      </section>
+    }
+
+    @if (p.bypasses.length) {
+      <section aria-labelledby="pp-bypass-h">
+        <h3 class="rg-h" id="pp-bypass-h">Bypassed ({{ p.bypasses.length }})</h3>
+        @for (b of p.bypasses; track b.identityId + b.checkId) {
+          <p class="pp-bypass"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i>{{ b.text }}</p>
+        }
+      </section>
+
+      <section aria-labelledby="pp-fixes-h">
+        <h3 class="rg-h" id="pp-fixes-h">Fixes</h3>
+        @for (f of p.fixes; track f.checkId + f.policyId) {
+          <article class="rg-fix" (appInView)="onScreen(f)">
+            <div class="rg-fix-body">
+              <p class="rg-fix-title">{{ f.title }}</p>
+              <p class="rg-fix-op">Adds {{ f.role }} to its posture checks.</p>
+              <div class="pp-preview">
+                <span class="rg-preview-label">Preview:</span>
+                @if (preview(f); as rows) {
+                  @if (rows.length) {
+                    <ul>
+                      @for (r of rows; track r.serviceId) {<li>{{ previewText(r) }}</li>}
+                    </ul>
+                  } @else {
+                    <span> no change to who can connect.</span>
+                  }
+                } @else {
+                  <span class="pp-calculating" role="status"> {{ calculating(f) }}</span>
+                }
+              </div>
+              <button type="button" class="btn btn-secondary btn-sm" (click)="review(f)">
+                <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> Review and add
+              </button>
+            </div>
+          </article>
+        }
+      </section>
+    }
+
+    @if (!p.blocked.length && !p.bypasses.length) {
+      <p class="rg-resolved">No one in this group is blocked by posture or bypasses its checks on {{ p.serviceName }}.</p>
+    }
+  } @else {
+    <p class="rg-resolved">This group isn't on {{ serviceId() }} in the draft any more.</p>
+  }
+</div>

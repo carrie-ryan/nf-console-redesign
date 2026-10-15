@@ -162,7 +162,7 @@ export type GrantEntry =
       border-radius: var(--radius-sm, 4px);
       background: var(--color-surface-2, #eef0f3);
       color: var(--color-text-3, #98a2b3);
-      font-size: 0.625rem;
+      font-size: 0.8125rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.05em;

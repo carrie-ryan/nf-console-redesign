@@ -1,0 +1,201 @@
+@if (spec(); as spec) {
+  <section class="section-card" aria-labelledby="sp-conn-heading">
+    @if (connection(); as editing) {
+      <h2 class="card-heading card-heading--hinted" id="sp-conn-heading">Edit {{ editing.name }}</h2>
+      <p class="card-hint">Secrets are used to test the connection and are never shown again.</p>
+      @if (showUsage() && usageCount(editing.id); as used) {
+        <div class="pc-warning conn-usage" role="status">
+          <i class="fa-solid fa-circle-info"></i>
+          <div>
+            Used by {{ used }} posture check{{ used === 1 ? '' : 's' }} —
+            changes apply to all of them.
+          </div>
+        </div>
+      }
+    } @else {
+      <h2 class="card-heading card-heading--hinted" id="sp-conn-heading">New {{ spec.label }} connection</h2>
+      <p class="card-hint">Secrets are used to test the connection and are never shown again.</p>
+    }
+
+    <div class="pc-field">
+      <div class="pc-field-hdr">
+        <label class="form-label" for="sp-conn-name">CONNECTION NAME</label>
+        <span class="pc-field-tag">REQUIRED</span>
+      </div>
+      <input id="sp-conn-name" class="form-control" [(ngModel)]="newConnName"
+        [attr.aria-invalid]="isMissing(newConnName) || null"
+        placeholder="Name this connection" autocomplete="off" />
+    </div>
+
+    @for (f of spec.credentialFields; track f.key) {
+      <div class="pc-field">
+        <div class="pc-field-hdr">
+          <label class="form-label" [for]="'sp-cred-' + f.key">{{ f.label | uppercase }}</label>
+          <span class="pc-field-tag">{{ isOptional(f) ? 'OPTIONAL' : 'REQUIRED' }}</span>
+        </div>
+        <input [id]="'sp-cred-' + f.key" class="form-control"
+          [type]="f.secret ? 'password' : 'text'"
+          [(ngModel)]="newConnCredentials[f.key]"
+          [attr.aria-invalid]="isMissing(newConnCredentials[f.key], isOptional(f)) || null"
+          [attr.aria-describedby]="isOptional(f) ? 'sp-cred-' + f.key + '-hint' : null"
+          [attr.autocomplete]="f.secret ? 'new-password' : 'off'" />
+        @if (isOptional(f)) {
+          <p class="pc-field-hint" [id]="'sp-cred-' + f.key + '-hint'">Leave blank to keep the current value.</p>
+        }
+      </div>
+    }
+
+    <div class="pc-field">
+      <div class="pc-field-hdr">
+        <span class="form-label" id="sp-acq">ACQUISITION</span>
+      </div>
+      <div class="opt-chips" role="radiogroup" aria-labelledby="sp-acq"
+        [attr.aria-describedby]="acquisitionLocked ? 'sp-acq-locked' : null">
+        @for (a of acquisitionOptions; track a.value) {
+          <button type="button" class="opt-chip" role="radio" [class.opt-chip-on]="newConnAcquisition === a.value"
+            [attr.aria-checked]="newConnAcquisition === a.value" [disabled]="acquisitionLocked"
+            (click)="setAcquisition(a.value)">{{ a.label }}</button>
+        }
+      </div>
+      @if (acquisitionLocked) {
+        <p class="pc-field-hint" id="sp-acq-locked">{{ spec.label }} pushes posture events; it can't be polled.</p>
+      }
+    </div>
+
+    @if (newConnAcquisition === 'poll') {
+      <div class="pc-field">
+        <div class="pc-field-hdr">
+          <label class="form-label" for="sp-poll">POLLING FREQUENCY</label>
+        </div>
+        <app-option-picker triggerId="sp-poll" panelLabel="Polling frequency"
+          [options]="pollOptions" [value]="newConnPoll" (picked)="newConnPoll = $event" />
+      </div>
+    } @else {
+      <div class="pc-field">
+        <div class="pc-field-hdr">
+          <label class="form-label" for="sp-event">EVENT ENDPOINT</label>
+        </div>
+        <app-copy-field inputId="sp-event" describedBy="sp-event-hint" [value]="newConnEventEndpoint" />
+        <p class="pc-field-hint" id="sp-event-hint">Point your provider at this URL to receive posture events.</p>
+      </div>
+    }
+
+    <div class="pc-field">
+      <div class="pc-field-hdr">
+        <span class="form-label" id="sp-mode">MODE</span>
+      </div>
+      <div class="opt-chips" role="radiogroup" aria-labelledby="sp-mode">
+        @for (m of modeOptions; track m.value) {
+          <button type="button" class="opt-chip" role="radio" [class.opt-chip-on]="newConnMode === m.value"
+            [attr.aria-checked]="newConnMode === m.value" (click)="newConnMode = m.value">{{ m.label }}</button>
+        }
+      </div>
+      @for (m of modeOptions; track m.value) {
+        @if (newConnMode === m.value) {
+          <p class="conn-summary">{{ m.help }}</p>
+        }
+      }
+    </div>
+
+    <!-- Device matching -->
+    <h3 class="card-subheading">Device matching</h3>
+    <p class="card-hint">How a {{ spec.label }} device record is matched to a Ziti identity.</p>
+
+    <div class="pc-field">
+      <div class="pc-field-hdr">
+        <label class="form-label" for="sp-match">MATCH ON</label>
+      </div>
+      <app-option-picker triggerId="sp-match" panelLabel="Match on"
+        [options]="matchOptions" [value]="newConnMatchKey"
+        (picked)="newConnMatchKey = $event; onMatchKeyChange()" />
+    </div>
+
+    @if (newConnMatchKey === 'tag') {
+      <div class="pc-field">
+        <div class="pc-field-hdr">
+          <label class="form-label" for="sp-match-tag">TAG NAME</label>
+        </div>
+        <input id="sp-match-tag" class="form-control" [(ngModel)]="newConnMatchTagKey"
+          placeholder="e.g. serial" autocomplete="off" spellcheck="false"
+          [attr.aria-invalid]="isMissing(newConnMatchTagKey) || null" aria-describedby="sp-match-tag-hint" />
+        <p class="pc-field-hint" id="sp-match-tag-hint">
+          The identity tag whose value equals the {{ spec.label }} device's identifier.
+        </p>
+      </div>
+    }
+
+    <app-match-key-preview [matchKey]="newConnMatchKey" [matchTagKey]="newConnMatchTagKey"
+      [providerLabel]="spec.label" [polled]="newConnPolled"
+      [manualMappings]="connection()?.manualMappings ?? []" />
+
+    @if (newConnMatchKey === 'manual') {
+      <div class="pc-field">
+        <div class="mapping-wrap">
+          <table class="data-table mapping-table">
+            <thead>
+              <tr>
+                <th scope="col">Ziti identity</th>
+                <th scope="col">{{ spec.label }} device</th>
+                <th scope="col" class="mapping-remove-cell" aria-label="Remove"></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of newConnMappings; track row; let i = $index) {
+                <tr>
+                  <td>
+                    <app-identity-typeahead [identities]="identityOptions" [(identityId)]="row.identityId"
+                      [ariaLabel]="'Ziti identity, row ' + (i + 1)" />
+                  </td>
+                  <td>
+                    <input class="form-control" [(ngModel)]="row.externalDeviceId"
+                      [attr.aria-invalid]="(mappingsMissing && !row.externalDeviceId.trim()) || null"
+                      [placeholder]="spec.label + ' device ID or serial'"
+                      [attr.aria-label]="spec.label + ' device, row ' + (i + 1)"
+                      autocomplete="off" />
+                  </td>
+                  <td class="mapping-remove-cell">
+                    <button class="mapping-remove" type="button" (click)="removeMapping(i)"
+                      [attr.aria-label]="'Remove mapping ' + (i + 1)">
+                      <i class="fa-solid fa-xmark"></i>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="mapping-actions">
+          <button class="btn btn-secondary btn-sm mapping-add" type="button" (click)="addMapping()"><i class="fa-solid fa-plus" aria-hidden="true"></i> Add mapping</button>
+          <button class="btn btn-secondary btn-sm" type="button" (click)="importOpen = true">
+            <i class="fa-solid fa-file-import" aria-hidden="true"></i> Import CSV…
+          </button>
+        </div>
+        @if (importOpen) {
+          <app-import-mappings-modal [identities]="importableIdentities" [providerLabel]="spec.label"
+            (imported)="onImported($event)" (dismissed)="importOpen = false" />
+        }
+        <p class="pc-field-hint">
+          The device value is {{ spec.label }}'s identifier for the device — it's kept on this
+          connection, not stored on the Ziti identity. Rows without a device value aren't saved.
+        </p>
+      </div>
+    }
+
+    <div class="conn-form-actions">
+      @if (connectionSubmitAttempted && connectionBlockers.length) {
+        <p class="conn-blocked" id="sp-conn-blocked" role="alert">
+          <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+          Can't save yet — add {{ connectionBlockers.join(', ') }}.
+        </p>
+      }
+      @if (cancellable()) {
+        <button class="btn btn-secondary btn-sm" type="button" (click)="cancelled.emit()">Cancel</button>
+      }
+      <button class="btn btn-primary btn-sm" type="button"
+        (click)="testAndSaveConnection()"
+        [attr.aria-describedby]="connectionSubmitAttempted && connectionBlockers.length ? 'sp-conn-blocked' : null">
+        <i class="fa-solid fa-plug"></i> {{ connection() ? 'Test & save changes' : 'Test & save connection' }}
+      </button>
+    </div>
+  </section>
+}

@@ -94,8 +94,9 @@
 
 .step-item--done { cursor: pointer; }
 .step-item:not(.step-item--active):not(.step-item--done) { cursor: default; }
-.step-item:not(.step-item--active):not(.step-item--done) .step-num { opacity: 0.5; }
-.step-item:not(.step-item--active):not(.step-item--done) .step-name { opacity: 0.5; }
+/* Upcoming steps: the secondary grey, not opacity (which took their names under 4.5:1). */
+.step-item:not(.step-item--active):not(.step-item--done) .step-num,
+.step-item:not(.step-item--active):not(.step-item--done) .step-name { color: var(--color-text-3); }
 
 .step-num {
   display: flex;
@@ -144,7 +145,7 @@
 
 .step-opt-badge {
   display: inline-block;
-  font-size: 0.625rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -194,7 +195,7 @@
 }
 
 .heading-badge {
-  font-size: 0.6875rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -226,7 +227,7 @@
 }
 
 .field-tag {
-  font-size: 0.6875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: 0.05em;
   color: var(--color-text-3);
@@ -234,14 +235,14 @@
 
 .type-desc {
   margin: 0.25rem 0 0;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   color: var(--color-text-2);
   line-height: 1.5;
 }
 
 .field-hint {
   margin: 0.25rem 0 0;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   color: var(--color-text-3);
 }
 
@@ -311,7 +312,7 @@
   line-height: 1.5;
 }
 
-.tag-bare-input::placeholder { color: var(--color-text-3); }
+.tag-bare-input::placeholder { color: var(--color-text-disabled); }
 
 /* ─── Tooltips ───────────────────────────────────────────────────── */
 .info-tip,
@@ -324,7 +325,7 @@
 }
 
 .info-tip { color: var(--color-text-3); }
-.warn-tip { color: var(--color-warning); }
+.warn-tip { color: var(--color-warning-text); }
 
 .info-tip::after,
 .warn-tip::after {
@@ -452,7 +453,7 @@
   transition: background var(--transition-fast), color var(--transition-fast);
 }
 
-.btn-icon-xs:hover { background: var(--color-danger-bg); color: var(--color-danger); }
+.btn-icon-xs:hover { background: var(--color-danger-bg); color: var(--color-danger-text); }
 
 .tag-add-row {
   display: flex;
@@ -465,7 +466,7 @@
 
 .empty-hint {
   margin: 0.5rem 0;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   color: var(--color-text-3);
 }
 

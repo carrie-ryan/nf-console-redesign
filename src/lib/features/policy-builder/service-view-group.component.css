@@ -1,0 +1,448 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  box-sizing: border-box;
+  /* Never wider than its lane. */
+  min-width: 0;
+  max-width: 100%;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  outline: none;
+  transition: box-shadow var(--transition-fast);
+}
+
+:host {
+  cursor: pointer;
+}
+
+:host(:hover) {
+  border-color: var(--brand-primary);
+}
+
+:host(:focus-within) {
+  border-color: var(--brand-primary);
+}
+
+/* Its policy is open in the editor. */
+:host(.selected) {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 2px var(--brand-primary);
+}
+
+/* Edited / new in the draft: a dashed edge reads as "not live yet". */
+:host(.marked:not(.selected)) {
+  border-style: dashed;
+  border-color: var(--brand-primary);
+}
+
+/* Proposed by the assist, not yet in the draft: a heavier accent dash. */
+:host(.proposed:not(.selected)) {
+  border: 2px dashed var(--brand-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-accent) 12%, transparent);
+}
+
+/* Rule groups read as a filter, not a list of people. */
+:host(.rule) {
+  background: var(--color-info-bg);
+  border-color: var(--color-info-border);
+}
+
+:host(.rule.proposed:not(.selected)) { border-color: var(--brand-accent); }
+
+.node-hdr {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: 0;
+  font-size: 0.75rem;
+  color: var(--color-text-2);
+}
+
+.node-hdr i {
+  color: var(--brand-primary);
+}
+
+.node-policy {
+  /* Chips never squeeze the name: they wrap below it. Only a name wider than the card
+     (less its icon) truncates — its title has it in full. */
+  flex-shrink: 0;
+  max-width: calc(100% - 1.25rem);
+  min-width: 0;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  font-family: inherit;
+  font-size: inherit;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.node-marks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: -0.125rem;
+}
+
+.node-kind {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-3);
+}
+
+/* The posture checks the policy requires. */
+.checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin: 0;
+}
+
+.summary {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--color-text);
+}
+
+.members {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--color-text-2);
+}
+
+.members li {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.member-link {
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+}
+
+.member-link:hover { color: var(--brand-primary); text-decoration: underline; }
+
+.member-link:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--color-focus-ring); }
+
+.members .more {
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  font: inherit;
+  color: var(--brand-primary);
+  cursor: pointer;
+}
+
+.members .more:hover { text-decoration: underline; }
+.members .more:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--color-focus-ring); }
+
+.status {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--color-text-2);
+}
+
+.sep {
+  color: var(--color-text-3);
+}
+
+.node-policy:hover { color: var(--brand-primary); text-decoration: underline; }
+
+.node-policy:focus-visible,
+.gap-link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
+}
+
+/* Wrap between phrases, never inside one. */
+.status [class^='tone-'],
+.row-counts [class^='tone-'] {
+  white-space: nowrap;
+}
+
+/* ─── other services the policy covers ─────────────────────────────────── */
+.cover {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.cover-badge:hover,
+.cover-badge[aria-expanded='true'] { border-color: var(--brand-primary); color: var(--brand-primary); }
+.cover-badge:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--color-focus-ring); }
+
+/* Hangs from the badge's right edge; ::before bridges the hover gap. */
+.cover-pop {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 5;
+  width: max-content;
+  min-width: 10rem;
+  margin: 0.25rem 0 0;
+  padding: 0.375rem 0;
+  list-style: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-lg, var(--shadow-md));
+}
+
+.cover-pop::before {
+  content: '';
+  position: absolute;
+  inset: -0.375rem 0 auto;
+  height: 0.375rem;
+}
+
+.cover-link {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  width: 100%;
+  padding: 0.25rem 0.75rem;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 0.75rem;
+  text-align: left;
+  color: var(--brand-primary);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.cover-link i { font-size: 0.625rem; }
+.cover-link:hover:not([aria-disabled='true']) { background: var(--color-surface-2); text-decoration: underline; }
+.cover-link:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--color-focus-ring); }
+.cover-link[aria-disabled='true'] { color: var(--color-text-disabled); cursor: not-allowed; }
+
+/* The focused service — plain text, marked. */
+.cover-this {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.cover-this-tag {
+  padding: 0 0.375rem;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-3);
+}
+
+/* Already on the canvas. */
+.cover-on {
+  margin: 0.125rem 0.375rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--radius-sm);
+  background: var(--brand-primary-light);
+  font-weight: 500;
+  color: var(--brand-primary);
+}
+
+.cover-on i { font-size: 0.625rem; }
+
+.cover-on-name { flex: 1; }
+
+.cover-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-left: 0.5rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--brand-primary);
+  cursor: pointer;
+}
+
+.cover-remove i { font-size: 0.6875rem; }
+.cover-remove:hover { background: color-mix(in srgb, var(--brand-primary) 14%, transparent); }
+.cover-remove:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--color-focus-ring); }
+
+/* Inside its policy's container: a plain card, the container carries the name. */
+:host(.in-container) { box-shadow: none; }
+
+/* ─── several services: one status row per edge ────────────────────────── */
+.status-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--color-text-2);
+}
+
+.rows-authorized {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-2);
+}
+
+/* Swatch | service + route status, then the extras on a second line under the name.
+   Nothing here may widen the card past its lane: names truncate (title has them in
+   full), phrases wrap between themselves. */
+.status-row {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  column-gap: 0.375rem;
+  align-items: baseline;
+  padding: 0.125rem 0.25rem;
+  margin: 0 -0.25rem;
+  border-radius: var(--radius-sm);
+  transition: opacity 150ms ease, background 150ms ease;
+}
+
+.swatch { align-self: center; overflow: visible; }
+.swatch line { stroke-width: 2; }
+.swatch-ok { stroke: var(--color-success); }
+.swatch-warn { stroke: var(--color-warning); stroke-dasharray: 4 3; }
+.swatch-bad { stroke: var(--color-danger); stroke-dasharray: 0.5 3; stroke-linecap: round; stroke-width: 2.5; }
+.swatch-none { stroke: var(--color-text-3); }
+
+.row-main {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 0.375rem;
+  min-width: 0;
+}
+
+.row-svc {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.row-counts,
+.row-extras { min-width: 0; overflow-wrap: anywhere; }
+
+/* Indented under the service name (column 2). */
+.row-extras { grid-column: 2; }
+
+/* A service is hovered/focused: its row stands out, the others recede. */
+.status-rows.has-hot .status-row:not(.row-hot) { opacity: 0.35; }
+.status-row.row-hot { background: var(--brand-primary-light); }
+
+@media (prefers-reduced-motion: reduce) {
+  .status-row { transition: none; }
+}
+
+/* No draft: a live change touched it — one flash. */
+:host(.live-flash) { animation: svg-live-flash 2.4s ease-out; }
+
+@keyframes svg-live-flash {
+  0%, 30% { box-shadow: 0 0 0 4px var(--color-warning); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host(.live-flash) { animation: none; box-shadow: 0 0 0 3px var(--color-warning); }
+}
+
+
+/* Time-limited access: the policy's countdown under the header, an entry's beside its member. */
+.node-expiry { margin: 0.25rem 0 0; }
+.member-expiry { margin: 0 0.125rem 0 0.25rem; vertical-align: 0.0625rem; }
+
+/* ─── ⋯ menu: Edit policy, Routers ─────────────────────────────────────── */
+.g-menu-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.g-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-full);
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.node-hdr .g-menu-btn i { font-size: 0.75rem; color: var(--color-text-3); }
+.g-menu-btn:hover,
+.g-menu-btn[aria-expanded='true'] { border-color: var(--brand-primary); background: var(--color-surface); }
+.node-hdr .g-menu-btn:hover i,
+.node-hdr .g-menu-btn[aria-expanded='true'] i { color: var(--brand-primary); }
+.g-menu-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--color-focus-ring); }
+
+.g-menu {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  right: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  min-width: 10rem;
+  padding: 0.25rem 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-lg, var(--shadow-md));
+}
+
+.g-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 0.8125rem;
+  text-align: left;
+  white-space: nowrap;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.node-hdr .g-menu-item i { width: 0.875rem; font-size: 0.75rem; color: var(--color-text-3); }
+.g-menu-item:hover,
+.g-menu-item:focus-visible { outline: none; background: var(--brand-primary-light); color: var(--brand-primary); }

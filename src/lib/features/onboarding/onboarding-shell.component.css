@@ -42,7 +42,7 @@
 
 .ob-rail-brand-text { display: flex; flex-direction: column; gap: 0.125rem; min-width: 0; }
 .ob-rail-title { font-size: 0.9375rem; font-weight: 700; color: var(--color-text); }
-.ob-rail-sub { font-size: 0.75rem; color: var(--color-text-3); }
+.ob-rail-sub { font-size: 0.875rem; color: var(--color-text-3); }
 
 /* ─── Rail steps (vertical checklist) ────────────────────────────────── */
 .ob-rail-steps {
@@ -121,19 +121,19 @@ a.ob-step:hover { background: var(--color-surface-2); color: var(--color-text); 
 .ob-step.is-complete .ob-step-marker {
   background: var(--color-success-bg);
   border-color: var(--color-success-border);
-  color: var(--color-success);
+  color: var(--color-success-text);
 }
 .ob-step.is-complete:not(.is-current) .ob-step-label { color: var(--color-text); }
 .ob-step.is-complete:not(.is-last) .ob-step-track::after { background: var(--color-success-border); }
 
 /* Greyed placeholder tail */
-.ob-step.is-placeholder { color: var(--color-text-3); cursor: default; }
+.ob-step.is-placeholder { color: var(--color-text-disabled); cursor: default; }
 .ob-step.is-placeholder .ob-step-marker {
   background: var(--color-surface);
   border-style: dashed;
-  color: var(--color-text-3);
+  color: var(--color-text-disabled);
 }
-.ob-step.is-placeholder .ob-step-label { color: var(--color-text-3); }
+.ob-step.is-placeholder .ob-step-label { color: var(--color-text-disabled); }
 
 /* ─── Workspace: form column + map region ────────────────────────────── */
 /* Fills the space beside the rail and splits it between the content column and

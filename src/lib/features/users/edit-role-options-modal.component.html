@@ -1,0 +1,47 @@
+<app-modal-shell (dismissed)="cancel()">
+  <span modal-title>
+    <span class="ero-title">
+      <span class="ero-illus" aria-hidden="true"><i class="fa-solid fa-sliders"></i></span>
+      Edit role options
+    </span>
+  </span>
+
+  <p class="ero-subject">{{ role().name }} <span class="ero-scope">{{ role().scope }}</span></p>
+
+  <label class="ero-opt">
+    <input
+      type="checkbox"
+      [checked]="options().isDefault"
+      (change)="toggle('isDefault')" />
+    <span class="check-box" aria-hidden="true"><i class="fa-solid fa-check"></i></span>
+    <span class="ero-opt-body">
+      <span class="ero-opt-title">Default role</span>
+      <span class="ero-opt-hint">
+        Granted automatically to new members of this organization when an invitation uses
+        default roles.
+      </span>
+    </span>
+  </label>
+
+  <label class="ero-opt">
+    <input
+      type="checkbox"
+      [checked]="options().grantableByDefault"
+      (change)="toggle('grantableByDefault')" />
+    <span class="check-box" aria-hidden="true"><i class="fa-solid fa-check"></i></span>
+    <span class="ero-opt-body">
+      <span class="ero-opt-title">Grantable by default</span>
+      <span class="ero-opt-hint">
+        New members invited with this role can also grant and revoke it for other users. You can
+        still override this per person when you invite them.
+      </span>
+    </span>
+  </label>
+
+  <ng-container modal-footer>
+    <button class="btn btn-secondary" type="button" (click)="cancel()">Cancel</button>
+    <button class="btn btn-primary" type="button" [disabled]="!dirty()" (click)="save()">
+      Save
+    </button>
+  </ng-container>
+</app-modal-shell>

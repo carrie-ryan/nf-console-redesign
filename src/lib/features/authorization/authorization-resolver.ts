@@ -46,10 +46,13 @@ export function roleSatisfied(
 
 /**
  * Does an entity satisfy a policy's role list under the given semantic?
- *   • AnyOf → at least one role is satisfied (the `.some()` create-policy uses).
- *   • AllOf → EVERY role is satisfied (strictly narrower — the piece create-policy
+ * Ziti rule: matched set = (entities named by '@refs') ∪ (entities matching the
+ * '#' terms under the semantic). The semantic applies ONLY to '#' terms:
+ *   • AnyOf → at least one term is satisfied (the `.some()` create-policy uses).
+ *   • AllOf → EVERY term is satisfied (strictly narrower — the piece create-policy
  *             never implements).
- * An empty role list authorises NO entity (matches create-policy returning []).
+ * With no '#' terms, only the '@refs' can match. An empty role list authorises
+ * NO entity (matches create-policy returning []).
  */
 export function entityMatchesRoles(
   roles: readonly string[],
@@ -58,9 +61,13 @@ export function entityMatchesRoles(
   entityName: string,
   entityId: string,
 ): boolean {
-  if (roles.length === 0) return false;
   const test = (r: string) => roleSatisfied(r, entityAttributes, entityName, entityId);
-  return semantic === 'AllOf' ? roles.every(test) : roles.some(test);
+  // '@refs' are unioned in regardless of semantic.
+  if (roles.some((r) => r.startsWith('@') && test(r))) return true;
+  const terms = roles.filter((r) => !r.startsWith('@'));
+  // No '#' terms → the term part matches nothing (not `every([])` = true).
+  if (terms.length === 0) return false;
+  return semantic === 'AllOf' ? terms.every(test) : terms.some(test);
 }
 
 // ─── stage 2: the authorization set (ground truth) ────────────────────────────

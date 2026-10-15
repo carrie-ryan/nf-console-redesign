@@ -9,7 +9,11 @@
  */
 
 import { MockDataService } from '../../shared/services/mock-data.service';
-import { DISCOVERED_FLOWS, DISCOVERY_IDENTITIES } from './discovered-flows.mock';
+import {
+  DISCOVERED_FLOWS,
+  DISCOVERY_CAPTURE_FLOWS,
+  DISCOVERY_IDENTITIES,
+} from './discovered-flows.mock';
 import { CLUSTER_SIMILARITY_THRESHOLD, runDiscovery } from './discovery-engine';
 // Reuse the pure materialiser directly for the headless approval test.
 import { materialiseProposal } from './proposed-policy-store.service';
@@ -18,13 +22,21 @@ import type { ProposedPolicy } from './discovery.models';
 describe('discovery engine — clustering emerges from Jaccard math', () => {
   const data = new MockDataService();
   const services = data.services();
-  const result = runDiscovery(DISCOVERED_FLOWS, services);
+  // Pins run against the CAPTURE subset, not the whole observed set. This file
+  // tests the ENGINE, and the capture is the controlled scenario it was authored
+  // against: five functional clusters with deliberate drift, a low-volume wiki
+  // tail, a DMZ that clusters with nobody, and one cluster mixing enrolled and
+  // unenrolled members (which the materialise test needs). Running these pins
+  // against DISCOVERED_FLOWS would couple engine correctness to how much demo
+  // traffic the roster happens to carry — a fixture edit would look like an
+  // engine regression. The app clusters the full set; see the smoke test below.
+  const result = runDiscovery(DISCOVERY_CAPTURE_FLOWS, services);
 
   it('DUMP — full engine output (inspect this)', () => {
     const dump = {
       threshold: result.clustering.threshold,
       identityCount: result.vectors.length,
-      flowCount: DISCOVERED_FLOWS.length,
+      flowCount: DISCOVERY_CAPTURE_FLOWS.length,
 
       serviceVectors: result.vectors.map((v) => ({
         id: v.identityId,
@@ -249,5 +261,29 @@ describe('discovery engine — clustering emerges from Jaccard math', () => {
 
     // eslint-disable-next-line no-console
     console.log('\n===== MATERIALISED RESULT =====\n' + JSON.stringify(created, null, 2) + '\n');
+  });
+
+  // ─── the FULL observed set (what the app actually runs on) ─────────────────
+
+  it('clusters the full observed set — capture plus the managed estate', () => {
+    expect(DISCOVERED_FLOWS.length).toBeGreaterThan(DISCOVERY_CAPTURE_FLOWS.length);
+
+    const full = runDiscovery(DISCOVERED_FLOWS, services);
+
+    // Deliberately NOT pinned to a cluster count: the estate exists to be grown,
+    // and this asserts the engine survives it, not what shape it lands in.
+    expect(full.clustering.clusters.length).toBeGreaterThan(0);
+    expect(full.proposals.length).toBeGreaterThan(0);
+
+    // Every vector is keyed by a real dialer — no flow lost its source.
+    const keys = new Set(full.vectors.map((v) => v.identityId));
+    expect(keys.size).toBe(full.vectors.length);
+
+    // The capture's own sources all survive into the bigger run: adding estate
+    // traffic must not make an existing observed host disappear.
+    const captureKeys = new Set(
+      DISCOVERY_CAPTURE_FLOWS.map((f) => f.dialingIdentityId ?? f.ingressIp),
+    );
+    for (const key of captureKeys) expect(keys.has(key)).toBe(true);
   });
 });

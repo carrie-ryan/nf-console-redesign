@@ -52,6 +52,12 @@
         @case ('flow-detail') {
           <app-flow-detail-content [data]="ref.data" />
         }
+        @case ('roster-group') {
+          <app-roster-group-content [data]="ref.data" />
+        }
+        @case ('identity-detail') {
+          <app-identity-detail-content [data]="ref.data" />
+        }
         @case ('concern-list') {
           <app-concern-list-content [data]="ref.data" />
         }

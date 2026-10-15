@@ -486,6 +486,19 @@ export class AlertsComponent {
     return items;
   }
 
+  /** Overflow-menu items for a Mutes-tab row. A revoked mute has nothing left to
+   *  do, so it returns [] — the action-menu then omits the ⋮ entirely, leaving a
+   *  blank Actions cell (intended). Active mutes (expired/scheduled treated as
+   *  active for now; full state-awareness rides with the deferred State filter)
+   *  can be rescheduled or revoked. */
+  muteMenuItems(mute: Mute): ActionMenuItem[] {
+    if (mute.revokedAt !== null) return [];
+    return [
+      { label: 'Reschedule', icon: 'fa-solid fa-clock', onClick: () => this.reschedulingMuteId.set(mute.id) },
+      { label: 'Revoke', icon: 'fa-solid fa-ban', danger: true, onClick: () => this.revokingMuteId.set(mute.id) },
+    ];
+  }
+
   /** Resolve a console-user UUID to its org-user record (human name + email).
    *  The actor is a console/org USER, so this resolves against consoleUsers(),
    *  NOT identities() (which holds Ziti edge handles). Null when unknown. */

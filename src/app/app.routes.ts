@@ -1,4 +1,5 @@
-import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { Router, Routes } from '@angular/router';
 import { ConsoleShellComponent } from '../lib/shared/components/console-shell/console-shell.component';
 import { OnboardingShellComponent } from '../lib/features/onboarding/onboarding-shell.component';
 import { OnboardingOverviewComponent } from '../lib/features/onboarding/onboarding-overview.component';
@@ -17,8 +18,13 @@ import { CreateSimpleServiceComponent } from '../lib/features/services/create-si
 import { CreateAdvancedServiceComponent } from '../lib/features/services/create-advanced-service.component';
 import { PoliciesComponent } from '../lib/features/policies/policies.component';
 import { CreatePolicyComponent } from '../lib/features/policies/create-policy.component';
+import { PolicyBuilderComponent } from '../lib/features/policy-builder/policy-builder.component';
 import { PostureChecksComponent } from '../lib/features/posture-checks/posture-checks.component';
 import { CreatePostureCheckComponent } from '../lib/features/posture-checks/create-posture-check.component';
+import { ExternalProvidersComponent } from '../lib/features/external-providers/external-providers.component';
+import { ProviderDetailComponent } from '../lib/features/external-providers/provider-detail.component';
+import { AddProviderComponent } from '../lib/features/external-providers/add-provider.component';
+import { EditProviderComponent } from '../lib/features/external-providers/edit-provider.component';
 import { RoutersComponent } from '../lib/features/routers/routers.component';
 import { MetricsOverviewComponent } from '../lib/features/metrics/overview/metrics-overview.component';
 import { FabricLatencyComponent } from '../lib/features/metrics/fabric-latency/fabric-latency.component';
@@ -28,8 +34,11 @@ import { TrafficAnalysisComponent } from '../lib/features/metrics/traffic-analys
 import { SessionsComponent } from '../lib/features/sessions/sessions.component';
 import { SessionDetailComponent } from '../lib/features/sessions/session-detail.component';
 import { DialLogsPageComponent } from '../lib/features/dial-logs/dial-logs-page.component';
+import { UsersComponent } from '../lib/features/users/users.component';
+import { RoleTemplateFormComponent } from '../lib/features/users/role-template-form.component';
 import { SegmentViewComponent } from '../lib/features/authorization/segment-view.component';
 import { AlertsComponent } from '../lib/features/alerts/alerts.component';
+import { AttributeExplorerComponent } from '../lib/features/attribute-explorer/attribute-explorer.component';
 
 export const routes: Routes = [
   // Focused onboarding flow — takes over the full screen (no console nav) until
@@ -67,13 +76,30 @@ export const routes: Routes = [
       { path: 'services/advanced',         component: CreateAdvancedServiceComponent },
       { path: 'policies',                  component: PoliciesComponent },
       { path: 'segments',                  component: SegmentViewComponent },
+      { path: 'attribute-explorer',        component: AttributeExplorerComponent },
       { path: 'policies/new',              component: CreatePolicyComponent },
+      { path: 'policy-builder',            component: PolicyBuilderComponent },
       { path: 'posture-checks',            component: PostureChecksComponent },
       { path: 'posture-checks/new',        component: CreatePostureCheckComponent },
+      { path: 'posture-checks/:id/edit',   component: CreatePostureCheckComponent },
+      // Connections moved to External providers; the old URLs redirect there.
+      { path: 'posture-checks/connections', redirectTo: 'external-providers', pathMatch: 'full' },
+      { path: 'posture-checks/connections/:id', redirectTo: 'external-providers/:id', pathMatch: 'full' },
+      { path: 'posture-checks/connections/:id/matching', pathMatch: 'full',
+        redirectTo: ({ params }) => inject(Router).createUrlTree(['/external-providers', params['id']], { queryParams: { tab: 'matching' } }) },
+      { path: 'external-providers',        component: ExternalProvidersComponent },
+      // Before :id, so "new" isn't read as a connection id.
+      { path: 'external-providers/new',    component: AddProviderComponent },
+      { path: 'external-providers/:id',    component: ProviderDetailComponent },
+      { path: 'external-providers/:id/edit', component: EditProviderComponent },
+      { path: 'integrations',              redirectTo: 'external-providers', pathMatch: 'full' },
       { path: 'routers',                   component: RoutersComponent },
       { path: 'alerts',                    component: AlertsComponent },
       { path: 'sessions',                  component: SessionsComponent },
       { path: 'sessions/:id',              component: SessionDetailComponent },
+      // Org administration — console users, roles, invitations (in-page subtabs).
+      { path: 'users',                     component: UsersComponent },
+      { path: 'users/role-templates/new',  component: RoleTemplateFormComponent },
       // Dial-logs standalone page — hosts the reusable grouped activity table.
       { path: 'dial-logs',                 component: DialLogsPageComponent },
       // Metrics — flat routes, each page owns its own tab bar via MetricsNavComponent

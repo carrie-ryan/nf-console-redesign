@@ -1,0 +1,40 @@
+/* Under review: Add to draft / Cancel. */
+.rpe-actions {
+  display: flex;
+  gap: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+
+/* A system policy: created by Ziti, read-only. */
+.rpe-system {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--color-text);
+}
+
+.rpe-system > i { margin-top: 0.1875rem; color: var(--color-text-2); }
+
+.rpe-system-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0 0.375rem;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-2);
+}
+
+.rpe-system-tag i { font-size: 0.625rem; }
+
+/* Read-only: an empty field says so. */
+.rpe-none { font-size: 0.875rem; font-style: italic; color: var(--color-text-3); }

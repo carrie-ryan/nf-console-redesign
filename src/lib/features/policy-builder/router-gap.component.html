@@ -1,0 +1,146 @@
+<header class="rg-header">
+  <div class="rg-avatar" [class.rg-avatar-warn]="kind() === 'routersOffline'" aria-hidden="true">
+    <i class="fa-solid" [class.fa-route]="kind() === 'noSharedRouter'" [class.fa-plug-circle-xmark]="kind() === 'routersOffline'"></i>
+  </div>
+  <div class="rg-heading">
+    <h2 class="rg-title">{{ heading() }}</h2>
+    <span class="rg-subtitle">{{ subtitle() }}</span>
+  </div>
+  <button type="button" class="rg-icon-btn" (click)="closed.emit()" aria-label="Close router gap">
+    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+  </button>
+</header>
+
+<div class="rg-body">
+  @if (applied(); as a) {
+    <div class="rg-applied" role="status">
+      <p><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Added to draft: {{ a.line }}</p>
+      @for (e of a.edits; track e.policyId) {
+        <button type="button" class="rg-link" (click)="openPolicy.emit({ target: e.target, policyId: e.policyId })">
+          <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> Edit {{ e.name }}
+        </button>
+      }
+    </div>
+  }
+  @if (applyError(); as err) {
+    <p class="rg-error" role="alert">
+      <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> That fix can't be applied: {{ err }}
+    </p>
+  }
+
+  @if (gap(); as g) {
+    @if (g.memberIds.length === 0) {
+      <p class="rg-resolved">
+        Every member of this group now has an online route to {{ g.serviceName }} in the draft.
+      </p>
+    } @else {
+      @for (note of g.offlineNotes; track note) {
+        <p class="rg-outage"><i class="fa-solid fa-plug-circle-xmark" aria-hidden="true"></i> {{ note }}</p>
+      }
+
+      <section aria-labelledby="rg-rows-h">
+        <h3 class="rg-h" id="rg-rows-h">Routers they have vs. routers {{ g.serviceName }} uses</h3>
+        @for (row of g.rows; track row.memberIds[0]) {
+          <article class="rg-row" [attr.aria-label]="row.memberIds.length + ' with the same routers'">
+            <p class="rg-who">
+              <strong>{{ row.memberIds.length }}</strong> {{ shown(row.memberNames) }}
+            </p>
+            <div class="rg-cols">
+              <div>
+                <h4 class="rg-col-h">Their routers</h4>
+                <ul class="rg-routers">
+                  @for (r of row.routers; track r.id) {
+                    <li [class.offline]="!r.isOnline">
+                      <span class="dot" aria-hidden="true"></span>
+                      <span class="r-name">{{ r.name }}</span>
+                      <span class="r-state">{{ r.isOnline ? 'online' : 'offline' }}</span>
+                      <ng-container *ngTemplateOutlet="viaLinks; context: { $implicit: via(r, 'edgeRouterPolicy') }" />
+                    </li>
+                  } @empty {
+                    <li class="none">None — no edge router policy grants them a router.</li>
+                  }
+                </ul>
+              </div>
+              <div>
+                <h4 class="rg-col-h">{{ g.serviceName }}'s routers</h4>
+                <ul class="rg-routers">
+                  @for (r of g.serviceRouters; track r.id) {
+                    <li [class.offline]="!r.isOnline">
+                      <span class="dot" aria-hidden="true"></span>
+                      <span class="r-name">{{ r.name }}</span>
+                      <span class="r-state">{{ r.isOnline ? 'online' : 'offline' }}</span>
+                      <ng-container *ngTemplateOutlet="viaLinks; context: { $implicit: via(r, 'serviceEdgeRouterPolicy') }" />
+                    </li>
+                  } @empty {
+                    <li class="none">None — no service edge router policy makes a router eligible.</li>
+                  }
+                </ul>
+              </div>
+            </div>
+          </article>
+        }
+      </section>
+
+      <section aria-labelledby="rg-fixes-h">
+        <h3 class="rg-h" id="rg-fixes-h">{{ kind() === 'routersOffline' ? 'Workarounds' : 'Fixes' }}</h3>
+        @for (f of g.fixes; track f.kind) {
+          <article class="rg-fix">
+            <p class="rg-fix-purpose">
+              @if (f.workaround) {<span class="rg-tag">Workaround</span>}
+              {{ f.purpose }}
+            </p>
+            @if (f.alternative) {
+              <fieldset class="rg-choice">
+                <legend class="visually-hidden">How to apply this fix</legend>
+                <label [class.on]="chosen(f) === f">
+                  <input type="radio" [name]="'rg-choice-' + f.kind" [checked]="chosen(f) === f" (change)="choose(f, 'extend')" />
+                  Add to {{ extendedName(f) }} <span class="rg-rec">(recommended)</span>
+                </label>
+                <label [class.on]="chosen(f) !== f">
+                  <input type="radio" [name]="'rg-choice-' + f.kind" [checked]="chosen(f) !== f" (change)="choose(f, 'create')" />
+                  Create a separate policy
+                </label>
+              </fieldset>
+            }
+            <ng-container *ngTemplateOutlet="fixBody; context: { $implicit: chosen(f) }" />
+          </article>
+        }
+        @for (why of g.unavailable; track why) {
+          <p class="rg-unavailable">{{ why }}</p>
+        }
+      </section>
+    }
+  } @else {
+    <p class="rg-resolved">This group isn't on {{ serviceId() }} in the draft any more.</p>
+  }
+</div>
+
+<ng-template #fixBody let-f>
+  <div class="rg-fix-body">
+    @if (!reviewable(f)) {
+      <p class="rg-fix-title">{{ f.title }}</p>
+    }
+    @for (line of f.lines; track line) {
+      <p class="rg-fix-op">{{ line }}</p>
+    }
+    <p class="rg-fix-preview" role="status" (appInView)="onScreen(f)"><span class="rg-preview-label">Preview:</span> {{ preview(f)?.text ?? calculating(f) }}</p>
+    @if (reviewable(f)) {
+      <button type="button" class="btn btn-secondary btn-sm" (click)="review(f)">
+        <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> Review and add
+      </button>
+    } @else {
+      <button type="button" class="btn btn-secondary btn-sm" (click)="apply(f)">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i> Add to draft
+      </button>
+    }
+  </div>
+</ng-template>
+
+<ng-template #viaLinks let-links>
+  <span class="r-via">via
+    @for (l of links; track l.policyId; let last = $last) {
+      <button type="button" class="rg-via-link" [attr.aria-label]="(l.system ? 'View system policy ' : 'Edit ') + l.name"
+        (click)="openPolicy.emit({ target: l.target, policyId: l.policyId })">{{ l.name }}</button>@if (l.system) {&ngsp;<span class="system-tag" title="Created by Ziti for this router — read-only"><i class="fa-solid fa-lock" aria-hidden="true"></i> system</span>}@if (!last) {, }
+    }
+  </span>
+</ng-template>

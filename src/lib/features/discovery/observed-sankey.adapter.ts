@@ -6,16 +6,23 @@
  *
  *   0 = CIDR block (/24) → 1 = source host (IP) → 2 = destination
  *
- * This is the pre-discovery reality: an operator points discovery at CIDR /24
- * blocks of mostly-unknown hosts, watches which specific source IPs light up, and
- * sees where each dials. Grouping the 27 observed sources under their 6 subnets is
- * the key legibility win over the old flat Source→Protocol→Destination shape.
+ * This is the observed reality: an operator points discovery at CIDR /24 blocks of
+ * mostly-unknown hosts, watches which specific source IPs light up, and sees where
+ * each dials. Grouping sources under their subnets is the key legibility win over
+ * the old flat Source→Protocol→Destination shape.
  *
- * Port is NOT its own column and NOT the middle stage — the literal "IP:port"
- * middle is 92 distinct nodes (≈ one per flow, confirmed by audit), which is not
- * legible. The dialed intercept port folds into the SOURCE node's tooltip instead;
- * protocol/port fold into the DESTINATION node's tooltip. The three columns stay
- * legible (6 / 27 / 24 nodes).
+ * Port is NOT its own column and NOT the middle stage — a literal "IP:port" middle
+ * would be roughly one node per flow, which is not legible. The dialed intercept
+ * port folds into the SOURCE node's tooltip instead; protocol/port fold into the
+ * DESTINATION node's tooltip.
+ *
+ * SCALE, stated plainly: this was tuned for the discovery capture alone (6 / 27 /
+ * 24 nodes), and the middle column was the binding constraint even then. It now
+ * renders the capture PLUS the managed estate's own traffic, so the source column
+ * is several times that and the chart is correspondingly tall. That was a
+ * deliberate call — the map is meant to show the whole estate — but this is the
+ * stage to revisit first if the picture stops being readable, and the honest fix
+ * is a stage-0 roll-up or a filter, not smaller type.
  *
  * Weighted by `circuitCount` — the REAL observed magnitude. The chart stays
  * generic: this file only imports the two interface TYPES from it

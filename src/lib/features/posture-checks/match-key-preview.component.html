@@ -1,0 +1,58 @@
+@if (zitiSide(); as ziti) {
+  <p class="mk-join">Joins <b>{{ ziti }}</b> → <b>{{ providerLabel() }} device record</b></p>
+} @else if (matchKey() === 'tag') {
+  <p class="mk-join">Enter a tag name to preview the join.</p>
+}
+
+@if (polled()) {
+  @if (tagMissing()) {
+    <div class="mk-warning" role="status">
+      <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+      <div>
+        Set the <strong>“{{ tagKey() }}”</strong> tag on each Ziti identity — identities without it
+        won't match a {{ providerLabel() }} device.
+      </div>
+    </div>
+  }
+
+  @if (summary(); as s) {
+    <div class="mk-rate" aria-live="polite">
+      <div class="mk-rate-hdr">
+        <span>Match rate</span>
+        <strong class="mk-rate-value">{{ s.matchRate }}%</strong>
+      </div>
+      <div class="mk-bar" role="img" [attr.aria-label]="s.matchRate + '% of identities match'">
+        <span class="mk-bar-ok" [style.width.%]="s.matchRate"></span>
+      </div>
+      <p class="mk-rate-sub">
+        {{ s.matchedCount | number }} of {{ s.total | number }} identities match {{ providerLabel() }}'s device
+        records as of the last poll.
+      </p>
+      @if (s.reasons.length) {
+        <ul class="mk-reasons">
+          @for (r of s.reasons; track r.reason) {
+            <li><span>{{ r.label }}</span><span class="mk-count">{{ r.count | number }}</span></li>
+          }
+        </ul>
+      }
+    </div>
+  }
+} @else if (coverage(); as c) {
+  <!-- Pre-poll: Ziti-side facts only — no rate until the provider has been polled. -->
+  @if (tagMissing(); as miss) {
+    <div class="mk-warning" role="status" aria-live="polite">
+      <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+      <div>
+        <strong>{{ miss.count | number }} of {{ c.total | number }} identities have no “{{ tagKey() }}” tag</strong>
+        — set it at enrollment, or they won't match a {{ providerLabel() }} device.
+        @if (services(); as svc) {
+          ({{ svc.count | number }} are service identities with no device.)
+        }
+      </div>
+    </div>
+  } @else if (services(); as svc) {
+    <p class="mk-join" aria-live="polite">
+      {{ svc.count | number }} of {{ c.total | number }} are service identities with no device to check.
+    </p>
+  }
+}

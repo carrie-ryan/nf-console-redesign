@@ -13,7 +13,7 @@
   white-space: nowrap;
 }
 .concern-value--danger {
-  color: var(--color-danger);
+  color: var(--color-danger-text);
   font-weight: 600;
 }
 
@@ -70,7 +70,7 @@
   outline-offset: 2px;
 }
 .concern-btn--dismiss:hover {
-  color: var(--color-danger);
+  color: var(--color-danger-text);
 }
 
 .concern-confirm {
@@ -83,8 +83,8 @@
   color: var(--color-text-2);
 }
 .concern-btn--yes:hover {
-  color: var(--color-success);
+  color: var(--color-success-text);
 }
 .concern-btn--no:hover {
-  color: var(--color-danger);
+  color: var(--color-danger-text);
 }

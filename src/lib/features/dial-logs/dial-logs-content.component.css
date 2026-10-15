@@ -70,7 +70,7 @@
 }
 
 .child-empty {
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
 }
 
 .muted {
@@ -155,7 +155,7 @@
 }
 .ratio-meter__failed {
   font-weight: 700;
-  color: var(--color-danger);
+  color: var(--color-danger-text);
 }
 .ratio-meter__divider {
   color: var(--color-text-3);
@@ -188,7 +188,7 @@
   flex-direction: row;
   align-items: center;
   gap: 0.4375rem;
-  color: var(--color-success);
+  color: var(--color-success-text);
   font-size: 0.75rem;
   font-weight: 600;
   white-space: nowrap;
@@ -224,7 +224,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4375rem;
-  font-size: 0.6875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: 0.005em;
   white-space: nowrap;
@@ -233,8 +233,8 @@
   font-size: 0.8125rem;
   line-height: 1;
 }
-.event-chip--success { color: var(--color-success); }
-.event-chip--failure { color: var(--color-danger); }
+.event-chip--success { color: var(--color-success-text); }
+.event-chip--failure { color: var(--color-danger-text); }
 .event-chip--neutral { color: var(--color-text-3); }
 
 /* ─── Failure detail ─────────────────────────────────────────────────── */
@@ -251,7 +251,7 @@
 }
 .failure-headline {
   font-weight: 600;
-  color: var(--color-danger);
+  color: var(--color-danger-text);
 }
 .failure-code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;

@@ -59,7 +59,7 @@
 
 .help-point-text { display: flex; flex-direction: column; gap: 0.25rem; }
 .help-point-title { font-size: 0.875rem; font-weight: 600; color: var(--color-text); }
-.help-point-body { font-size: 0.8125rem; line-height: 1.5; color: var(--color-text-2); }
+.help-point-body { font-size: 0.875rem; line-height: 1.5; color: var(--color-text-2); }
 
 /* ─── How it fits ────────────────────────────────────────────────────── */
 .help-fits {

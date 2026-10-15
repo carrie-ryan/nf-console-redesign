@@ -116,20 +116,20 @@
                 <!-- Attributes -->
                 <div class="iscf">
                   <label class="form-label" [for]="'isc-attrs-' + dest.hostPort">
-                    Attributes <span class="opt">Optional</span>
+                    Role attributes <span class="opt">Optional</span>
                   </label>
                   <div class="tag-input-wrap">
                     @for (attr of cardFor(dest).attributes; track attr) {
                       <span class="tag-chip">
                         {{ attr }}
                         <button class="tag-chip-x" type="button" (click)="removeAttr(dest, attr)"
-                          aria-label="Remove attribute"><i class="fa-solid fa-xmark"></i></button>
+                          aria-label="Remove role attribute"><i class="fa-solid fa-xmark"></i></button>
                       </span>
                     }
                     <input [id]="'isc-attrs-' + dest.hostPort" class="tag-bare-input"
                       [(ngModel)]="attrBuf[dest.hostPort]"
                       (keydown)="onAttrKeydown(dest, $event)"
-                      [placeholder]="cardFor(dest).attributes.length === 0 ? 'Add attributes to group services' : ''"
+                      [placeholder]="cardFor(dest).attributes.length === 0 ? 'Add role attributes to group services' : ''"
                       autocomplete="off" />
                   </div>
                   <p class="iscf-hint">Press Enter or comma to add. Prefix with # for role attributes policies can target.</p>

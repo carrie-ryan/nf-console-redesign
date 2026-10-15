@@ -1,0 +1,119 @@
+.cp { position: relative; }
+
+/* Reads as the console's .form-control select, but it's a button. */
+.cp-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+.cp-trigger-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cp-placeholder { flex: 1; color: var(--color-text-disabled); }
+.cp-chevron { font-size: 0.6875rem; color: var(--color-text-3); transition: transform var(--transition-fast); }
+.cp-trigger[aria-expanded='true'] .cp-chevron { transform: rotate(180deg); }
+
+.cp-badge {
+  flex-shrink: 0;
+  padding: 0.0625rem 0.4375rem;
+  border: 1px solid var(--color-warning-border);
+  border-radius: var(--radius-full);
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.cp-panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 50;
+  max-height: 22rem;
+  overflow-y: auto;
+  padding: 0.25rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Inline variant (attribute operators): trigger sizes to its value; panel may outgrow it. */
+.cp--inline { display: inline-block; }
+.cp--inline .cp-trigger { width: auto; }
+.cp--inline .cp-trigger-name { flex: none; }
+.cp--inline .cp-panel { right: auto; min-width: 100%; width: max-content; }
+.cp--inline .cp-check { margin-left: 1rem; }
+
+.cp-list { margin: 0; padding: 0; list-style: none; }
+
+.cp-row { display: flex; align-items: stretch; gap: 0.25rem; border-radius: var(--radius-sm); }
+.cp-row:hover, .cp-row:focus-within { background: var(--color-surface-2); }
+.cp-row--selected { background: var(--brand-primary-light); }
+.cp-row--selected:hover, .cp-row--selected:focus-within { background: var(--brand-primary-light); }
+
+.cp-pick, .cp-new, .cp-edit {
+  border: none;
+  background: transparent;
+  font: inherit;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.cp-pick {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0.5rem 0.625rem;
+  text-align: left;
+  border-radius: var(--radius-sm);
+}
+.cp-row-top { display: flex; align-items: center; gap: 0.5rem; }
+.cp-name { font-size: 0.875rem; font-weight: 500; }
+.cp-row--selected .cp-name { color: var(--brand-primary); }
+.cp-check { margin-left: auto; font-size: 0.75rem; color: var(--brand-primary); }
+.cp-sub {
+  font-size: 0.875rem;
+  color: var(--color-text-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cp-edit {
+  flex-shrink: 0;
+  align-self: center;
+  width: 2rem;
+  height: 2rem;
+  margin-right: 0.25rem;
+  border-radius: var(--radius-md);
+  color: var(--color-text-3);
+  font-size: 0.8125rem;
+}
+.cp-edit:hover, .cp-edit:focus-visible { background: var(--color-surface); color: var(--brand-primary); box-shadow: inset 0 0 0 1px var(--color-border); }
+
+.cp-new {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.625rem;
+  border-top: 1px solid var(--color-border);
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--brand-primary);
+  text-align: left;
+}
+.cp-new:hover, .cp-new:focus-visible { background: var(--color-surface-2); }
+.cp-new i { font-size: 0.75rem; }
+
+.cp-pick:focus-visible, .cp-new:focus-visible, .cp-edit:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: -2px;
+}

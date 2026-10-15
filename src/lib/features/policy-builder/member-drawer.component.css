@@ -1,0 +1,175 @@
+/* A fixed height, so the member list (the only scroller) knows its viewport. */
+:host { height: calc(100vh - 2rem); overflow: hidden; }
+
+.md-avatar { background: var(--brand-primary-light); color: var(--brand-primary); }
+
+.md-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.md-summary { margin: 0; font-size: 0.8125rem; font-weight: 600; color: var(--color-text); }
+
+.md-search { position: relative; display: flex; align-items: center; }
+.md-search > i { position: absolute; left: 0.625rem; font-size: 0.75rem; color: var(--color-text-3); pointer-events: none; }
+
+.md-search-input {
+  width: 100%;
+  padding: 0.4375rem 0.625rem 0.4375rem 1.875rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  font: inherit;
+  font-size: 0.8125rem;
+  color: var(--color-text);
+}
+
+.md-search-input:focus-visible { outline: none; border-color: var(--brand-primary); box-shadow: 0 0 0 3px var(--color-focus-ring); }
+
+.md-chips { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+
+.md-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  font: inherit;
+  font-size: 0.8125rem;
+  color: var(--color-text-2);
+  cursor: pointer;
+}
+
+.md-chip:hover:not(:disabled) { border-color: var(--brand-primary); color: var(--brand-primary); }
+.md-chip:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--color-focus-ring); }
+.md-chip:disabled { opacity: 0.5; cursor: default; }
+.md-chip[aria-pressed='true'],
+.md-chip[aria-pressed='true']:hover { border-color: var(--brand-primary); background: var(--brand-primary); color: var(--color-text-inverse); }
+.md-chip-n { font-weight: 600; }
+
+.md-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.875rem;
+  color: var(--color-text-2);
+}
+
+.md-legend li { display: inline-flex; align-items: center; gap: 0.25rem; }
+
+.md-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0.875rem;
+  height: 0.875rem;
+  margin-right: 0.1875rem;
+  border-radius: var(--radius-full);
+  background: var(--color-text-2);
+  font-size: 0.5625rem;
+  font-weight: 700;
+  color: var(--color-text-inverse);
+}
+
+.md-count { margin: 0; font-size: 0.875rem; color: var(--color-text-3); }
+
+/* The only scroller: rows are absolutely placed inside a list as tall as all of them. */
+.md-viewport { flex: 1; min-height: 0; overflow-y: auto; }
+
+.md-rows { position: relative; margin: 0; padding: 0; list-style: none; }
+
+.md-row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.1875rem;
+  padding: 0 1rem;
+  border-bottom: 1px solid var(--color-border);
+  box-sizing: border-box;
+}
+
+.md-line { display: flex; align-items: center; gap: 0.375rem; min-width: 0; overflow: hidden; white-space: nowrap; }
+
+.md-name { flex-shrink: 0; font-size: 0.8125rem; font-weight: 500; color: var(--brand-primary); text-decoration: none; }
+.md-name:hover { text-decoration: underline; }
+.md-name:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--color-focus-ring); border-radius: var(--radius-sm); }
+
+.md-attrs { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: 0.6875rem; color: var(--color-text-3); }
+
+.md-st {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 0 0.375rem 0 0.1875rem;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-2);
+  font-size: 0.6875rem;
+  color: var(--color-text-2);
+}
+
+.md-st-serving { background: var(--color-success-bg, var(--color-surface-2)); color: var(--color-success-text); font-weight: 600; }
+.md-st-standby { color: var(--color-text-2); }
+.md-st-reachable { color: var(--color-success-text); }
+.md-st-blocked,
+.md-st-noSharedRouter,
+.md-st-notAuthorized { background: var(--color-danger-bg); color: var(--color-danger-text); }
+.md-st-routersOffline { background: var(--color-warning-bg); color: var(--color-text); }
+.md-st:not(:has(.md-num)) { padding-left: 0.375rem; }
+
+.md-none { margin: 0; padding: 1rem; font-size: 0.875rem; color: var(--color-text-2); text-align: center; }
+
+.md-router { flex-shrink: 0; font-size: 0.6875rem; color: var(--brand-primary); }
+
+/* ─── selection and tagging ───────────────────────────────────────────── */
+.md-select-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.md-sel-n { font-size: 0.875rem; font-weight: 600; color: var(--color-text); }
+
+.md-link {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 0.75rem;
+  color: var(--brand-primary);
+  cursor: pointer;
+}
+
+.md-link:hover:not(:disabled) { text-decoration: underline; }
+.md-link:disabled { color: var(--color-text-disabled); cursor: default; }
+.md-link:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--color-focus-ring); border-radius: var(--radius-sm); }
+
+.md-tag {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
+}
+
+.md-tag-actions { display: flex; gap: 0.25rem; }
+.md-tag-row { display: flex; align-items: stretch; gap: 0.375rem; }
+.md-tag-attr { position: relative; flex: 1; min-width: 0; background: var(--color-surface); }
+.md-apply { flex-shrink: 0; }
+.md-tag-hint { margin: 0; font-size: 0.875rem; color: var(--color-text-2); }
+
+.md-tag-result { margin: 0; font-size: 0.875rem; color: var(--color-text); }
+.md-tag-result i { color: var(--color-success-text); }
+.md-tag-error, .md-tag-error i { color: var(--color-danger-text); }
+
+/* A row with its checkbox. */
+.md-row-sel { padding-left: 2.5rem; }
+.md-row-on { background: var(--brand-primary-light); }
+.md-check { position: absolute; left: 1rem; top: 50%; margin: 0; transform: translateY(-50%); }

@@ -1,0 +1,34 @@
+<header class="ap-header">
+  <a routerLink="/external-providers" class="btn-back" title="Back to External providers">
+    <i class="fa-solid fa-arrow-left"></i>
+  </a>
+  <h1>Add provider</h1>
+</header>
+
+<div class="ap-body">
+  <div class="ap-column">
+    <section class="section-card" aria-labelledby="ap-provider-heading">
+      <h2 class="ap-heading" id="ap-provider-heading">Provider</h2>
+      <p class="ap-hint">Choose the provider that reports device posture, then configure the connection to it.</p>
+      <div class="ap-field">
+        <div class="ap-field-hdr">
+          <label class="form-label" for="sp-provider">PROVIDER</label>
+          <span class="ap-tag">REQUIRED</span>
+        </div>
+        <app-provider-picker [providers]="providerOptions" [selectedType]="providerType()"
+          (picked)="providerType.set($event)" />
+        @if (spec()?.help; as help) {
+          <p class="ap-field-hint">{{ help }}</p>
+        }
+      </div>
+    </section>
+
+    <!-- Keyed on the provider: the form loads its fields once, so a new provider needs a fresh form. -->
+    @for (type of [providerType()]; track type) {
+      @if (type) {
+        <app-provider-connection-form [providerType]="type"
+          (saved)="onSaved($event)" (cancelled)="onCancelled()" />
+      }
+    }
+  </div>
+</div>

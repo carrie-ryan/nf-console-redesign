@@ -13,11 +13,11 @@
 }
 
 .toast[data-variant='success'] { border-left: 3px solid var(--color-success); }
-.toast[data-variant='success'] .toast-icon { color: var(--color-success); }
+.toast[data-variant='success'] .toast-icon { color: var(--color-success-text); }
 .toast[data-variant='error']   { border-left: 3px solid var(--color-danger); }
-.toast[data-variant='error']   .toast-icon { color: var(--color-danger); }
+.toast[data-variant='error']   .toast-icon { color: var(--color-danger-text); }
 .toast[data-variant='warning'] { border-left: 3px solid var(--color-warning); }
-.toast[data-variant='warning'] .toast-icon { color: var(--color-warning); }
+.toast[data-variant='warning'] .toast-icon { color: var(--color-warning-text); }
 .toast[data-variant='info']    { border-left: 3px solid var(--color-info); }
 .toast[data-variant='info']    .toast-icon { color: var(--color-info); }
 

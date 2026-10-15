@@ -1,0 +1,48 @@
+<section class="api-card" aria-labelledby="api-calls-title">
+  <div class="api-hdr">
+    <h2 class="api-title" id="api-calls-title">API calls</h2>
+
+    <div class="split-btn">
+      <button class="btn btn-primary btn-sm split-main" type="button" (click)="copy('cli')">
+        <i [class]="copied() === 'cli' ? 'fa-solid fa-check' : 'fa-solid fa-terminal'"></i>
+        {{ copied() === 'cli' ? 'Copied' : 'Copy as CLI' }}
+      </button>
+      <button class="btn btn-primary btn-sm split-caret" type="button" aria-label="More copy options"
+        aria-haspopup="menu" [attr.aria-expanded]="menuOpen()" (click)="toggleMenu($event)">
+        <i class="fa-solid fa-chevron-down"></i>
+      </button>
+      @if (menuOpen()) {
+        <div class="dropdown-menu" role="menu">
+          <button class="dropdown-item" role="menuitem" type="button" (click)="copy('cli')">
+            <i class="fa-solid fa-terminal"></i> Copy cURL command
+          </button>
+          <button class="dropdown-item" role="menuitem" type="button" (click)="copy('body')">
+            <i class="fa-solid fa-code"></i> Copy request body
+          </button>
+          <button class="dropdown-item" role="menuitem" type="button" (click)="copy('url')">
+            <i class="fa-solid fa-link"></i> Copy endpoint URL
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="api-url-row">
+    <span class="api-method">{{ method() }}</span>
+    <span class="api-url" [title]="url()">{{ url() }}</span>
+    <button class="icon-copy" type="button" (click)="copy('url')"
+      [attr.aria-label]="copied() === 'url' ? 'Endpoint URL copied' : 'Copy endpoint URL'">
+      <i [class]="copied() === 'url' ? 'fa-solid fa-check' : 'fa-solid fa-copy'"></i>
+    </button>
+  </div>
+
+  <div class="code">
+    <button class="icon-copy code-copy" type="button" (click)="copy('body')"
+      [attr.aria-label]="copied() === 'body' ? 'Request body copied' : 'Copy request body'">
+      <i [class]="copied() === 'body' ? 'fa-solid fa-check' : 'fa-solid fa-copy'"></i>
+    </button>
+    <pre class="code-pre" aria-label="Request body"><code>@for (line of lines(); track $index) {<span class="code-line"><span class="ln" aria-hidden="true">{{ $index + 1 }}</span><span class="lc">@for (t of line; track $index) {<span [class]="'t-' + t.kind">{{ t.text }}</span>}</span></span>}</code></pre>
+  </div>
+
+  <div class="api-note"><ng-content /></div>
+</section>

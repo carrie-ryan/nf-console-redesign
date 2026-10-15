@@ -1,0 +1,288 @@
+<header class="dr-header">
+  <div class="dr-avatar" aria-hidden="true"><i class="fa-solid fa-list-check"></i></div>
+  <div class="dr-heading">
+    <h2 class="dr-title">Review changes</h2>
+    <span class="dr-subtitle">Draft · {{ changeCount() }} · {{ affectedCount() }}</span>
+  </div>
+  <button type="button" class="dr-icon-btn" (click)="closed.emit()" aria-label="Close review">
+    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+  </button>
+</header>
+
+<div class="dr-body">
+  <section aria-labelledby="dr-changes-h">
+    <h3 class="dr-h" id="dr-changes-h">Changes</h3>
+    <ul class="dr-changes">
+      @for (line of changes(); track $index) {
+        <li>{{ line }}</li>
+      }
+    </ul>
+  </section>
+
+  @if (conflicts().length) {
+    <section aria-labelledby="dr-conflicts-h">
+      <h3 class="dr-h" id="dr-conflicts-h">Conflicts</h3>
+      @for (c of conflicts(); track c.key) {
+        <article class="dr-cf" [attr.aria-label]="c.text">
+          <p class="dr-cf-title"><i class="fa-solid fa-code-merge" aria-hidden="true"></i>{{ c.text }}</p>
+          <div class="dr-cf-sides">
+            <div>
+              <h4 class="dr-cf-h">Their change</h4>
+              <ul class="dr-cf-list">
+                @for (f of c.theirs; track f.field) {
+                  <li><span class="dr-cf-field">{{ f.label }}</span> {{ valueText(f.from) }} → <strong>{{ valueText(f.to) }}</strong></li>
+                }
+              </ul>
+            </div>
+            <div>
+              <h4 class="dr-cf-h">Your change</h4>
+              <ul class="dr-cf-list">
+                @for (f of c.mine; track f.field) {
+                  <li><span class="dr-cf-field">{{ f.label }}</span> {{ valueText(f.from) }} → <strong>{{ valueText(f.to) }}</strong></li>
+                } @empty {
+                  <li class="dr-cf-none">Nothing left to change</li>
+                }
+              </ul>
+            </div>
+          </div>
+          @for (x of c.clashes; track x.field) {
+            <fieldset class="dr-cf-pick">
+              <legend>{{ x.label }} changed on both sides — keep which?</legend>
+              <label [class.on]="pickOf(c, x.field) === 'theirs'">
+                <input type="radio" [name]="'dr-pick-' + c.key + '-' + x.field" [checked]="pickOf(c, x.field) === 'theirs'"
+                  (change)="pick(c, x.field, 'theirs')" />
+                <span>Theirs</span>&ngsp;<span class="dr-cf-val">{{ valueText(x.theirs) }}</span>
+              </label>
+              <label [class.on]="pickOf(c, x.field) === 'mine'">
+                <input type="radio" [name]="'dr-pick-' + c.key + '-' + x.field" [checked]="pickOf(c, x.field) === 'mine'"
+                  (change)="pick(c, x.field, 'mine')" />
+                <span>Mine</span>&ngsp;<span class="dr-cf-val">{{ valueText(x.mine) }}</span>
+              </label>
+            </fieldset>
+          }
+          @if (conflictError()?.key === c.key) {
+            <p class="dr-cf-error" role="alert">{{ conflictError()!.message }}</p>
+          }
+          <div class="dr-cf-actions">
+            <button type="button" class="btn btn-primary btn-sm dr-reapply" [disabled]="!canReapply(c)" (click)="reapply(c)">
+              <i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Reapply my change on the latest
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm dr-drop" (click)="dropChange(c)">Drop my change</button>
+          </div>
+          @if (!c.canReapply) {
+            <p class="dr-cf-note">It no longer exists in live as you edited it — only dropping your change applies.</p>
+          } @else if (c.clashes.length && !canReapply(c)) {
+            <p class="dr-cf-note">Pick a value for each field changed on both sides to reapply.</p>
+          }
+        </article>
+      }
+    </section>
+  }
+
+  @if (reverting(); as rv) {
+    <section aria-labelledby="dr-revert-h">
+      <h3 class="dr-h" id="dr-revert-h">Revert</h3>
+      <p class="dr-note"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> This draft reverts commit {{ rv.commitId }}.</p>
+      @for (name of rv.conflicts; track name) {
+        <p class="dr-line dr-loosen dr-conflict" role="note"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>Changed since: {{ name }} — not reverted</p>
+      }
+    </section>
+  }
+
+  @if (warnings().length || hostWarnings().length || conflictWarnings().length || expiryWarnings().length || expiredRestores().length) {
+    <section aria-labelledby="dr-warn-h">
+      <h3 class="dr-h" id="dr-warn-h">Warnings</h3>
+      @for (r of expiredRestores(); track r.policyId + (r.role ?? '')) {
+        <p class="dr-line dr-loosen dr-restore" role="note"><i class="fa-regular fa-clock" aria-hidden="true"></i><span>
+          @if (r.identityName) {{{ r.identityName }} via&ngsp;}<button type="button" class="dr-link" [disabled]="!reasonLinks()"
+            (click)="openLink.emit({ kind: 'policy', id: r.policyId, focus: 'expires' })"
+            [attr.aria-label]="r.policyName + ': open its Expires control'">{{ r.policyName }}</button>:
+          Restores access that was time-limited (expired {{ expiryDate(r.expiredAt) }}); it will no longer expire.</span></p>
+      }
+      @for (w of expiryWarnings(); track w.testId) {
+        <p class="dr-line dr-loosen dr-expiry" role="note"><i class="fa-regular fa-clock" aria-hidden="true"></i>{{ w.text }}</p>
+      }
+      @for (w of warnings(); track w) {
+        <p class="dr-line dr-loosen" role="note"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>{{ w }}</p>
+      }
+      @for (w of hostWarnings(); track w.serviceId) {
+        <p class="dr-line dr-loosen dr-broad" role="note"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i><span><app-test-reason
+          [parts]="w.parts" [linked]="reasonLinks()" (open)="openLink.emit($event)" /></span></p>
+      }
+      @for (w of conflictWarnings(); track w.serviceIds.join()) {
+        <p class="dr-line dr-loosen dr-overlap" role="note"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i><span><app-test-reason
+          [parts]="w.parts" [linked]="reasonLinks()" (open)="openLink.emit($event)" /></span></p>
+      }
+    </section>
+  }
+
+  <section aria-labelledby="dr-tests-h">
+    <h3 class="dr-h" id="dr-tests-h">Tests</h3>
+    @if (checking()) {
+      <p class="dr-note dr-checking" role="status"><i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> {{ progress() }}</p>
+    } @else {
+    @for (f of failures(); track f.test.id) {
+      <article class="dr-test-fail" [attr.aria-label]="'Failing test: ' + f.text">
+        <p class="dr-test-name"><i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>{{ f.text }}</p>
+        @if (f.test.note) {<p class="dr-test-note">{{ f.test.note }}</p>}
+        @if (f.problem) {
+          <p class="dr-test-who">{{ f.problem }}</p>
+        } @else {
+          <ul class="dr-test-who">
+            @for (o of f.offenders.slice(0, OFFENDERS_SHOWN); track o.identityId) {
+              <li><strong>{{ o.name }}</strong> — <app-test-reason [parts]="o.parts" [linked]="reasonLinks()" (open)="openLink.emit($event)" /></li>
+            }
+            @if (f.offenders.length > OFFENDERS_SHOWN) {<li>+{{ f.offenders.length - OFFENDERS_SHOWN }} more</li>}
+          </ul>
+        }
+      </article>
+    } @empty {
+      <p class="dr-note dr-tests-ok"><i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+        {{ testCount() ? 'All ' + testCount() + ' access tests pass.' : 'No access tests.' }}</p>
+    }
+    }
+  </section>
+
+  <section aria-labelledby="dr-effects-h">
+    <h3 class="dr-h" id="dr-effects-h">Effects</h3>
+    <ng-container *ngTemplateOutlet="effects" />
+  </section>
+
+  @if (commitError(); as err) {
+    <p class="dr-error" role="alert">
+      <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+      Commit failed — the draft is unchanged. {{ err }}
+    </p>
+  }
+
+  @if (approval.required()) {
+    <ng-container *ngTemplateOutlet="reviewActions" />
+  } @else {
+  <div class="dr-actions">
+    @if (checking()) {
+      <p class="dr-commit-note" id="dr-blocked" role="status">{{ progress() }} Commit is available once the checks finish.</p>
+    } @else if (blockedMessage(); as msg) {
+      <p class="dr-commit-note dr-blocked" id="dr-blocked" role="status">{{ msg }}</p>
+    } @else {
+      <p class="dr-commit-note">Writes these changes to live; the effects take hold immediately.</p>
+    }
+    <button type="button" class="btn btn-primary btn-sm" (click)="commit()" [disabled]="checking() || !!blockedMessage()"
+      [attr.aria-describedby]="checking() || blockedMessage() ? 'dr-blocked' : null">
+      <i class="fa-solid fa-upload" aria-hidden="true"></i> Commit {{ changeCount() }}
+    </button>
+  </div>
+  }
+</div>
+
+<!-- Review required (demo): the author submits, withdraws, or commits once approved; a
+     reviewer approves or requests changes with a note. -->
+<ng-template #reviewActions>
+  @let sub = approval.submission();
+  @if (reviewError(); as err) {
+    <p class="dr-error" role="alert"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> {{ err }}</p>
+  }
+  @if (sub?.status === 'submitted') {
+    <section class="dr-approval" aria-labelledby="dr-approval-h">
+      <h3 class="dr-h" id="dr-approval-h">Review</h3>
+      <p class="dr-note"><i class="fa-solid fa-lock" aria-hidden="true"></i>
+        Submitted for review by {{ sub!.by }} · {{ sub!.at | date: 'HH:mm' }}. The draft is locked until it's approved, sent back or withdrawn.</p>
+      @if (!approval.viewerIsSubmitter()) {
+        <label class="dr-cf-h" for="dr-review-note">Note to {{ sub!.by }}</label>
+        <textarea id="dr-review-note" class="form-control dr-review-note" rows="2" placeholder="What should change? (optional)"
+          [value]="reviewNote()" (input)="reviewNote.set($any($event.target).value)"></textarea>
+      }
+      <div class="dr-actions">
+        @if (approveBlocked(); as why) {
+          <p class="dr-commit-note dr-blocked" id="dr-approve-blocked" role="status">{{ why }}</p>
+        } @else {
+          <p class="dr-commit-note">Approving lets {{ sub!.by }} commit this exact draft.</p>
+        }
+        @if (approval.viewerIsSubmitter()) {
+          <button type="button" class="btn btn-secondary btn-sm dr-withdraw" (click)="withdraw()">Withdraw</button>
+        } @else {
+          <button type="button" class="btn btn-secondary btn-sm dr-request" (click)="requestChanges()">Request changes</button>
+        }
+        <button type="button" class="btn btn-primary btn-sm dr-approve" (click)="approve()" [disabled]="!!approveBlocked()"
+          [attr.aria-describedby]="approveBlocked() ? 'dr-approve-blocked' : null">
+          <i class="fa-solid fa-check" aria-hidden="true"></i> Approve
+        </button>
+      </div>
+    </section>
+  } @else if (approval.viewer() === 'reviewer') {
+    <div class="dr-actions">
+      <p class="dr-commit-note">
+        @if (sub?.status === 'approved') {
+          Approved by {{ sub!.by }} — waiting for the author to commit.
+        } @else {
+          Nothing to approve yet: the author hasn't submitted this draft.
+        }
+      </p>
+    </div>
+  } @else {
+    <div class="dr-actions">
+      @if (checking()) {
+        <p class="dr-commit-note" id="dr-blocked" role="status">{{ progress() }} Available once the checks finish.</p>
+      } @else if (blockedMessage(); as msg) {
+        <p class="dr-commit-note dr-blocked" id="dr-blocked" role="status">{{ msg }}</p>
+      } @else if (approval.approved(); as a) {
+        <p class="dr-commit-note dr-approved"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Approved by {{ a.by }}. Commit writes it to live.</p>
+      } @else {
+        <p class="dr-commit-note">Review is required: someone else approves this draft before it can be committed.</p>
+      }
+      @if (approval.approved()) {
+        <button type="button" class="btn btn-primary btn-sm dr-commit" (click)="commit()" [disabled]="checking() || !!blockedMessage()">
+          <i class="fa-solid fa-upload" aria-hidden="true"></i> Commit {{ changeCount() }}
+        </button>
+      } @else {
+        <button type="button" class="btn btn-primary btn-sm dr-submit" (click)="submit()" [disabled]="checking() || !!blockedMessage()"
+          [attr.aria-describedby]="checking() || blockedMessage() ? 'dr-blocked' : null">
+          <i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Submit for review
+        </button>
+      }
+    </div>
+  }
+</ng-template>
+
+<ng-template #effects>
+  @if (scopeNote(); as note) {
+    <p class="dr-note"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> {{ note }}</p>
+  }
+  @if (checking()) {
+    <p class="dr-note dr-checking" role="status"><i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> {{ progress() }}</p>
+  }
+  @for (r of rows(); track r.serviceId) {
+    <article class="dr-row" [class.current]="r.isCurrent" [attr.aria-label]="'Effect on ' + r.serviceName">
+      <div class="dr-row-h">
+        <i class="fa-solid fa-server" aria-hidden="true"></i>
+        <span class="dr-svc">{{ r.serviceName }}</span>
+        @if (r.isCurrent) {<span class="dr-tag">this service</span>}
+      </div>
+      <dl class="dr-stats">
+        <div><dt>Dialers</dt><dd [class]="tone(r.dialers)">{{ delta(r.dialers) }}</dd></div>
+        <div><dt>Can connect</dt><dd [class]="tone(r.canConnect)">{{ delta(r.canConnect) }}</dd></div>
+        <div><dt>Hosts online</dt><dd [class]="tone(r.hostsOnline)">{{ delta(r.hostsOnline) }}</dd></div>
+        @if (r.blocked.delta) {
+          <div><dt>Blocked by posture</dt><dd [class]="tone(r.blocked)">{{ delta(r.blocked) }}</dd></div>
+        }
+        @if (r.reason; as reason) {
+          <div><dt>Reason</dt><dd>{{ reasonText(reason.before) }} → {{ reasonText(reason.after) }}</dd></div>
+        }
+      </dl>
+      @if (hosting().get(r.serviceId); as h) {
+        <p class="dr-line dr-hosting" [class.dr-hosting-none]="!h.remainingHostNames.length">
+          <i class="fa-solid" [class]="h.remainingHostNames.length ? 'fa-arrow-right-arrow-left' : 'fa-triangle-exclamation'" aria-hidden="true"></i>{{ h.text }}
+        </p>
+      }
+      @for (line of r.looseningLines; track line) {
+        <p class="dr-line dr-loosen" role="note"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>{{ line }}</p>
+      }
+      @for (line of r.configLines; track line) {<p class="dr-line dr-config"><i class="fa-solid fa-gear" aria-hidden="true"></i>{{ line }}</p>}
+      @if (r.postureLine; as line) {<p class="dr-line dr-posture"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i>{{ line }}</p>}
+      @if (r.newDialers) {<p class="dr-line">{{ r.newDialers }}</p>}
+      @if (r.lostDialers) {<p class="dr-line">{{ r.lostDialers }}</p>}
+      @for (line of r.routeLines; track line) {<p class="dr-line dr-route"><i class="fa-solid fa-route" aria-hidden="true"></i>{{ line }}</p>}
+    </article>
+  } @empty {
+    @if (!checking()) {<p class="dr-note">No change to who can host, dial, or connect.</p>}
+  }
+</ng-template>

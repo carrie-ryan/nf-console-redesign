@@ -36,7 +36,7 @@
 .scope-opt--disabled { opacity: 0.5; cursor: not-allowed; }
 .scope-body { display: flex; flex-direction: column; gap: 0.125rem; }
 .scope-title { font-size: 0.875rem; font-weight: 600; color: var(--color-text); }
-.scope-hint { font-size: 0.75rem; line-height: 1.4; color: var(--color-text-3); }
+.scope-hint { font-size: 0.875rem; line-height: 1.4; color: var(--color-text-3); }
 
 /* ─── Fields (starts / duration) ─────────────────────────────────────── */
 .mute-field { margin-bottom: 1rem; }
@@ -81,4 +81,4 @@
   color: var(--color-text-3);
 }
 .mute-preview-scope { font-size: 0.875rem; color: var(--color-text); }
-.mute-preview-timing { font-size: 0.75rem; color: var(--color-text-2); }
+.mute-preview-timing { font-size: 0.875rem; color: var(--color-text-2); }

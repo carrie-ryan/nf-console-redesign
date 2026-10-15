@@ -3,19 +3,28 @@
     <h1>Policies</h1>
     <p>Control who can access what on your network</p>
   </div>
-  <a routerLink="/policies/new" class="btn btn-primary">
-    <i class="fa-solid fa-plus"></i> New Policy
-  </a>
+  @if (activeTab() === 'service') {
+    <a routerLink="/policy-builder" class="btn btn-primary">
+      <i class="fa-solid fa-plus"></i> New Policy
+    </a>
+  }
+</div>
+
+<div class="tab-bar" role="tablist" aria-label="Policy types">
+  @for (t of tabs; track t.id) {
+    <button type="button" role="tab" class="tab-btn" [class.tab-btn--active]="activeTab() === t.id"
+      [attr.aria-selected]="activeTab() === t.id" (click)="setTab(t.id)">{{ t.label }}</button>
+  }
 </div>
 
 <div class="list-body" (click)="closeMenu()">
-  @if (data.policies().length === 0) {
+  @if (activeTab() === 'service' && data.policies().length === 0) {
     <div class="section-card empty-card">
       <app-empty-state
         icon="fa-solid fa-shield-halved"
         title="No policies yet"
         message="Policies control which identities can access which services. You need at least one Identity and one Service before a policy is meaningful.">
-        <a routerLink="/policies/new" class="btn btn-primary">
+        <a routerLink="/policy-builder" class="btn btn-primary">
           <i class="fa-solid fa-plus"></i> Create a Policy
         </a>
       </app-empty-state>
@@ -32,80 +41,168 @@
       </div>
     </div>
   } @else {
-    <div class="section-card table-card">
-      <table class="data-table">
-        <thead>
-          <tr>
-            @if (prefs.isPowerUser()) {
-              <th class="col-id-toggle">ID</th>
-            }
-            <th>Name</th>
-            <th>Type</th>
-            <th>Semantic</th>
-            <th>Service Attributes</th>
-            <th>Identity Attributes</th>
-            <th>Created At</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (policy of data.policies(); track policy.id) {
+    <div class="section-card table-card" role="tabpanel">
+      <div class="toolbar">
+        <div class="filter-wrap">
+          <i class="fa-solid fa-magnifying-glass filter-icon" aria-hidden="true"></i>
+          <input class="filter-input" type="search" placeholder="Search by name" aria-label="Search policies by name"
+            [value]="search()" (input)="search.set($any($event.target).value)" />
+        </div>
+        <select class="filter-select" aria-label="Filter by attribute" [value]="attribute()" (change)="attribute.set($any($event.target).value)">
+          <option value="">All attributes</option>
+          @for (a of attributeOptions(); track a) {
+            <option [value]="a" [selected]="a === attribute()">{{ a }}</option>
+          }
+        </select>
+        @if (filtering()) {
+          <button type="button" class="btn-text filter-clear-all" (click)="clearFilters()">Clear</button>
+        }
+        <span class="pagination-info" aria-live="polite">{{ countText() }}</span>
+      </div>
+
+      @if (activeTab() === 'service') {
+        <table class="data-table">
+          <thead>
             <tr>
               @if (prefs.isPowerUser()) {
-                <td class="col-id-toggle"><span class="id-value">{{ policy.id }}</span></td>
+                <th class="col-id-toggle">ID</th>
               }
-              <td class="name-cell">{{ policy.name }}</td>
-              <td>
-                <span class="type-badge" [class.type-badge--dial]="policy.type === 'dial'" [class.type-badge--bind]="policy.type === 'bind'">
-                  {{ policy.type === 'dial' ? 'Dial' : 'Bind' }}
-                </span>
-              </td>
-              <td class="semantic-cell">{{ policy.semantic }}</td>
-              <td class="roles-cell">
-                <div class="roles-wrap">
-                  @for (role of policy.serviceRoles; track role) {
-                    <span class="role-tag">{{ role }}</span>
-                  }
-                </div>
-              </td>
-              <td class="roles-cell">
-                <div class="roles-wrap">
-                  @for (role of policy.identityRoles; track role) {
-                    <span class="role-tag">{{ role }}</span>
-                  }
-                </div>
-              </td>
-              <td class="date-cell">{{ policy.createdAt.slice(0, 10) }}</td>
-              <td class="actions-cell" (click)="$event.stopPropagation()">
-                <div class="action-menu">
-                  <button
-                    class="btn-icon"
-                    (click)="toggleMenu(policy.id, $event)"
-                    [attr.aria-label]="'Actions for ' + policy.name">
-                    <i class="fa-solid fa-ellipsis-vertical"></i>
-                  </button>
-                  @if (openMenuId() === policy.id) {
-                    <div class="dropdown-menu" role="menu">
-                      <button class="dropdown-item" role="menuitem">
-                        <i class="fa-solid fa-pen"></i> Edit
-                      </button>
-                      @if (prefs.isPowerUser()) {
-                        <button class="dropdown-item" role="menuitem">
-                          <i class="fa-solid fa-code"></i> View API
-                        </button>
-                      }
-                      <div class="dropdown-divider"></div>
-                      <button class="dropdown-item dropdown-item--danger" role="menuitem">
-                        <i class="fa-solid fa-trash"></i> Delete
-                      </button>
-                    </div>
-                  }
-                </div>
-              </td>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Semantic</th>
+              <!-- policy side: these cells render serviceRoles / identityRoles, which hold
+                   BOTH #role-attributes and @id refs — so "roles", not "attributes" -->
+              <th>Service roles</th>
+              <th>Identity roles</th>
+              <th>Created At</th>
+              <th></th>
             </tr>
-          }
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            @for (policy of servicePolicies(); track policy.id) {
+              <tr>
+                @if (prefs.isPowerUser()) {
+                  <td class="col-id-toggle"><span class="id-value">{{ policy.id }}</span></td>
+                }
+                <td class="name-cell"><div class="name-wrap"><app-truncated-cell [value]="policy.name" /></div></td>
+                <td>
+                  <span class="type-badge" [class.type-badge--dial]="policy.type === 'dial'" [class.type-badge--bind]="policy.type === 'bind'">
+                    {{ policy.type === 'dial' ? 'Dial' : 'Bind' }}
+                  </span>
+                </td>
+                <td class="semantic-cell">{{ policy.semantic }}</td>
+                <td class="roles-cell">
+                  <div class="roles-wrap">
+                    @for (role of policy.serviceRoles; track role) {
+                      <span class="role-tag">{{ role }}</span>
+                    }
+                  </div>
+                </td>
+                <td class="roles-cell">
+                  <div class="roles-wrap">
+                    @for (role of policy.identityRoles; track role) {
+                      <span class="role-tag">{{ role }}</span>
+                    }
+                  </div>
+                </td>
+                <td class="date-cell">{{ policy.createdAt.slice(0, 10) }}</td>
+                <td class="actions-cell" (click)="$event.stopPropagation()">
+                  <div class="action-menu">
+                    <button
+                      class="btn-icon"
+                      (click)="toggleMenu(policy.id, $event)"
+                      [attr.aria-label]="'Actions for ' + policy.name">
+                      <i class="fa-solid fa-ellipsis-vertical"></i>
+                    </button>
+                    @if (openMenuId() === policy.id) {
+                      <div class="dropdown-menu" role="menu">
+                        <button class="dropdown-item" role="menuitem" (click)="edit(policy)">
+                          <i class="fa-solid fa-pen"></i> Edit
+                        </button>
+                        @if (prefs.isPowerUser()) {
+                          <button class="dropdown-item" role="menuitem">
+                            <i class="fa-solid fa-code"></i> View API
+                          </button>
+                        }
+                        <div class="dropdown-divider"></div>
+                        <button class="dropdown-item dropdown-item--danger" role="menuitem">
+                          <i class="fa-solid fa-trash"></i> Delete
+                        </button>
+                      </div>
+                    }
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td [attr.colspan]="prefs.isPowerUser() ? 8 : 7" class="empty-row">No service policies match.</td></tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        @let erp = activeTab() === 'edge-router';
+        <table class="data-table">
+          <thead>
+            <tr>
+              @if (prefs.isPowerUser()) {
+                <th class="col-id-toggle">ID</th>
+              }
+              <th>Name</th>
+              <th>Semantic</th>
+              <th>{{ erp ? 'Identity roles' : 'Service roles' }}</th>
+              <th>Router roles</th>
+              @if (erp) {<th>Created At</th>}
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of shownRouterRows(); track row.id) {
+              <tr [class.system-row]="row.system">
+                @if (prefs.isPowerUser()) {
+                  <td class="col-id-toggle"><span class="id-value">{{ row.id }}</span></td>
+                }
+                <td class="name-cell">
+                  <div class="name-wrap">
+                    <app-truncated-cell [value]="row.name" />
+                    @if (row.system) {
+                      <span class="system-tag" title="Created by Ziti for this router — read-only"><i class="fa-solid fa-lock" aria-hidden="true"></i> system</span>
+                    }
+                  </div>
+                </td>
+                <td class="semantic-cell">{{ row.semantic }}</td>
+                <td class="roles-cell">
+                  <div class="roles-wrap">
+                    @for (role of row.entityRoles; track role) {<span class="role-tag">{{ role }}</span>}
+                  </div>
+                </td>
+                <td class="roles-cell">
+                  <div class="roles-wrap">
+                    @for (role of row.routerRoles; track role) {<span class="role-tag">{{ role }}</span>}
+                  </div>
+                </td>
+                @if (erp) {<td class="date-cell">{{ row.createdAt?.slice(0, 10) }}</td>}
+                <td class="actions-cell" (click)="$event.stopPropagation()">
+                  <div class="action-menu">
+                    <button class="btn-icon" (click)="toggleMenu(row.id, $event)" [attr.aria-label]="'Actions for ' + row.name">
+                      <i class="fa-solid fa-ellipsis-vertical"></i>
+                    </button>
+                    @if (openMenuId() === row.id) {
+                      <div class="dropdown-menu" role="menu">
+                        <button class="dropdown-item" role="menuitem" (click)="editRouter(row)">
+                          @if (row.system) {<i class="fa-solid fa-eye"></i> View} @else {<i class="fa-solid fa-pen"></i> Edit}
+                        </button>
+                      </div>
+                    }
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td [attr.colspan]="(prefs.isPowerUser() ? 1 : 0) + (erp ? 6 : 5)" class="empty-row">
+                {{ filtering() ? 'No policies match.' : 'No ' + (erp ? 'edge router policies' : 'service edge router policies') + ' yet.' }}
+              </td></tr>
+            }
+          </tbody>
+        </table>
+      }
     </div>
   }
 </div>
