@@ -1,0 +1,194 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.sd-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.sd-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  background: var(--brand-primary-light);
+  color: var(--brand-primary);
+  font-size: 0.8125rem;
+}
+
+.sd-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.sd-title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.sd-subtitle {
+  font-size: 0.875rem;
+  color: var(--color-text-3);
+}
+
+.sd-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-2);
+  cursor: pointer;
+}
+
+.sd-icon-btn:hover { background: var(--color-surface-2); }
+.sd-icon-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--color-focus-ring); }
+
+.sd-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  font-size: 0.8125rem;
+  color: var(--color-text);
+}
+
+.sd-body p { margin: 0; }
+
+.sd-h {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-2);
+}
+
+.sd-sub {
+  margin: 0.5rem 0 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-2);
+}
+
+.sd-muted { color: var(--color-text-3); }
+
+.sd-verdict {
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  background: var(--color-success-bg);
+  font-weight: 600;
+  color: var(--color-success-text);
+}
+
+.sd-verdict.sd-bad {
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+}
+
+.sd-verdict.sd-warn {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+}
+
+.sd-props { margin: 0; }
+
+.sd-props > div {
+  display: grid;
+  grid-template-columns: 7.5rem minmax(0, 1fr);
+  gap: 0.5rem;
+  padding: 0.3125rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.sd-props > div:last-child { border-bottom: none; }
+
+.sd-props dt { color: var(--color-text-2); }
+
+.sd-props dd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.mono { font-family: var(--font-mono, ui-monospace, monospace); font-size: 0.75rem; }
+
+.sd-proto {
+  padding: 0 0.375rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-2);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.sd-attr {
+  padding: 0 0.5rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-full);
+  background: var(--color-surface-2);
+  font-size: 0.75rem;
+}
+
+.sd-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sd-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  line-height: 1.7;
+}
+
+.sd-list li .sd-muted:last-child { margin-left: auto; font-size: 0.875rem; }
+
+.sd-link {
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  color: var(--brand-primary);
+  cursor: pointer;
+}
+
+.sd-link:hover { text-decoration: underline; }
+.sd-link:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--color-focus-ring); }
+
+.sd-mark {
+  padding: 0 0.375rem;
+  border: 1px solid var(--brand-primary);
+  border-radius: var(--radius-full);
+  background: var(--brand-primary-light);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--brand-primary);
+}
+
+.sd-ready { color: var(--brand-primary); }
+.sd-verdict-note { margin: 0.125rem 0 0; font-size: 0.875rem; color: var(--color-text-2); }

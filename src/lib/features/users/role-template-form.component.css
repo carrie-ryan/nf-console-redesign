@@ -1,0 +1,408 @@
+/* Full-page form: fixed header, one scrolling column, pinned footer. The host
+   is a flex child of .console-content, so it has to be a column itself for the
+   body's overflow to resolve. */
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ─── Header ─────────────────────────────────────────────────────── */
+.rtf-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.rtf-header h1 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.rtf-header p {
+  margin: 0.125rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-2);
+}
+
+.btn-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-md);
+  color: var(--color-text-2);
+  cursor: pointer;
+  font-size: 1rem;
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.btn-back:hover { background: var(--color-surface-2); color: var(--color-text); }
+
+/* ─── Body ───────────────────────────────────────────────────────── */
+.rtf-body { flex: 1; overflow-y: auto; padding: 1.5rem; background: var(--color-bg); }
+
+/* The two-pane picker needs more room than the wizard's 600px step panel. */
+.rtf-column {
+  max-width: 60rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Roomier than the console's dense tables — the reference's card scale. */
+.rtf-card { padding: 1.5rem; }
+
+.card-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.375rem;
+}
+
+.card-heading {
+  margin: 0 0 1.25rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.card-hdr .card-heading { margin-bottom: 0; }
+
+.card-hint { margin: 0 0 1.25rem; font-size: 0.875rem; line-height: 1.5; color: var(--color-text-3); }
+.card-hint strong { font-weight: 600; }
+/* While unmet, the requirement is the reason Save is disabled — say so plainly. */
+.card-hint--unmet strong { color: var(--color-warning-text); }
+
+/* The reference's "2 of 22 fields included" treatment. */
+.count-pill {
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-full);
+  background: var(--brand-primary-light);
+  color: var(--brand-primary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.field-error {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin: 0 0 1.25rem;
+  font-size: 0.8125rem;
+  color: var(--color-danger-text);
+}
+
+/* ─── Details fields ─────────────────────────────────────────────── */
+.form-group { display: flex; flex-direction: column; gap: 0.375rem; margin-bottom: 1.5rem; }
+.rtf-last-group { margin-bottom: 0; }
+
+.field-hdr { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.field-tag { font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.05em; color: var(--color-text-3); }
+.field-hint { margin: 0.25rem 0 0; font-size: 0.875rem; color: var(--color-text-3); }
+
+/* ─── Anchor radio cards ─────────────────────────────────────────── */
+.anchor-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+
+.anchor-opt {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.anchor-opt:hover { border-color: var(--brand-primary); }
+
+.anchor-opt--active {
+  border-color: var(--brand-primary);
+  background: var(--brand-primary-light);
+  box-shadow: inset 0 0 0 1px var(--brand-primary);
+}
+
+/* Hidden input + drawn control, so the selected state can be tinted to match
+   the card. Same hidden-input approach as the checkboxes elsewhere here. */
+.anchor-opt input { position: absolute; opacity: 0; pointer-events: none; }
+
+.radio-mark {
+  position: relative;
+  flex-shrink: 0;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-top: 0.0625rem;
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: 50%;
+  background: var(--color-surface);
+  transition: border-color var(--transition-fast);
+}
+
+.anchor-opt input:checked + .radio-mark { border-color: var(--brand-primary); border-width: 2px; }
+
+.anchor-opt input:checked + .radio-mark::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--brand-primary);
+}
+
+.anchor-opt input:focus-visible + .radio-mark { box-shadow: 0 0 0 3px var(--color-focus-ring); }
+
+.anchor-body { display: flex; flex-direction: column; gap: 0.1875rem; min-width: 0; }
+.anchor-title { font-size: 0.875rem; font-weight: 600; color: var(--color-text); }
+.anchor-opt--active .anchor-title { color: var(--brand-primary); }
+.anchor-hint { font-size: 0.875rem; line-height: 1.45; color: var(--color-text-3); }
+
+/* ─── Two-pane picker ────────────────────────────────────────────── */
+.picker {
+  display: grid;
+  grid-template-columns: 17rem 1fr;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.picker-list {
+  border-right: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.picker-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.picker-filter > i { color: var(--color-text-3); font-size: 0.75rem; }
+
+.picker-filter-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font: inherit;
+  font-size: 0.8125rem;
+  color: var(--color-text);
+}
+
+.picker-filter-input::placeholder { color: var(--color-text-disabled); }
+
+.picker-filter-clear {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--color-text-3);
+  font-size: 0.75rem;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.picker-filter-clear:hover { color: var(--color-text); }
+
+/* Capped so a long catalogue scrolls inside the pane instead of stretching the
+   card — the right pane stays beside the list rather than below the fold. */
+.picker-items {
+  list-style: none;
+  margin: 0;
+  padding: 0.375rem;
+  overflow-y: auto;
+  max-height: 22rem;
+}
+
+.picker-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.4375rem 0.625rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font: inherit;
+  font-size: 0.8125rem;
+  color: var(--color-text-2);
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.picker-item:hover { background: var(--color-surface-3, var(--color-surface)); color: var(--color-text); }
+
+.picker-item--active {
+  background: var(--color-surface);
+  color: var(--brand-primary);
+  font-weight: 600;
+  box-shadow: inset 2px 0 0 var(--brand-primary);
+}
+
+.picker-item-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.picker-badge {
+  flex-shrink: 0;
+  min-width: 1.25rem;
+  padding: 0.0625rem 0.375rem;
+  border-radius: var(--radius-full);
+  background: var(--brand-primary);
+  color: var(--color-text-inverse);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.picker-empty {
+  padding: 1rem 0.625rem;
+  font-size: 0.875rem;
+  color: var(--color-text-3);
+  font-style: italic;
+}
+
+/* ─── Detail pane ────────────────────────────────────────────────── */
+.picker-detail { padding: 1.25rem; display: flex; flex-direction: column; min-width: 0; align-self: start; }
+
+.detail-hdr {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.125rem;
+}
+
+.detail-name { margin: 0; font-size: 0.9375rem; font-weight: 600; color: var(--color-text); }
+
+/* The reference's "(allowedPortRanges)" treatment for the API identifier. */
+.detail-api {
+  font-family: monospace;
+  font-size: 0.875rem;
+  color: var(--color-text-3);
+}
+
+.detail-count { font-size: 0.875rem; color: var(--color-text-3); white-space: nowrap; }
+
+/* ─── Action rows ────────────────────────────────────────────────── */
+/* Checkboxes rather than chips: an unselected chip and a read-only tag look
+   identical, so the row read as metadata already attached to the resource
+   instead of something to choose. Checkboxes (not switches) because the bulk
+   control above them is one — a select-all checkbox governing switches is
+   incoherent — and because a checkbox has the indeterminate state that control
+   needs for a partial selection. */
+.actions-block {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+/* Hidden input + drawn box, shared by the bulk row and the action rows. */
+.actions-block input { position: absolute; opacity: 0; pointer-events: none; }
+
+.check-box {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: 4px;
+  background: var(--color-surface);
+  color: #fff;
+  font-size: 0.625rem;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.actions-block input:checked + .check-box { background: var(--brand-primary); border-color: var(--brand-primary); }
+.actions-block input:not(:checked) + .check-box i { display: none; }
+.actions-block input:focus-visible + .check-box { box-shadow: 0 0 0 3px var(--color-focus-ring); }
+
+/* Partial selection — only the bulk control can reach this state. */
+.actions-block input:indeterminate + .check-box { background: var(--brand-primary); border-color: var(--brand-primary); }
+.actions-block input:indeterminate + .check-box::after {
+  content: '';
+  position: absolute;
+  width: 0.5rem;
+  height: 2px;
+  border-radius: 1px;
+  background: #fff;
+}
+
+.all-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem 0.875rem;
+  background: var(--color-surface-2);
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+  user-select: none;
+}
+
+.all-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-text-2);
+}
+
+.action-rows { list-style: none; margin: 0; padding: 0; }
+
+/* Same horizontal padding and gap as .all-row, so every checkbox in the block
+   sits on one vertical line — and so do the labels beside them. The banding on
+   the bulk row carries the hierarchy instead of an indent. */
+.action-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.875rem;
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.action-rows li:last-child .action-row { border-bottom: none; }
+.action-row:hover { background: var(--color-surface-2); }
+
+.action-name {
+  font-family: monospace;
+  font-size: 0.8125rem;
+  color: var(--color-text-2);
+}
+
+.action-row--on .action-name { color: var(--color-text); font-weight: 600; }
+
+@media (max-width: 820px) {
+  .picker { grid-template-columns: 1fr; }
+  .picker-list { border-right: none; border-bottom: 1px solid var(--color-border); }
+  .anchor-row { grid-template-columns: 1fr; }
+}

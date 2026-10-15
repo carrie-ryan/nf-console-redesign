@@ -1,0 +1,83 @@
+<header class="sd-header">
+  <div class="sd-avatar" aria-hidden="true"><i class="fa-solid fa-server"></i></div>
+  <div class="sd-heading">
+    <h2 class="sd-title">{{ service()?.name ?? serviceId() }}</h2>
+    <span class="sd-subtitle">Service details · {{ serviceId() }}</span>
+  </div>
+  <button type="button" class="sd-icon-btn" (click)="closed.emit()" aria-label="Close service details">
+    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+  </button>
+</header>
+
+@if (service(); as s) {
+  <div class="sd-body">
+    @if (waiting(); as w) {
+      <p class="sd-verdict" [class.sd-warn]="w.kind === 'waiting'" [class.sd-ready]="w.kind === 'ready'" [title]="w.title">{{ w.text }}</p>
+      <p class="sd-verdict-note">{{ w.title }}</p>
+    } @else {
+      <p class="sd-verdict" [class.sd-bad]="verdict().canConnect === 0 && verdict().tone !== 'warn'" [class.sd-warn]="verdict().tone === 'warn'">{{ verdict().text }}</p>
+    }
+
+    <section aria-labelledby="sd-props-h">
+      <h3 class="sd-h" id="sd-props-h">Details</h3>
+      <dl class="sd-props">
+        <div><dt>Status</dt><dd><app-pill [variant]="s.status" /></dd></div>
+        <div><dt>Protocol</dt><dd><span class="sd-proto">{{ s.protocol }}</span></dd></div>
+        <div><dt>Intercept</dt><dd class="mono">{{ s.interceptAddress }}</dd></div>
+        <div><dt>Host</dt><dd class="mono">{{ s.hostAddress }}</dd></div>
+        <div>
+          <dt>Attributes</dt>
+          <dd>
+            @for (a of s.attributes ?? []; track a) {
+              <span class="sd-attr">{{ a }}</span>
+            } @empty {
+              <span class="sd-muted">None</span>
+            }
+          </dd>
+        </div>
+        @if (s.encryptionRequired !== undefined) {
+          <div><dt>Encryption</dt><dd>{{ s.encryptionRequired ? 'Required' : 'Not required' }}</dd></div>
+        }
+        @if (s.terminatorStrategy) {
+          <div><dt>Terminator strategy</dt><dd>{{ s.terminatorStrategy }}</dd></div>
+        }
+        @for (t of tags(); track t[0]) {
+          <div><dt>Tag: {{ t[0] }}</dt><dd>{{ t[1] }}</dd></div>
+        }
+        @if (s.totalUsage !== undefined) {
+          <div><dt>Usage</dt><dd>{{ s.totalUsage }} GB</dd></div>
+        }
+        <div><dt>Created</dt><dd>{{ s.createdAt | date: 'medium' }}</dd></div>
+      </dl>
+    </section>
+
+    <section aria-labelledby="sd-pol-h">
+      <h3 class="sd-h" id="sd-pol-h">Policies</h3>
+      @for (lane of [{ label: 'Host (Bind)', items: policies().bind }, { label: 'Dial', items: policies().dial }]; track lane.label) {
+        <h4 class="sd-sub">{{ lane.label }} · {{ lane.items.length }}</h4>
+        <ul class="sd-list">
+          @for (p of lane.items; track p.id) {
+            <li>
+              <button type="button" class="sd-link" (click)="editPolicy.emit(p.id)">{{ p.name }}</button>
+              @if (p.mark) {<span class="sd-mark">{{ p.mark }}</span>}
+              <span class="sd-muted">{{ p.members }} {{ p.members === 1 ? 'identity' : 'identities' }}</span>
+            </li>
+          } @empty {
+            <li class="sd-muted">None</li>
+          }
+        </ul>
+      }
+    </section>
+
+    <section aria-labelledby="sd-rt-h">
+      <h3 class="sd-h" id="sd-rt-h">Routers</h3>
+      @if (routers().eligible.length) {
+        <p>{{ routers().onlineCount }} of {{ routers().eligible.length }} eligible routers online</p>
+      } @else {
+        <p class="sd-muted">No eligible routers — no service edge router policy covers it.</p>
+      }
+    </section>
+  </div>
+} @else {
+  <div class="sd-body"><p class="sd-muted">This service no longer exists.</p></div>
+}

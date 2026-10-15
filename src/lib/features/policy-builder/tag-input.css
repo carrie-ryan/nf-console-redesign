@@ -1,0 +1,79 @@
+/*
+ * Chip inputs, shared: the editors, the access-test form, the member drawer's tagging
+ * row and the identity lens's attributes. No :host rules — safe to add to any panel.
+ */
+
+/* Chip input — same look as the create-policy wizard's. Its search picker's list anchors here. */
+.tag-input-wrap {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 2.375rem;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.tag-input-wrap:focus-within {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem 0.2rem 0.625rem;
+  background: var(--brand-primary-light);
+  border: 1px solid var(--brand-primary);
+  border-radius: var(--radius-full);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--brand-primary);
+  line-height: 1;
+}
+
+.tag-chip i.fa-solid:not(.fa-xmark) { font-size: 0.6875rem; }
+
+.tag-chip.missing {
+  background: var(--color-warning-bg);
+  border-color: var(--color-warning-border);
+  color: var(--color-text);
+}
+
+.tag-chip-x {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font-size: 0.625rem;
+  cursor: pointer;
+}
+
+.tag-chip-x:hover { background: var(--color-surface-2); }
+.tag-chip-x:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--color-focus-ring); }
+
+/* An entry a fix adds to an existing policy. */
+.tag-chip.added {
+  border-color: var(--brand-accent);
+  background: color-mix(in srgb, var(--brand-accent) 12%, var(--color-surface));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand-accent) 25%, transparent);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

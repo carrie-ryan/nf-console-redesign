@@ -218,7 +218,7 @@
   background: var(--color-text);
   color: var(--color-text-inverse);
   border-radius: var(--radius-full);
-  font-size: 0.6875rem;
+  font-size: 0.875rem;
   font-weight: 700;
 }
 
@@ -244,7 +244,7 @@
 
 .assoc-empty {
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   color: var(--color-text-3);
   font-style: italic;
 }
@@ -274,4 +274,4 @@
   font-size: 0.9375rem;
 }
 
-.not-found i { color: var(--color-warning); font-size: 1.25rem; }
+.not-found i { color: var(--color-warning-text); font-size: 1.25rem; }

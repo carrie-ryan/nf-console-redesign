@@ -1,13 +1,13 @@
 <!-- Page header -->
 <div class="form-header">
   <div class="form-header-left">
-    <a routerLink="/posture-checks" class="btn-back" title="Back to Posture Checks">
+    <a routerLink="/posture-checks" [queryParams]="listParams()" class="btn-back" title="Back to Posture Checks">
       <i class="fa-solid fa-arrow-left"></i>
     </a>
-    <h1>Create Posture Check</h1>
+    <h1>{{ editingCheck ? 'Edit ' + editingCheck.name : 'Create Posture Check' }}</h1>
   </div>
   <button class="btn btn-primary" type="button" (click)="save()" [disabled]="!canSave">
-    <i class="fa-solid fa-check"></i> Save
+    <i class="fa-solid fa-check"></i> {{ editingCheck ? 'Save changes' : 'Save' }}
   </button>
 </div>
 
@@ -16,87 +16,290 @@
 
   <main class="form-main">
     <div class="form-panel">
+    <div class="form-layout" [class.form-layout--with-api]="prefs.isPowerUser()">
+      <div class="form-column">
 
-      <!-- Name -->
-      <div class="form-group">
-        <div class="field-hdr">
-          <label class="form-label" for="pc-name">NAME</label>
-          <span class="field-tag">REQUIRED</span>
-        </div>
-        <input
-          id="pc-name"
-          class="form-control"
-          [(ngModel)]="name"
-          placeholder="Name this posture check"
-          autocomplete="off" />
-      </div>
+        <!-- ─── Details ─────────────────────────────────────────────── -->
+        <section class="section-card" aria-labelledby="pc-details-heading">
+          <h2 class="card-heading" id="pc-details-heading">Details</h2>
 
-      <!-- Attributes -->
-      <div class="form-group">
-        <div class="field-hdr">
-          <label class="form-label" for="pc-attrs">SELECT OR CREATE POSTURE CHECK ATTRIBUTES</label>
-          <span class="field-tag">OPTIONAL</span>
-        </div>
-        <div class="tag-input-wrap">
-          @for (attr of attributes(); track attr) {
-            <span class="tag-chip">
-              {{ attr }}
-              <button class="tag-chip-x" type="button" (click)="removeAttribute(attr)" aria-label="Remove attribute">
-                <i class="fa-solid fa-xmark"></i>
-              </button>
-            </span>
+          <!-- Name -->
+          <div class="pc-field">
+            <div class="pc-field-hdr">
+              <label class="form-label" for="pc-name">NAME</label>
+              <span class="pc-field-tag">REQUIRED</span>
+            </div>
+            <input
+              id="pc-name"
+              class="form-control"
+              [(ngModel)]="name"
+              placeholder="Name this posture check"
+              autocomplete="off" />
+          </div>
+
+          <!-- Attributes -->
+          <div class="pc-field">
+            <div class="pc-field-hdr">
+              <label class="form-label" for="pc-attrs">SELECT OR CREATE POSTURE CHECK ROLE ATTRIBUTES</label>
+              <span class="pc-field-tag">OPTIONAL</span>
+            </div>
+            <div class="tag-input-wrap">
+              @for (attr of attributes(); track attr) {
+                <span class="tag-chip">
+                  {{ attr }}
+                  <button class="tag-chip-x" type="button" (click)="removeAttribute(attr)" aria-label="Remove role attribute">
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                </span>
+              }
+              <input
+                id="pc-attrs"
+                class="tag-bare-input"
+                [(ngModel)]="attributeInput"
+                (keydown)="onAttributeKeydown($event)"
+                [placeholder]="attributes().length === 0 ? 'Add role attributes to group Posture Checks' : ''"
+                autocomplete="off" />
+            </div>
+            <p class="pc-field-hint">Press Enter or comma to add. Prefix with # for role attributes.</p>
+          </div>
+
+          <!-- Type -->
+          <div class="pc-field">
+            <div class="pc-field-hdr">
+              <label class="form-label" for="pc-type">TYPE</label>
+              <span class="pc-field-tag">REQUIRED</span>
+            </div>
+            <app-option-picker triggerId="pc-type" panelLabel="Posture check types"
+              placeholder="Select posture check type…"
+              [options]="typeOptions" [value]="checkType" (picked)="checkType = $event" />
+            @if (selectedTypeDescription) {
+              <p class="type-desc">{{ selectedTypeDescription }}</p>
+            }
+          </div>
+        </section>
+
+        <!-- Per-type sub-form slot. No existing type has type-specific fields yet;
+             the empty cases are placeholders for types that will. -->
+        @switch (checkType) {
+          @case ('OS') {}
+          @case ('MFA') {}
+          @case ('Process') {}
+          @case ('Domain') {}
+          @case ('MAC') {}
+          @case ('WindowsDomain') {}
+          @case ('ServiceProvider') {
+            <!-- ─── Provider connection ─────────────────────────────────── -->
+            <section class="section-card" aria-labelledby="sp-heading">
+              <h2 class="card-heading card-heading--hinted" id="sp-heading">Provider connection</h2>
+              <p class="card-hint">Choose the provider that reports device posture, then pick the connection to read it from.</p>
+
+              <!-- Provider -->
+              <div class="pc-field">
+                <div class="pc-field-hdr">
+                  <label class="form-label" for="sp-provider">PROVIDER</label>
+                  <span class="pc-field-tag">REQUIRED</span>
+                </div>
+                <app-provider-picker [providers]="providerOptions" [selectedType]="providerType"
+                  (picked)="providerType = $event; onProviderChange()" />
+                @if (activeProvider?.help; as help) {
+                  <p class="pc-field-hint">{{ help }}</p>
+                }
+              </div>
+
+              <!-- Connection -->
+              @if (activeProvider && existingConnections.length > 0) {
+                <div class="pc-field">
+                  <div class="pc-field-hdr">
+                    <label class="form-label" for="sp-connection">CONNECTION</label>
+                    <span class="pc-field-tag">REQUIRED</span>
+                  </div>
+                  <app-connection-picker
+                    [connections]="existingConnections"
+                    [selectedId]="connectionId"
+                    [creating]="creatingConnection"
+                    (picked)="onPickConnection($event)"
+                    (editRequested)="startEdit($event)"
+                    (createRequested)="onCreateConnection()" />
+                  @if (selectedConnection; as conn) {
+                    <p class="conn-summary">
+                      <span class="field-badge" [class]="conn.mode === 'observe' ? 'pill-inactive' : 'pill-active'">{{ modeLabel(conn.mode) }}</span>
+                      {{ connectionSummary(conn) }}
+                    </p>
+                    <p class="conn-summary">
+                      @if (conn.mode === 'observe') {
+                        Dry run — checks using this connection record results but don't block access.
+                        <button type="button" class="btn btn-secondary btn-sm" (click)="setConnectionMode(conn, 'enforce')">Start enforcing</button>
+                      } @else {
+                        Checks using this connection block access when they fail.
+                        <button type="button" class="btn btn-secondary btn-sm" (click)="setConnectionMode(conn, 'observe')">Switch to observe</button>
+                      }
+                    </p>
+                    @if (connectionSavedNote) {
+                      <p class="conn-summary conn-saved" role="status">
+                        <i class="fa-solid fa-circle-check" aria-hidden="true"></i> {{ connectionSavedNote }}
+                      </p>
+                    }
+                    @if (needsAttention(conn)) {
+                      <div class="pc-warning" role="status">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <div>
+                          <strong>Needs attention.</strong>
+                          {{ conn.lastVerifiedAt ? 'This connection is failing verification' : 'This connection has never verified successfully' }}
+                          — checks using it can't evaluate devices until it's fixed.
+                        </div>
+                      </div>
+                    }
+                  }
+                </div>
+              }
+            </section>
+
+            @if (activeProvider; as spec) {
+              @if (showCredentialForm) {
+                <!-- ─── New / edit connection — a fresh form each time it opens ─── -->
+                @for (session of [connectionFormSession]; track session) {
+                  <app-provider-connection-form [providerType]="spec.providerType" [connection]="editingConnection"
+                    [cancellable]="existingConnections.length > 0"
+                    (saved)="onConnectionSaved($event)" (cancelled)="cancelNewConnection()" />
+                }
+              }
+            }
+
+            <!-- ─── Attributes ──────────────────────────────────────────── -->
+            <section class="section-card" aria-labelledby="sp-attr-heading">
+              <div class="card-hdr">
+                <h2 class="card-heading" id="sp-attr-heading">Attributes</h2>
+                @if (includedSummary; as pill) {
+                  <span class="count-pill">{{ pill }}</span>
+                }
+              </div>
+              @if (connectionId === null) {
+                <p class="card-hint">Conditions the provider's device data must meet.</p>
+                <p class="attr-placeholder">Add or select a connection to configure attributes.</p>
+              } @else if (activeProvider; as spec) {
+                <p class="card-hint" [class.card-hint--unmet]="conditions.length === 0">
+                  @if (spec.multi) {
+                    Include one or more attributes. A device must pass every included condition.
+                  } @else {
+                    The condition the provider's device data must meet.
+                  }
+                  <strong>At least one condition is required.</strong>
+                </p>
+                <div class="attr-list">
+                  @for (a of spec.attributes; track a.id) {
+                    @let d = conditionDrafts[a.id];
+                    @let on = isIncluded(spec, a);
+                    @let base = 'sp-attr-' + a.id;
+                    <div class="attr-row" [class.attr-row-off]="!on" [id]="base">
+                      <div class="attr-row-hdr">
+                        @if (spec.multi) {
+                          <label class="attr-include">
+                            <input type="checkbox" [id]="base + '-include'" [(ngModel)]="d.included" />
+                            <span class="attr-name">{{ a.label }}</span>
+                          </label>
+                        } @else {
+                          <span class="attr-name">{{ a.label }}</span>
+                        }
+                        @if (a.sub) {
+                          <span class="attr-sub">{{ a.sub }}</span>
+                        }
+                      </div>
+
+                      @if (on) {
+                        <div class="attr-control">
+                          @if (a.kind === 'range' || a.kind === 'count') {
+                            <app-option-picker [inline]="true" [triggerId]="base + '-op'"
+                              [ariaLabel]="a.label + ' operator'" [panelLabel]="a.label + ' operators'"
+                              [options]="numericOps(a)" [value]="d.op" (picked)="d.op = $event" />
+                            <input type="number" class="form-control attr-num" [id]="base + '-value'" [(ngModel)]="d.num"
+                              [attr.min]="numMin(a)" [attr.max]="a.max ?? null"
+                              [attr.aria-label]="a.label + (d.op === 'between' ? ' lower bound' : ' value')" />
+                            @if (d.op === 'between') {
+                              <span class="attr-lead">and</span>
+                              <input type="number" class="form-control attr-num" [id]="base + '-value2'" [(ngModel)]="d.num2"
+                                [attr.min]="numMin(a)" [attr.max]="a.max ?? null"
+                                [attr.aria-label]="a.label + ' upper bound'" />
+                            }
+                          } @else if (a.kind === 'enum') {
+                            <div class="opt-chips" role="group" [attr.aria-label]="a.label + ' allowed values'">
+                              @for (v of a.values ?? []; track v) {
+                                <button type="button" class="opt-chip" [class.opt-chip-on]="d.selected.includes(v)"
+                                  [attr.aria-pressed]="d.selected.includes(v)" (click)="toggleEnumValue(a, d, v)">{{ v }}</button>
+                              }
+                            </div>
+                          } @else if (a.kind === 'bool') {
+                            <span class="attr-lead">Must be</span>
+                            <div class="opt-chips" role="group" [attr.aria-label]="a.label + ' required value'">
+                              <button type="button" class="opt-chip" [class.opt-chip-on]="d.bool"
+                                [attr.aria-pressed]="d.bool" (click)="d.bool = true">Yes</button>
+                              <button type="button" class="opt-chip" [class.opt-chip-on]="!d.bool"
+                                [attr.aria-pressed]="!d.bool" (click)="d.bool = false">No</button>
+                            </div>
+                          } @else if (a.kind === 'freshness') {
+                            <label class="attr-lead" [for]="base + '-window'">Seen within the last</label>
+                            <app-option-picker [inline]="true" [triggerId]="base + '-window'"
+                              [panelLabel]="a.label + ' windows'"
+                              [options]="a.values ?? []" [value]="d.window" (picked)="d.window = $event" />
+                          } @else if (a.kind === 'text') {
+                            <label class="attr-lead" [for]="base + '-value'">Value is</label>
+                            <input class="form-control attr-text" [id]="base + '-value'" [(ngModel)]="d.text" autocomplete="off" />
+                          } @else if (a.kind === 'fixed') {
+                            <p class="attr-fixed">
+                              <i class="fa-solid fa-circle-check"></i> Device must be compliant (no configuration)
+                            </p>
+                          }
+                        </div>
+                        @if (a.kind === 'enum') {
+                          <p class="pc-field-hint">Passes when the device's {{ a.label | lowercase }} is any selected value.</p>
+                        }
+                        @if (attrError(a, d); as err) {
+                          <p class="pc-field-hint attr-error">{{ err }}</p>
+                        }
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </section>
+
+            <!-- ─── When posture data is unavailable ─────────────────────── -->
+            <section class="section-card" aria-labelledby="sp-unavail-heading">
+              <div class="card-hdr">
+                <h2 class="card-heading" id="sp-unavail-heading">When posture data is unavailable</h2>
+              </div>
+              <p class="card-hint">
+                These decide the check result when a device can't be evaluated — pick pass or fail per situation.
+                Failing is the safe default.
+              </p>
+              <app-unavailable-policy-editor [(policy)]="unavailablePolicy" [(maxAgeSeconds)]="maxAgeSeconds" />
+            </section>
           }
-          <input
-            id="pc-attrs"
-            class="tag-bare-input"
-            [(ngModel)]="attributeInput"
-            (keydown)="onAttributeKeydown($event)"
-            [placeholder]="attributes().length === 0 ? 'Add attributes to group Posture Checks' : ''"
-            autocomplete="off" />
-        </div>
-        <p class="field-hint">Press Enter or comma to add. Prefix with # for role attributes.</p>
-      </div>
-
-      <!-- Type -->
-      <div class="form-group">
-        <div class="field-hdr">
-          <label class="form-label" for="pc-type">TYPE</label>
-          <span class="field-tag">REQUIRED</span>
-        </div>
-        <select id="pc-type" class="form-control" [(ngModel)]="checkType">
-          <option value="" disabled>Select posture check type...</option>
-          @for (opt of typeOptions; track opt.value) {
-            <option [value]="opt.value">{{ opt.label }}</option>
-          }
-        </select>
-        @if (selectedTypeDescription) {
-          <p class="type-desc">{{ selectedTypeDescription }}</p>
+          @default {}
         }
-      </div>
 
+      </div><!-- /form-column -->
+
+      <!-- Right: API call for the current form state (power users only) -->
+      @if (prefs.isPowerUser()) {
+        <aside class="api-column">
+          <app-api-calls-panel [url]="apiUrl" [json]="jsonPreview">
+            @if (checkType === 'ServiceProvider') {
+              The form shows a curated set of attributes per provider; the payload keeps one normalized
+              shape (<code>connectionId</code> + <code>conditions[]</code>) for every provider.
+            }
+          </app-api-calls-panel>
+        </aside>
+      }
+    </div><!-- /form-layout -->
     </div><!-- /form-panel -->
 
     <!-- Footer -->
     <div class="form-footer">
-      <a routerLink="/posture-checks" class="btn btn-secondary">Cancel</a>
+      <a routerLink="/posture-checks" [queryParams]="listParams()" class="btn btn-secondary">Cancel</a>
       <button class="btn btn-primary" type="button" (click)="save()" [disabled]="!canSave">
-        <i class="fa-solid fa-check"></i> Save
+        <i class="fa-solid fa-check"></i> {{ editingCheck ? 'Save changes' : 'Save' }}
       </button>
     </div>
   </main>
-
-  <!-- Right: API Calls panel (power users only) -->
-  @if (prefs.isPowerUser()) {
-    <div class="api-panel">
-      <div class="api-panel-hdr">
-        <span class="api-panel-title">API Calls</span>
-        <button class="btn btn-primary btn-sm" type="button" (click)="copyAsCLI()">Copy as CLI</button>
-      </div>
-      <div class="api-panel-body">
-        <div class="api-url" [title]="apiUrl">{{ apiUrl }}</div>
-        <pre class="dev-json">{{ jsonPreview }}</pre>
-      </div>
-    </div>
-  }
 
 </div><!-- /form-body -->

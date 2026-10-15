@@ -1,0 +1,224 @@
+<div class="node-hdr">
+  <i [class]="group().kind === 'named' ? 'fa-solid fa-user' : 'fa-solid fa-hashtag'" aria-hidden="true"></i>
+  @if (!inContainer()) {
+    <button type="button" class="node-policy" [title]="group().policyName + ' (' + group().policyId + ')'"
+      [attr.aria-label]="'Edit policy ' + group().policyName" [attr.aria-pressed]="selected()" (click)="edit($event)">
+      {{ group().policyName }}
+    </button>
+    @if (statusChipCount() === 1) {
+      <ng-container *ngTemplateOutlet="statusChips" />
+    }
+  }
+  <span class="node-kind" aria-hidden="true">{{ kindTag() }}</span>
+  @if (coverRows().length > 1) {
+    <span class="cover" (click)="$event.stopPropagation()" (mouseenter)="coverOpen.set(true)" (mouseleave)="coverOpen.set(false)"
+      (focusin)="coverOpen.set(true)" (focusout)="coverBlur($event)" (keydown.escape)="coverOpen.set(false)">
+      <button type="button" class="cover-badge" [attr.aria-expanded]="coverOpen()" [attr.aria-controls]="group().id + ':cover'"
+        [attr.aria-label]="'Covers ' + coverRows().length + ' services'" (click)="toggleCover($event)">
+        <i class="fa-solid fa-layer-group" aria-hidden="true"></i>{{ coverRows().length }}
+      </button>
+      @if (coverOpen()) {
+        <ul class="cover-pop" [id]="group().id + ':cover'" aria-label="Services this policy covers">
+          @for (s of coverRows(); track s.id) {
+            @switch (s.state) {
+              @case ('focus') {
+                <li class="cover-this">{{ s.name }} <span class="cover-this-tag">this service</span></li>
+              }
+              @case ('onCanvas') {
+                <li class="cover-this cover-on">
+                  <i class="fa-solid fa-check" aria-hidden="true"></i>
+                  <span class="cover-on-name">{{ s.name }}</span>
+                  <button type="button" class="cover-remove" [attr.aria-label]="'Remove ' + s.name + ' from the canvas'"
+                    [title]="'Remove from the canvas'" (click)="remove(s.id, $event)">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                  </button>
+                </li>
+              }
+              @default {
+                <li>
+                  <button type="button" class="cover-link" [attr.aria-disabled]="s.state === 'full' ? 'true' : null"
+                    [title]="s.state === 'full' ? 'The canvas shows at most 4 services — remove one first' : 'Add ' + s.name + ' to the canvas'"
+                    [attr.aria-label]="s.state === 'full' ? s.name + ' — the canvas shows at most 4 services, remove one first' : 'Add ' + s.name + ' to the canvas'"
+                    (click)="add(s, $event)">
+                    <i class="fa-solid fa-plus" aria-hidden="true"></i>{{ s.name }}
+                  </button>
+                </li>
+              }
+            }
+          }
+        </ul>
+      }
+    </span>
+  }
+  <span class="g-menu-wrap" (click)="$event.stopPropagation()" (keydown)="menuOpen() && menuKey($event)">
+    <button type="button" class="g-menu-btn" aria-haspopup="menu" [attr.aria-expanded]="menuOpen()"
+      [attr.aria-controls]="group().id + ':menu'" [attr.aria-label]="'More for ' + group().policyName" title="Edit policy · Routers"
+      (click)="toggleMenu()">
+      <i class="fa-solid fa-ellipsis" aria-hidden="true"></i>
+    </button>
+    @if (menuOpen()) {
+      <span class="g-menu" role="menu" [id]="group().id + ':menu'" [attr.aria-label]="group().policyName">
+        <button type="button" role="menuitem" class="g-menu-item" tabindex="-1" (click)="menuEdit()">
+          <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> Edit policy
+        </button>
+        @if (!locked()) {
+          <button type="button" role="menuitem" class="g-menu-item g-menu-routers" tabindex="-1" (click)="menuRouters()">
+            <i class="fa-solid fa-route" aria-hidden="true"></i> Routers
+          </button>
+        }
+      </span>
+    }
+  </span>
+</div>
+@if (statusChipCount() > 1) {
+  <!-- Several status chips: their own line under the name, so they never squeeze it. -->
+  <div class="node-marks"><ng-container *ngTemplateOutlet="statusChips" /></div>
+}
+@if (layers.expiry() && !inContainer() && expiry()?.at; as at) {
+  <!-- Inside a container, the container carries it. -->
+  <p class="node-expiry"><app-expiry-pill [expiresAt]="at" /></p>
+}
+@if (layers.posture() && group().checks.length) {
+  <p class="checks">
+    @for (k of group().checks; track k.id) {
+      <button type="button" class="check-chip" [title]="'Requires posture check ' + k.name + ' — details'"
+        [attr.aria-label]="'Posture check ' + k.name + ' — details'" (click)="openCheck(k.id, $event)">
+        <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>{{ k.name }}
+      </button>
+    }
+  </p>
+}
+@if (group().appliesToAll) {
+  <p class="all-svcs" title="This policy covers the service through #all" aria-hidden="true">
+    <i class="fa-solid fa-globe" aria-hidden="true"></i> applies to all services
+  </p>
+}
+@if (group().kind === 'named') {
+  <!-- Named members ARE the summary: each name links to the identity lens. -->
+  <p class="summary">
+    @for (n of group().named!; track n.id; let last = $last) {
+      @if (group().memberIds.includes(n.id)) {
+        @if (routerIds().has(n.id)) {<ng-container *ngTemplateOutlet="routerMark" />}
+        <a class="member-link" [routerLink]="[]" [queryParams]="{ identity: n.id }" queryParamsHandling="merge"
+          (click)="$event.stopPropagation()">{{ n.name }}</a>
+        @if (layers.expiry() && expiry()?.entries?.get(n.id); as at) {<app-expiry-pill class="member-expiry" [expiresAt]="at" />}
+        @if (layers.hosts() && hostState().get(n.id); as hs) {<ng-container *ngTemplateOutlet="hostMark; context: { $implicit: hs }" />}
+        @if (layers.hosts() && group().lane === 'bind') {<ng-container *ngTemplateOutlet="hostEdit; context: { $implicit: n }" />}
+      } @else {
+        <span>{{ n.name }}</span>
+      }@if (!last) {, }
+    }
+  </p>
+} @else {
+  <p class="summary" aria-hidden="true">{{ visible().summary }}</p>
+}
+@if (group().kind === 'rule' && group().memberCount > 0) {
+  <ul class="members">
+    @for (m of shownMembers(); track m.id) {
+      <li>
+        @if (routerIds().has(m.id)) {<ng-container *ngTemplateOutlet="routerMark" />}
+        <a class="member-link" [title]="m.name" [routerLink]="[]" [queryParams]="{ identity: m.id }" queryParamsHandling="merge"
+          (click)="$event.stopPropagation()">{{ m.name }}</a>
+        @if (layers.hosts() && m.state) {<ng-container *ngTemplateOutlet="hostMark; context: { $implicit: m.state }" />}
+        @if (layers.hosts() && group().lane === 'bind') {<ng-container *ngTemplateOutlet="hostEdit; context: { $implicit: m }" />}
+      </li>
+    }
+    @if (hiddenMembers() > 0) {
+      <li>
+        <button type="button" class="more" aria-haspopup="dialog" [attr.aria-label]="'Show all ' + group().memberCount + ' members'"
+          (click)="openMembers($event)">+{{ hiddenMembers().toLocaleString('en-US') }} more</button>
+      </li>
+    }
+  </ul>
+}
+@if (statusRows().length) {
+  <!-- Several services: "N authorized" once, then one line per service this group has an edge to. -->
+  <p class="rows-authorized" aria-hidden="true" [attr.title]="chipTitle(rowsAuthorized())">{{ rowsAuthorized() }}</p>
+  <ul class="status-rows" [class.has-hot]="hotServiceId() !== null">
+    @for (r of statusRows(); track r.serviceId) {
+      <!-- Line 1: swatch, service, route status. Line 2 (indented under the name): the extras. -->
+      <li class="status-row" [class.row-hot]="r.serviceId === hotServiceId()">
+        <svg class="swatch" width="18" height="6" aria-hidden="true"><line [attr.class]="'swatch-' + r.tone" x1="1" y1="3" x2="17" y2="3" /></svg>
+        <span class="row-main">
+          <span class="row-svc" [title]="r.serviceName">{{ r.serviceName }}</span>
+          <span class="row-counts">
+            <ng-container *ngTemplateOutlet="rowParts; context: { $implicit: r.parts, r: r }" />
+          </span>
+        </span>
+        @if (shownParts(r.extras).length) {
+          <span class="row-extras">
+            <ng-container *ngTemplateOutlet="rowParts; context: { $implicit: shownParts(r.extras), r: r }" />
+          </span>
+        }
+      </li>
+    }
+  </ul>
+} @else if (statusShown()) {
+  <p class="status">
+    @for (c of shownParts(visible().counts); track c.text; let first = $first) {
+      @if (!first) {<span class="sep" aria-hidden="true"> · </span>}
+      @if (c.gap; as kind) {
+        <button type="button" [class]="'gap-link tone-' + c.tone" (click)="openGap(kind, $event)"
+          [attr.aria-label]="c.text + afterDraft() + ' — show why'" [attr.title]="chipTitle(c.text)">{{ c.text }}</button>
+      } @else if (c.posture) {
+        <ng-container *ngTemplateOutlet="posturePart; context: { $implicit: c, serviceId: null, on: '' }" />
+      } @else {
+        <span [class]="'tone-' + c.tone" aria-hidden="true" [attr.title]="chipTitle(c.text)">{{ c.text }}</span>
+      }
+    }
+  </p>
+}
+
+<!-- A per-service row's phrases, " · "-separated; gap and posture phrases are links. -->
+<ng-template #rowParts let-parts let-r="r">
+  @for (c of parts; track c.text; let first = $first) {
+    @if (!first) {<span class="sep" aria-hidden="true"> · </span>}
+    @if (c.gap; as kind) {
+      <button type="button" [class]="'gap-link tone-' + c.tone" (click)="openRowGap(r.serviceId, kind, $event)"
+        [attr.aria-label]="c.text + ' on ' + r.serviceName + afterDraft() + ' — show why'" [attr.title]="chipTitle(c.text)">{{ c.text }}</button>
+    } @else if (c.posture) {
+      <ng-container *ngTemplateOutlet="posturePart; context: { $implicit: c, serviceId: r.serviceId, on: ' on ' + r.serviceName }" />
+    } @else {
+      <span [class]="'tone-' + c.tone" aria-hidden="true" [attr.title]="chipTitle(c.text)">{{ c.text }}</span>
+    }
+  }
+</ng-template>
+
+<!-- A host member's default hosting precedence / cost. -->
+<ng-template #hostEdit let-m>
+  <button type="button" class="host-edit" [attr.aria-label]="'Hosting defaults for ' + m.name" title="Hosting defaults"
+    (click)="openHost(m.id, $event)"><i class="fa-solid fa-sliders" aria-hidden="true"></i></button>
+</ng-template>
+
+<ng-template #hostMark let-hs>
+  <span class="host-mark" [class.standby]="hs === 'standby'" [class.blocked]="hs === 'blocked'" [title]="hostTitle(hs)">{{ hs }}</span>
+</ng-template>
+
+<!-- "N blocked by posture" (a link) / "N bypassed" (an amber shield chip): both open the posture panel. -->
+<ng-template #posturePart let-c let-serviceId="serviceId" let-on="on">
+  @if (c.posture === 'bypassed') {
+    <button type="button" class="bypass-chip" (click)="openPosture(serviceId, $event)"
+      [attr.aria-label]="c.text + on + afterDraft() + ' — posture checks skipped through another policy; show why'" [attr.title]="chipTitle(c.text)">
+      <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>{{ c.text }}
+    </button>
+  } @else {
+    <button type="button" [class]="'gap-link tone-' + c.tone" (click)="openPosture(serviceId, $event)"
+      [attr.aria-label]="c.text + on + afterDraft() + ' — show why'" [attr.title]="chipTitle(c.text)">{{ c.text }}</button>
+  }
+</ng-template>
+
+<!-- The status chips: draft state (edited / new / proposed), then "changed in live". -->
+<ng-template #statusChips>
+  @if (mark(); as m) {
+    <span class="node-mark" [class.node-mark-new]="m === 'new'" [class.node-mark-proposed]="m === 'proposed'"
+      aria-hidden="true">{{ m }}</span>
+  }
+  @if (liveChanged()) {
+    <span class="node-live" aria-hidden="true">changed in live</span>
+  }
+</ng-template>
+
+<!-- A router identity among the members. -->
+<ng-template #routerMark>
+  <i class="fa-solid fa-tower-broadcast member-router" title="Router identity" aria-hidden="true"></i>
+</ng-template>

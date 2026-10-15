@@ -1,0 +1,25 @@
+<div class="up-list">
+  @for (r of rows; track r.key) {
+    @let current = policy()[r.key];
+    <div class="up-row">
+      <span class="up-label" [id]="'up-' + r.key">{{ r.label }}</span>
+      <div class="opt-chips" role="group" [attr.aria-labelledby]="'up-' + r.key">
+        @for (o of outcomes; track o) {
+          <button type="button" class="opt-chip" [class.opt-chip-on]="current === o"
+            [attr.aria-pressed]="current === o"
+            (click)="set(r.key, o)">{{ o === 'pass' ? 'Pass' : 'Fail' }}</button>
+        }
+      </div>
+      @if (r.key === 'onStale') {
+        <label class="up-sub">
+          Data is considered stale after
+          <input #maxAge type="number" class="up-num" min="1" step="1" required
+            [value]="maxAgeSeconds()"
+            (input)="setMaxAge(maxAge.value)" (blur)="resetMaxAgeInput(maxAge)" />
+          seconds
+          <span class="up-echo">({{ maxAgeLabel() }})</span>
+        </label>
+      }
+    </div>
+  }
+</div>

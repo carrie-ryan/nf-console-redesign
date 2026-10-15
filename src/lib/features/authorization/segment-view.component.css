@@ -57,9 +57,9 @@
 .stat-value { font-size: 1.375rem; font-weight: 700; color: var(--color-text); line-height: 1; }
 .stat-label { font-size: 0.6875rem; color: var(--color-text-3); text-transform: uppercase; letter-spacing: 0.04em; }
 .stat-ok { background: var(--color-success-bg); border-color: var(--color-success-border); }
-.stat-ok .stat-value { color: var(--color-success); }
+.stat-ok .stat-value { color: var(--color-success-text); }
 .stat-bad { background: var(--color-danger-bg); border-color: var(--color-danger-border); }
-.stat-bad .stat-value { color: var(--color-danger); }
+.stat-bad .stat-value { color: var(--color-danger-text); }
 
 /* ─── segmented control (Graph | Matrix) — the only interactive element ── */
 .seg-toggle {
@@ -148,7 +148,7 @@
 /* ─── surface panel (each takes the FULL content width) ──────────────── */
 .surface { padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; }
 .surface-head h3 { margin: 0 0 0.2rem; font-size: 1rem; font-weight: 700; color: var(--color-text); }
-.surface-head p { margin: 0; font-size: 0.78125rem; line-height: 1.5; color: var(--color-text-2); }
+.surface-head p { margin: 0; font-size: 0.875rem; line-height: 1.5; color: var(--color-text-2); }
 .surface-head em { font-style: normal; font-weight: 600; color: var(--color-text-2); }
 
 /* ─── A. graph ───────────────────────────────────────────────────────── */
@@ -284,10 +284,10 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   color: var(--color-text-2);
 }
-.legend-muted { opacity: 0.75; }
+.legend-muted { color: var(--color-text-3); } /* readable: opacity took it under 4.5:1 */
 .lg-svg { overflow: visible; }
 
 .lg-chip { width: 22px; height: 14px; border-radius: 3px; display: inline-block; }
@@ -373,7 +373,7 @@
   margin-left: 0.35rem;
   padding: 0.05rem 0.35rem;
   border-radius: var(--radius-full);
-  font-size: 0.5625rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -381,7 +381,7 @@
 }
 .catch-tag { background: var(--color-surface-3); color: var(--color-text-2); }
 .reason-isolated { background: var(--color-text); color: var(--color-text-inverse); }
-.reason-unresolvable { background: var(--color-warning-bg); color: var(--color-warning); border: 1px solid var(--color-warning-border); }
+.reason-unresolvable { background: var(--color-warning-bg); color: var(--color-warning-text); border: 1px solid var(--color-warning-border); }
 
 .row-head-isolated { border-left: 3px solid var(--color-text); }
 .row-head-unresolvable { border-left: 3px solid var(--color-warning); }
@@ -407,18 +407,18 @@
   z-index: 1;
 }
 .cell-glyph { font-size: 0.875rem; line-height: 1; display: block; }
-.cell-count { font-size: 0.6875rem; font-weight: 600; display: block; margin-top: 0.1rem; }
+.cell-count { font-size: 0.875rem; font-weight: 600; display: block; margin-top: 0.1rem; }
 
 /* colorblind-safe: color + glyph + count, never color alone */
 .cell-full {
   background: var(--color-success-bg);
-  color: var(--color-success);
+  color: var(--color-success-text);
 }
-.cell-full .cell-count { color: var(--color-success); }
+.cell-full .cell-count { color: var(--color-success-text); }
 
 .cell-partial {
   background: var(--color-warning-bg);
-  color: var(--color-warning);
+  color: var(--color-warning-text);
   background-image: repeating-linear-gradient(
     45deg,
     transparent,
@@ -427,7 +427,7 @@
     rgba(202, 138, 4, 0.12) 8px
   );
 }
-.cell-partial .cell-count { color: var(--color-warning); }
+.cell-partial .cell-count { color: var(--color-warning-text); }
 
 .cell-none {
   background: var(--color-surface);

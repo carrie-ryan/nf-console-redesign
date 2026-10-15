@@ -88,14 +88,14 @@
   border-radius: var(--radius-full);
   background: var(--brand-primary-light);
   color: var(--brand-primary);
-  font-size: 0.6875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: 0.01em;
 }
 
 .ob-nf-badge i { font-size: 0.625rem; }
 
-.ob-preprov-sub { font-size: 0.8125rem; color: var(--color-text-2); }
+.ob-preprov-sub { font-size: 0.875rem; color: var(--color-text-2); }
 
 .ob-preprov-status {
   display: inline-flex;
@@ -104,7 +104,7 @@
   flex-shrink: 0;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--color-success);
+  color: var(--color-success-text);
 }
 
 /* ─── Add-another-router affordance ──────────────────────────────────── */
@@ -140,7 +140,7 @@
 
 .ob-add-router-text { display: flex; flex-direction: column; gap: 0.125rem; }
 .ob-add-router-title { font-size: 0.875rem; font-weight: 600; color: var(--color-text); }
-.ob-add-router-sub { font-size: 0.75rem; color: var(--color-text-2); }
+.ob-add-router-sub { font-size: 0.875rem; color: var(--color-text-2); }
 
 /* ─── Second-router card header ──────────────────────────────────────── */
 .ob-second-head {
@@ -168,7 +168,7 @@
   transition: color var(--transition-fast), background var(--transition-fast);
 }
 
-.ob-second-remove:hover { color: var(--color-danger, #d33); background: var(--color-surface-2); }
+.ob-second-remove:hover { color: var(--color-danger-text); background: var(--color-surface-2); }
 
 /* Extensibility hint beneath the second router — cap is a POC limit, not a wall. */
 .ob-more-note {
@@ -176,7 +176,7 @@
   align-items: center;
   gap: 0.5rem;
   margin: 1rem 0 0;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   color: var(--color-text-3);
 }
 
@@ -186,7 +186,7 @@
 
 .field-hint {
   margin: 0.375rem 0 0;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   color: var(--color-text-3);
 }
 
@@ -299,7 +299,7 @@ select.form-control:disabled { cursor: not-allowed; opacity: 0.6; }
 }
 
 .ob-hosting-title { font-size: 0.875rem; font-weight: 600; color: var(--color-text); }
-.ob-hosting-desc { font-size: 0.75rem; line-height: 1.4; color: var(--color-text-2); }
+.ob-hosting-desc { font-size: 0.875rem; line-height: 1.4; color: var(--color-text-2); }
 
 /* NetFoundry hosting sub-fields */
 .ob-hosting-fields {
@@ -379,7 +379,7 @@ select.form-control:disabled { cursor: not-allowed; opacity: 0.6; }
   line-height: 1.5;
 }
 
-.tag-bare-input::placeholder { color: var(--color-text-3); }
+.tag-bare-input::placeholder { color: var(--color-text-disabled); }
 
 /* ─── Saved state (registration-key / provisioned) ──────────────────── */
 .ob-saved { display: flex; flex-direction: column; gap: 1rem; }
@@ -394,9 +394,9 @@ select.form-control:disabled { cursor: not-allowed; opacity: 0.6; }
   border-radius: var(--radius-md);
 }
 
-.ob-saved-icon { color: var(--color-success); font-size: 1.25rem; flex-shrink: 0; }
+.ob-saved-icon { color: var(--color-success-text); font-size: 1.25rem; flex-shrink: 0; }
 .ob-saved-title { margin: 0; font-size: 0.875rem; font-weight: 600; color: var(--color-text); }
-.ob-saved-sub { margin: 0.125rem 0 0; font-size: 0.8125rem; color: var(--color-text-2); }
+.ob-saved-sub { margin: 0.125rem 0 0; font-size: 0.875rem; color: var(--color-text-2); }
 
 /* Registration key row */
 .ob-regkey {
@@ -486,4 +486,4 @@ select.form-control:disabled { cursor: not-allowed; opacity: 0.6; }
 .ob-fake-link:hover { text-decoration: underline; }
 .ob-fake-link i { font-size: 0.6875rem; }
 
-.ob-outside-note { font-size: 0.8125rem; color: var(--color-text-3); }
+.ob-outside-note { font-size: 0.875rem; color: var(--color-text-3); }

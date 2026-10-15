@@ -1,0 +1,71 @@
+@let a = access();
+<header class="ra-header">
+  <div class="ra-avatar" aria-hidden="true"><i class="fa-solid fa-route"></i></div>
+  <div class="ra-heading">
+    <h2 class="ra-title">{{ a?.title ?? (subject().kind === 'service' ? 'Routing' : 'Routers') }}</h2>
+    @if (a) {<span class="ra-subtitle">{{ a.subtitle }}</span>}
+  </div>
+  <button type="button" class="ra-icon-btn" (click)="closed.emit()" [attr.aria-label]="'Close ' + (a?.title ?? 'panel')">
+    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+  </button>
+</header>
+
+<div class="ra-body">
+  @if (a) {
+    <section aria-labelledby="ra-list-h">
+      <h3 class="ra-h" id="ra-list-h">{{ a.target === 'serviceEdgeRouterPolicy' ? 'Service edge router policies' : 'Edge router policies' }}</h3>
+      @for (p of a.policies; track p.id) {
+        <article class="ra-policy" [attr.aria-label]="p.name">
+          <p class="ra-policy-head">
+            <button type="button" class="ra-name ra-link" [attr.aria-label]="(p.system ? 'View system policy ' : 'Edit ') + p.name"
+              (click)="open(p.id)">{{ p.name }}</button>
+            @if (p.system) {
+              <span class="system-tag" title="Created by Ziti for this router — read-only"><i class="fa-solid fa-lock" aria-hidden="true"></i> system</span>
+            }
+          </p>
+          <p class="ra-how">Matches {{ p.how }}@if (p.covers) { · {{ p.covers }}}</p>
+          <ul class="ra-routers" [attr.aria-label]="'Routers in ' + p.name">
+            @for (r of p.routers; track r.id) {
+              <li [class.offline]="!r.isOnline">
+                <span class="dot" aria-hidden="true"></span>
+                <span class="r-name">{{ r.name }}</span>
+                <span class="r-state">{{ r.isOnline ? 'online' : 'offline' }}</span>
+              </li>
+            } @empty {
+              <li class="none">No router matches its router side.</li>
+            }
+          </ul>
+        </article>
+      } @empty {
+        <p class="ra-empty">{{ a.empty }}</p>
+      }
+    </section>
+
+    <section class="ra-add" aria-labelledby="ra-add-h">
+      <h3 class="ra-h" id="ra-add-h">{{ a.target === 'serviceEdgeRouterPolicy' ? 'Add routing' : 'Add routers' }}</h3>
+      @if (pickerItems().length) {
+        <label class="ra-sub-h" for="ra-extend">{{ extendLabel() }}</label>
+        <div class="tag-input-wrap">
+          <app-search-picker inputId="ra-extend" [items]="pickerItems()" [noun]="a.nounMany"
+            [placeholder]="'Search ' + a.nounMany" (picked)="extend($event)" />
+        </div>
+        <p class="ra-hint">Opens it in the editor with the change marked; it reaches the draft when you add it there.</p>
+      } @else {
+        <p class="ra-sub-h">{{ extendLabel() }}</p>
+        <p class="ra-muted">{{ a.extendNote ?? 'No other ' + a.noun + ' can take ' + (subject().kind === 'group' ? 'them' : 'it') + '.' }}</p>
+      }
+      @if (pickerItems().length && a.extendNote) {
+        <p class="ra-muted">{{ a.extendNote }}</p>
+      }
+      <button type="button" class="btn btn-secondary btn-sm ra-new" (click)="create()">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i> New {{ a.noun }}
+      </button>
+    </section>
+
+    <p class="ra-footer">
+      <a routerLink="/policies" [queryParams]="{ tab: a.listTab }" class="ra-all">{{ a.listLabel }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+    </p>
+  } @else {
+    <p class="ra-muted">This isn't in the draft any more.</p>
+  }
+</div>

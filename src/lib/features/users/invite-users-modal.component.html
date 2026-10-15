@@ -1,0 +1,163 @@
+<app-modal-shell (dismissed)="cancel()">
+  <span modal-title>
+    <span class="ium-title">
+      <span class="ium-illus" aria-hidden="true"><i class="fa-solid fa-user-plus"></i></span>
+      Invite new users
+    </span>
+  </span>
+
+  <p class="ium-lede">
+    Everyone you add gets an email with a link to join your organization. Their access is
+    determined by the roles you pick below.
+  </p>
+
+  <!-- ─── Emails ─────────────────────────────────────────────────── -->
+  <div class="form-group">
+    <div class="field-hdr">
+      <label class="form-label" for="ium-email">EMAIL ADDRESSES</label>
+      <span class="field-tag">REQUIRED</span>
+    </div>
+
+    <div class="tag-input-wrap" [class.is-error]="emailError()" (click)="emailField.focus()">
+      @for (email of emails(); track email) {
+        <span class="tag-chip">
+          {{ email }}
+          <button class="tag-chip-x" type="button" (click)="removeEmail(email)"
+            [attr.aria-label]="'Remove ' + email">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </span>
+      }
+      <input
+        #emailField
+        id="ium-email"
+        class="tag-bare-input"
+        type="text"
+        [ngModel]="emailInput()"
+        (ngModelChange)="setEmailInput($event)"
+        (keydown)="onEmailKeydown($event)"
+        (paste)="onEmailPaste($event)"
+        (blur)="onEmailBlur()"
+        [placeholder]="emails().length === 0 ? 'name@company.com' : ''"
+        autocomplete="off" />
+    </div>
+
+    @if (emailError(); as err) {
+      <p class="field-error"><i class="fa-solid fa-triangle-exclamation"></i> {{ err }}</p>
+    } @else {
+      <p class="field-hint">Press Enter, comma, or semicolon to add each address.</p>
+    }
+  </div>
+
+  <!-- ─── Roles ──────────────────────────────────────────────────── -->
+  <div class="form-group">
+    <div class="field-hdr">
+      <label class="form-label" for="ium-role">ROLES</label>
+      <label class="default-check">
+        <input
+          type="checkbox"
+          [checked]="useDefaultRoles()"
+          (change)="setUseDefaultRoles($any($event.target).checked)" />
+        <span class="check-box" aria-hidden="true"><i class="fa-solid fa-check"></i></span>
+        Use default roles
+      </label>
+    </div>
+
+    <div class="role-picker" [class.is-disabled]="useDefaultRoles()">
+      <div #roleControl class="role-search" [class.is-open]="roleMenuOpen()">
+        <i class="fa-solid fa-magnifying-glass role-search-icon" aria-hidden="true"></i>
+        <input
+          #roleField
+          id="ium-role"
+          class="tag-bare-input"
+          type="text"
+          role="combobox"
+          [attr.aria-expanded]="roleMenuOpen()"
+          [ngModel]="roleQuery()"
+          (ngModelChange)="roleQuery.set($event)"
+          (focus)="onRoleFocus()"
+          (blur)="roleFocused.set(false)"
+          (keydown.enter)="onRoleEnter($event)"
+          [disabled]="useDefaultRoles()"
+          placeholder="Search for roles"
+          autocomplete="off" />
+      </div>
+
+      @if (selectedRoleDetails().length > 0) {
+        <ul class="role-list">
+          @for (entry of selectedRoleDetails(); track entry.role.id) {
+            <li class="role-row">
+              <span class="role-name">
+                {{ entry.role.name }}
+                <span class="role-scope">{{ entry.role.scope }}</span>
+              </span>
+
+              <label class="grant-toggle"
+                [title]="'Lets this person grant and revoke ' + entry.role.name + ' for other users'">
+                <span class="grant-label">Can grant to others</span>
+                <span class="toggle-switch">
+                  <input
+                    type="checkbox"
+                    [checked]="entry.grant.canGrant"
+                    (change)="toggleCanGrant(entry.role.id)"
+                    [attr.aria-label]="'Allow granting and revoking ' + entry.role.name + ' for other users'" />
+                  <span class="toggle-track"><span class="toggle-knob"></span></span>
+                </span>
+              </label>
+
+              <button class="role-remove" type="button" (click)="removeRole(entry.role.id)"
+                [attr.aria-label]="'Remove ' + entry.role.name">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </li>
+          }
+        </ul>
+      } @else if (!useDefaultRoles()) {
+        <p class="role-empty">No roles selected yet.</p>
+      }
+    </div>
+
+    @if (useDefaultRoles()) {
+      <p class="field-hint">
+        Invitees get the organization's default roles:
+        @for (name of defaultRoleNames(); track name) {
+          <span class="default-role">{{ name }}</span>
+        }
+      </p>
+    } @else {
+      <p class="field-hint">
+        Turn on <strong>Can grant to others</strong> to let this person assign and revoke that role
+        for other users. Leave it off to give them the role without letting them pass it on.
+      </p>
+    }
+  </div>
+
+  <!-- The menu is fixed-positioned and measured off the search control, so the
+       modal body's overflow can't clip it. mousedown preventDefault keeps a
+       click from blurring the input before it registers. -->
+  @if (roleMenuOpen() && roleMatches().length > 0) {
+    <ul class="role-menu" role="listbox" (mousedown)="$event.preventDefault()"
+      [style.top.px]="menuTop()" [style.left.px]="menuLeft()"
+      [style.width.px]="menuWidth()" [style.maxHeight.px]="menuMaxHeight()">
+      @for (role of roleMatches(); track role.id) {
+        <li class="role-opt" role="option" (click)="pickRole(role)">
+          <span class="role-opt-head">
+            <span class="role-opt-name">{{ role.name }}</span>
+            <span class="role-scope">{{ role.scope }}</span>
+          </span>
+          @if (role.description) {
+            <span class="role-opt-desc">{{ role.description }}</span>
+          }
+        </li>
+      }
+    </ul>
+  }
+
+  <ng-container modal-footer>
+    <span class="consequence">{{ consequence() }}</span>
+    <button class="btn btn-secondary" type="button" (click)="cancel()">Cancel</button>
+    <button class="btn btn-primary" type="button" [disabled]="!canSubmit()" (click)="submit()">
+      <i class="fa-solid fa-paper-plane"></i> Send invites
+    </button>
+  </ng-container>
+</app-modal-shell>

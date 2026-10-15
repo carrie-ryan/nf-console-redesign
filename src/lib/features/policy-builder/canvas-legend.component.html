@@ -1,0 +1,105 @@
+@if (layers.legendOpen()) {
+  <section class="lg" id="sv-legend" aria-labelledby="sv-legend-h">
+    <header class="lg-head">
+      <h3 class="lg-title" id="sv-legend-h">Legend</h3>
+      <button type="button" class="lg-all" [attr.aria-pressed]="showAll()" (click)="showAll.set(!showAll())">Show all</button>
+      <button type="button" class="lg-x" aria-label="Collapse the legend" title="Collapse" (click)="setOpen(false)">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+      </button>
+    </header>
+    <p class="lg-sr" id="sv-legend-tip">Hover or focus an entry to find it on the canvas.</p>
+
+    <div class="lg-body">
+      @for (sec of sections(); track sec.id) {
+        <h4 class="lg-h">{{ sec.title }}</h4>
+        <ul class="lg-list">
+          @for (e of sec.entries; track e.id) {
+            <li class="lg-entry" tabindex="0" [attr.data-entry]="e.id" [class.lg-off]="!e.present"
+              [attr.aria-describedby]="e.present ? 'sv-legend-tip' : null"
+              (mouseenter)="enter(e, false)" (mouseleave)="leave(e, false)" (focus)="enter(e, true)" (blur)="leave(e, true)">
+              <span class="lg-sample" aria-hidden="true">
+                @switch (e.id) {
+                  @case ('line-ok') {<svg width="28" height="8"><line class="edge tone-ok" x1="1" y1="4" x2="27" y2="4" /></svg>}
+                  @case ('line-warn') {<svg width="28" height="8"><line class="edge tone-warn" x1="1" y1="4" x2="27" y2="4" /></svg>}
+                  @case ('line-bad') {<svg width="28" height="8"><line class="edge tone-bad" x1="1" y1="4" x2="27" y2="4" /></svg>}
+                  @case ('line-none') {<svg width="28" height="8"><line class="edge tone-none" x1="1" y1="4" x2="27" y2="4" /></svg>}
+                  @case ('line-all') {<svg width="28" height="8"><line class="edge tone-ok via-all" x1="1" y1="4" x2="27" y2="4" /></svg>}
+
+                  @case ('verdict-ok') {<span class="verdict">can connect</span>}
+                  @case ('verdict-bad') {<span class="verdict verdict-none">No one</span>}
+                  @case ('verdict-waiting') {<span class="verdict verdict-warn">Waiting</span>}
+                  @case ('verdict-ready') {<span class="verdict verdict-ready">Ready</span>}
+                  @case ('verdict-blank') {<span class="verdict verdict-blank">Not set up</span>}
+                  @case ('verdict-gap') {<span class="gap-link tone-bad">no route</span>}
+
+                  @case ('card-rule') {<span class="mk-card mk-rule"><i class="fa-solid fa-hashtag"></i></span>}
+                  @case ('card-named') {<span class="mk-card"><i class="fa-solid fa-user"></i></span>}
+                  @case ('card-box') {<span class="mk-box"><span class="mk-card mk-mini"></span><span class="mk-card mk-mini"></span></span>}
+                  @case ('card-empty') {<span class="mk-card mk-empty"></span>}
+                  @case ('card-cover') {<span class="cover-badge"><i class="fa-solid fa-layer-group"></i>3</span>}
+                  @case ('card-all') {<span class="all-svcs"><i class="fa-solid fa-globe"></i> all</span>}
+                  @case ('card-router') {<i class="fa-solid fa-tower-broadcast member-router"></i>}
+                  @case ('card-check') {<span class="check-chip"><i class="fa-solid fa-shield-halved"></i>edr</span>}
+                  @case ('card-blocked') {<span class="gap-link tone-bad">blocked</span>}
+                  @case ('card-bypass') {<span class="bypass-chip"><i class="fa-solid fa-shield-halved"></i>bypassed</span>}
+                  @case ('card-expiry') {<app-expiry-pill [expiresAt]="expiryLater()" [short]="true" />}
+                  @case ('card-expiry-soon') {<app-expiry-pill [expiresAt]="expirySoon()" [short]="true" />}
+
+                  @case ('draft-edited') {<span class="node-mark">edited</span>}
+                  @case ('draft-new') {<span class="node-mark node-mark-new">new</span>}
+                  @case ('draft-proposed') {<span class="node-mark node-mark-proposed">proposed</span>}
+                  @case ('draft-live') {<span class="node-live">live</span>}
+                  @case ('draft-routing') {<span class="routers-changed">routing</span>}
+
+                  @case ('host-serving') {<span class="host-mark">serving</span>}
+                  @case ('host-standby') {<span class="host-mark standby">standby</span>}
+                  @case ('host-blocked') {<span class="host-mark blocked">blocked</span>}
+                  @case ('host-edit') {<span class="host-edit"><i class="fa-solid fa-sliders"></i></span>}
+
+                  @case ('svc-attr') {<span class="svc-chip">#attr</span>}
+                  @case ('svc-hosting') {<span class="hosting">hosts <i class="fa-solid fa-sliders"></i></span>}
+                  @case ('svc-traffic') {<span class="traffic-policies"><i class="fa-solid fa-code-branch"></i> 2</span>}
+                  @case ('svc-overlap') {<span class="overlap-badge"><i class="fa-solid fa-triangle-exclamation"></i></span>}
+                  @case ('svc-routing') {<span class="routers mk-band"><span class="routers-line">2 of 2</span></span>}
+                  @case ('svc-outage') {<span class="routers outage mk-band"><span class="routers-line">0 of 2</span></span>}
+                  @case ('svc-norouting') {<span class="routers mk-band"><span class="routers-line routers-empty">none</span></span>}
+                  @case ('svc-menu') {<span class="svc-menu-btn"><i class="fa-solid fa-ellipsis"></i></span>}
+                  @case ('svc-remove') {<span class="svc-menu-btn"><i class="fa-solid fa-xmark"></i></span>}
+                }
+              </span>
+              <span class="lg-label">{{ e.label }}</span>
+              @if (e.hidden) {<span class="lg-tag">hidden</span>}
+            </li>
+          }
+        </ul>
+      } @empty {
+        <p class="lg-none">Nothing on this canvas yet.</p>
+      }
+    </div>
+
+    <h4 class="lg-h lg-h-show">Show on canvas</h4>
+    <ul class="lg-toggles">
+      @for (t of toggles; track t.layer) {
+        <li>
+          <label class="lg-switch" [attr.data-layer]="t.layer">
+            <span class="lg-switch-label">{{ t.label }}</span>
+            <input type="checkbox" role="switch" [checked]="layers.layer(t.layer)" (change)="setLayer(t.layer, $event)" />
+            <span class="lg-track" aria-hidden="true"></span>
+          </label>
+        </li>
+      }
+      <li>
+        <label class="lg-switch" data-layer="edges"
+          [title]="'Off: only what you hover or focus draws its edges' + (compact() ? ' (off by default on a canvas this large)' : '')">
+          <span class="lg-switch-label">Edges at rest</span>
+          <input type="checkbox" role="switch" [checked]="layers.edgesAtRest(compact())" (change)="setEdges($event)" />
+          <span class="lg-track" aria-hidden="true"></span>
+        </label>
+      </li>
+    </ul>
+  </section>
+} @else {
+  <button type="button" class="lg-open" aria-expanded="false" (click)="setOpen(true)">
+    <i class="fa-solid fa-list-ul" aria-hidden="true"></i> Legend
+  </button>
+}

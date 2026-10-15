@@ -1,0 +1,272 @@
+:host { display: block; }
+
+.id-detail { display: flex; flex-direction: column; gap: 1rem; }
+
+/* ─── back to origin group ────────────────────────────────────────────── */
+/* Sits above the tabs, inside the body — a return to a named list, not a
+   history control, so it names its destination. Quiet by default: this is a way
+   back, not the drawer's primary action. */
+.idt-back {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.5rem;
+  margin-bottom: -0.25rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 6px);
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-2);
+}
+.idt-back i { font-size: 0.6875rem; }
+.idt-back:hover {
+  background: var(--color-surface-2);
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+.idt-back:focus-visible { outline: 2px solid var(--color-focus-ring); outline-offset: 1px; }
+.idt-back-name {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  color: var(--brand-primary);
+}
+
+/* ─── tab strip (echoes the Traffic Analysis subtab bar, drawer-scaled) ── */
+.idt-tabs {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--color-border);
+}
+.idt-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-2);
+  margin-bottom: -1px;
+}
+.idt-tab i { font-size: 0.75rem; }
+.idt-tab:hover { color: var(--color-text); }
+.idt-tab.active {
+  color: var(--brand-primary);
+  border-bottom-color: var(--brand-primary);
+}
+.idt-count {
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  background: var(--color-surface-2);
+  color: var(--color-text-3);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+.idt-tab.active .idt-count { background: var(--color-info-bg); color: var(--brand-primary); }
+
+.idt-panel { display: block; }
+
+/* ─── summary facts ───────────────────────────────────────────────────── */
+.idt-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 1.25rem;
+  margin: 0;
+}
+.idt-fact { min-width: 0; }
+.idt-fact-wide { grid-column: 1 / -1; }
+.idt-facts dt {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-3);
+  margin-bottom: 0.2rem;
+}
+.idt-facts dd {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-text);
+}
+.idt-strong { font-weight: 700; }
+.idt-soft { color: var(--color-text-2); }
+.idt-status { display: inline-flex; align-items: center; gap: 0.4rem; }
+.idt-none { font-size: 0.875rem; color: var(--color-text-3); }
+
+/* status dot — the Identities table's convention, repeated here because view
+   encapsulation scopes that component's stylesheet to its own template */
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-text-3);
+}
+.status-dot--online  { background: var(--color-success); }
+.status-dot--pending { background: var(--color-warning); }
+.status-dot--offline { background: var(--color-text-3); }
+
+/* attribute chips — deliberately identical to the roster-group drawer's rows
+   (roster-group-content.component.css), so a tag looks like the same object on
+   both sides of the row→detail transition. Repeated for the same encapsulation
+   reason as the dot above; no `.rg-chip-open` here, since this drawer is not
+   opened "from" any one tag. */
+.rg-chips { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+.rg-chip {
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+  color: var(--color-text-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ─── traffic table ───────────────────────────────────────────────────── */
+.idt-lede {
+  margin: 0 0 0.625rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--color-text-2);
+}
+.idt-table { font-size: 0.78125rem; }
+.idt-table .num { text-align: right; }
+.idt-mono { font-family: var(--font-mono, ui-monospace, monospace); font-size: 0.75rem; }
+.idt-table tfoot td {
+  border-top: 1px solid var(--color-border);
+  font-size: 0.6875rem;
+  color: var(--color-text-3);
+  padding-top: 0.4rem;
+}
+.idt-table tfoot .idt-strong { color: var(--color-text); font-size: 0.78125rem; }
+
+/* ─── empty state ─────────────────────────────────────────────────────── */
+/* Reads as a FINDING, not an error: bordered like a fact panel rather than
+   tinted like a warning, and worded as a statement about the capture. */
+.idt-empty {
+  padding: 1.25rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
+  text-align: center;
+}
+.idt-empty i { font-size: 1.125rem; color: var(--color-text-3); }
+.idt-empty h4 {
+  margin: 0.5rem 0 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.idt-empty p {
+  margin: 0 auto;
+  max-width: 46ch;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--color-text-2);
+}
+.idt-empty-note {
+  margin-top: 0.5rem !important;
+  font-size: 0.875rem !important;
+  color: var(--color-text-3) !important;
+}
+
+/* ─── footer action — "Create service policy" ──────────────────────────────
+   The flow-detail analogue (.fd-action) sits ABOVE its list and rules off with a
+   bottom border; this one is a footer under the tab panel, so the rule and the
+   padding flip to the top edge. Same stack, spacing and hint tone otherwise. */
+.idt-action {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.85rem 0.25rem 0;
+  margin-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+.idt-create-btn {
+  align-self: flex-start;
+}
+.idt-action-hint {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--color-text-2);
+}
+
+/* ─── destination selection ────────────────────────────────────────────────
+   The check column + the house checkbox treatment, copied VERBATIM from
+   raw-traffic.component.css so the two surfaces are visually identical.
+
+   NOTE: these `.row-check` / `.check-box` rules are now duplicated in THREE
+   component stylesheets (raw-traffic, construct-policy-modal, here). They belong
+   in the global stylesheet, but promoting them restyles two already-shipped
+   components, so that cleanup is deliberately out of scope for this increment. */
+/* Narrower than Raw traffic's 2.5rem `sd-check`: the drawer is a fixed-width panel
+   and a 6th column pushed the destination cell into wrapping mid-token. Trim the
+   check gutter and the horizontal cell padding to buy that width back. */
+.idt-table th.idt-check,
+.idt-table td.idt-check {
+  width: 1.9rem;
+  padding-right: 0;
+  overflow: visible;
+  text-overflow: clip;
+}
+/* keep long host:port on one line — it is the row's identifier */
+.idt-table td:nth-child(2) { white-space: nowrap; }
+
+.idt-row { cursor: pointer; }
+.idt-row:hover td { background: var(--color-surface); }
+.idt-row.is-selected td { background: color-mix(in srgb, var(--brand-primary) 7%, transparent); }
+
+.row-check { display: inline-flex; cursor: pointer; }
+.row-check input { position: absolute; opacity: 0; pointer-events: none; }
+.check-box {
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 4px;
+  border: 1.5px solid var(--color-border-strong);
+  display: grid;
+  place-items: center;
+  color: var(--color-text-inverse);
+  font-size: 0.625rem;
+  background: var(--color-surface);
+}
+.row-check input:checked + .check-box {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+}
+.row-check input:indeterminate + .check-box {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+}
+.row-check input:indeterminate + .check-box i { display: none; }
+.row-check input:indeterminate + .check-box::after {
+  content: "";
+  width: 0.55rem;
+  height: 2px;
+  background: var(--color-text-inverse);
+  border-radius: 1px;
+}
+.row-check input:not(:checked):not(:indeterminate) + .check-box i { display: none; }
+
+/* action row: count on the left, button on the right */
+.idt-action-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.idt-sel-count {
+  font-size: 0.875rem;
+  color: var(--color-text-2);
+  font-variant-numeric: tabular-nums;
+}
+/* overrides the `align-self: flex-start` set when the button was a direct child of
+   the column-flex .idt-action; inside the row it centres and sits hard right */
+.idt-create-btn { align-self: center; margin-left: auto; }

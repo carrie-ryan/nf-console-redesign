@@ -1,0 +1,288 @@
+<div class="grouped-body">
+  <section class="section-card">
+    <header class="grouped-intro">
+      <span class="intro-eyebrow"><i class="fa-solid fa-circle-nodes"></i> Role attribute grouping</span>
+      <h2>Identities by role attribute</h2>
+
+      <!-- TWO numbers, never summed: identities counts each identity once;
+           placements counts filings, and is the figure the tag-circle sizes add
+           up to. An identity carrying two tags is one identity, two placements.
+           Both are computed over the VISIBLE circles only, so the header always
+           reconciles with what is actually on the canvas. Hosts are reported
+           separately because a host is not an identity — folding it in would
+           undo the distinction the second catch-all arm exists to draw. -->
+      <p class="grouped-totals">
+        <span class="total"><strong>{{ identityCount() }}</strong> identities</span>
+        @if (hasTagNodes()) {
+          <span class="total-sep">/</span>
+          <span class="total"><strong>{{ tagPlacements() }}</strong> placements</span>
+        }
+        @if (hostCount() > 0) {
+          <span class="total-sep">/</span>
+          <span class="total total-host"><strong>{{ hostCount() }}</strong> unmanaged hosts</span>
+        }
+        @if (!allVisible()) {
+          <span class="totals-scope">of the shown groups</span>
+        }
+      </p>
+
+      <p>
+        One circle per role attribute, sized by how many identities carry it. An identity
+        appears under <strong>every</strong> role attribute it carries, so
+        @if (hasTagNodes()) {
+          {{ taggedIdentityCount() }} tagged identities make {{ tagPlacements() }} placements —
+          the circles total placements, not identities.
+        } @else {
+          a tagged identity can occupy more than one circle.
+        }
+        The two catch-alls are counted separately and are
+        <strong>not</strong> role attributes: <em>No role attribute</em> holds managed identities
+        carrying none, <em>Unmanaged hosts</em> holds observed sources that resolve to no
+        identity at all.
+      </p>
+    </header>
+
+    <!-- ─── filter: SUBTRACTIVE show/hide of existing circles ───────────────
+         Not a group-by control: nothing here changes how identities are filed,
+         only which of the already-computed groups is drawn. Every box starts
+         checked (DEFAULT_VISIBLE) — the user hides down, never discovers up. -->
+    <section class="grouped-filter" aria-label="Show or hide groups">
+      <!-- ONE row, whatever the tag count: the tag list lives in a popover that
+           scrolls internally, so 40 tags occupy exactly the same height as 7. -->
+
+      <!-- TAGS — searchable dropdown. `position: relative` here is the popover's
+           containing block; no ancestor between this and .console-content sets a
+           transform or overflow:hidden, so the menu is not clipped. (.grouped-scroll
+           does set overflow-x, which is why this control sits OUTSIDE it.) -->
+      <div class="gf-drop" #dropRoot>
+        <button
+          type="button"
+          class="gf-trigger"
+          [class.gf-trigger-open]="menuOpen()"
+          [attr.aria-expanded]="menuOpen()"
+          aria-haspopup="true"
+          (click)="toggleMenu($event)">
+          <i class="fa-solid fa-sliders" aria-hidden="true"></i>
+          <span class="gf-trigger-label">Show groups</span>
+          <span class="gf-trigger-count">{{ visibleCount() }} of {{ totalCount() }}</span>
+          <i class="fa-solid fa-chevron-down gf-chev" aria-hidden="true"></i>
+        </button>
+
+        @if (menuOpen()) {
+          <div class="gf-menu" role="dialog" aria-label="Filter role attributes">
+            <div class="gf-search">
+              <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+              <input
+                type="text"
+                class="gf-search-input"
+                placeholder="Filter tags…"
+                aria-label="Filter role attributes by name"
+                [value]="tagQuery()"
+                (input)="tagQuery.set($any($event.target).value)" />
+              @if (tagQuery()) {
+                <button type="button" class="gf-search-clear" aria-label="Clear search" (click)="tagQuery.set('')">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              }
+            </div>
+
+            <div class="gf-bulk">
+              <button type="button" class="gf-link" [disabled]="allTagsVisible()" (click)="setAllTags(true)">
+                Select all
+              </button>
+              <button type="button" class="gf-link" [disabled]="noTagsVisible()" (click)="setAllTags(false)">
+                Clear all
+              </button>
+              <span class="gf-bulk-note">{{ visibleTagCount() }} of {{ tagNodes().length }} tags</span>
+            </div>
+
+            <!-- fixed max-height + internal scroll: this is what keeps the
+                 control's footprint constant as the roster grows -->
+            <div class="gf-list">
+              @for (n of filteredTagNodes(); track n.key) {
+                <label class="gf-row" [class.gf-off]="!isVisible(n.key)">
+                  <input
+                    type="checkbox"
+                    [checked]="isVisible(n.key)"
+                    (change)="toggle(n.key)"
+                    [attr.aria-label]="'Show ' + n.label" />
+                  <span class="gf-name">{{ n.label }}</span>
+                  <span class="gf-n">{{ n.count }}</span>
+                </label>
+              } @empty {
+                <p class="gf-nomatch">No role attribute matches “{{ tagQuery() }}”.</p>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- CATCH-ALLS — deliberately OUTSIDE the dropdown and always visible.
+           A closed set of exactly two that exists for every roster, and NOT
+           tags: putting them in a searchable tag list would imply they were. -->
+      <span class="gf-catch-label">Catch-alls</span>
+      @for (n of catchAllNodes(); track n.key) {
+        <label
+          class="gf-box"
+          [class.gf-off]="!isVisible(n.key)"
+          [class.gf-box-unmanaged]="n.kind === 'unmanaged'">
+          <input
+            type="checkbox"
+            [checked]="isVisible(n.key)"
+            (change)="toggle(n.key)"
+            [attr.aria-label]="'Show ' + n.label" />
+          <span class="gf-name">{{ n.label }}</span>
+          <span class="gf-n">{{ n.count }}</span>
+        </label>
+      }
+
+      <button
+        type="button"
+        class="btn btn-secondary btn-sm gf-reset"
+        [disabled]="allVisible()"
+        (click)="reset()">
+        <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Reset
+      </button>
+    </section>
+
+    <div class="grouped-scroll">
+      @if (noneVisible()) {
+        <!-- Everything hidden — a state the user chose, so it says so and offers
+             the way out, rather than reading as an empty or broken canvas. -->
+        <div class="grouped-empty">
+          <i class="fa-solid fa-eye-slash" aria-hidden="true"></i>
+          <h3>No groups shown</h3>
+          <p>Every group is hidden. Reset to see all {{ totalCount() }}.</p>
+          <button type="button" class="btn btn-secondary btn-sm" (click)="reset()">
+            <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Reset
+          </button>
+        </div>
+      } @else {
+        <svg
+          class="grouped-svg"
+          [attr.viewBox]="'0 0 ' + canvasW + ' ' + canvasH"
+          [attr.width]="canvasW"
+          [attr.height]="canvasH"
+          preserveAspectRatio="xMidYMid meet"
+          role="img"
+          aria-label="Grouped roster: one circle per identity role attribute, sized by the number of identities carrying it, plus two catch-all circles for managed identities with no role attribute and for observed hosts that are not identities. Select a circle to list its members.">
+
+          <!-- full-canvas background behind everything: a click on empty space
+               clears the hover. Drawn first so it only catches clicks that miss a
+               circle (hit-testing picks the topmost element). -->
+          <rect
+            class="rn-bg"
+            x="0"
+            y="0"
+            [attr.width]="canvasW"
+            [attr.height]="canvasH"
+            (click)="onBackground()" />
+
+          <!-- ── overlap lines ──
+               AFTER rn-bg and BEFORE the circles: SVG paint order is document
+               order, so these render beneath the circle fills. pointer-events
+               is none (see .ov-layer) — the layer sits above the click-catching
+               rn-bg and would otherwise swallow background clicks. Endpoints are
+               already trimmed to both circles' edges by `overlaps`. -->
+          <g class="ov-layer" aria-hidden="true">
+            @for (o of overlaps(); track o.targetKey) {
+              <line class="ov-line" [attr.x1]="o.x1" [attr.y1]="o.y1" [attr.x2]="o.x2" [attr.y2]="o.y2" />
+            }
+          </g>
+
+          @for (c of circles(); track c.key) {
+            <g
+              [class]="'roster-node rn-' + c.kind"
+              [class.rn-dim]="isDimmed(c)"
+              [attr.transform]="'translate(' + c.cx + ',' + c.cy + ')'"
+              role="button"
+              tabindex="0"
+              [attr.aria-label]="c.ariaLabel + ' — show members'"
+              (mouseenter)="hoveredNodeId.set(c.key)"
+              (mouseleave)="hoveredNodeId.set(null)"
+              (click)="openGroup(c)"
+              (keydown.enter)="openGroup(c)"
+              (keydown.space)="$event.preventDefault(); openGroup(c)">
+              <title>{{ c.title }}</title>
+
+              <circle class="rn-circle" [attr.r]="c.r" />
+
+              @if (c.showCount) {
+                <text
+                  class="rn-count"
+                  x="0"
+                  [attr.y]="c.labelInside ? -4 : 5"
+                  text-anchor="middle"
+                  dominant-baseline="middle">{{ c.count }}</text>
+              }
+
+              <!-- label inside a circle big enough to hold it; otherwise just below -->
+              @if (c.labelInside) {
+                <text class="rn-label rn-label-in" x="0" y="20" text-anchor="middle" dominant-baseline="middle">{{ c.label }}</text>
+              } @else {
+                <text class="rn-label rn-label-out" x="0" [attr.y]="c.r + 15" text-anchor="middle" dominant-baseline="middle">{{ c.label }}</text>
+              }
+            </g>
+          }
+
+          <!-- ── overlap count badges ──
+               ABOVE the circles, unlike the lines they sit on. A badge in the
+               lines layer is only legible where a DIMMED circle happens to let
+               it show through — against a lit circle it disappears entirely,
+               and the count is the one thing on a line that must be readable.
+               The lines themselves stay beneath, so they still pass behind
+               circles rather than over them. -->
+          <g class="ov-badges" aria-hidden="true">
+            @for (o of overlaps(); track o.targetKey) {
+              <g [attr.transform]="'translate(' + o.mx + ',' + o.my + ')'">
+                <circle class="ov-badge-bg" r="10" />
+                <text class="ov-badge" x="0" y="0" text-anchor="middle" dominant-baseline="central">{{ o.count }}</text>
+              </g>
+            }
+          </g>
+
+          <!-- ── stable overlap readout ──
+               Painted LAST so it sits above the circles: it is a callout to be
+               read, not a glyph to be occluded. Also pointer-events: none, so
+               it can never block a circle underneath it or steal the hover that
+               summoned it. Only rendered for a TAG hover. -->
+          @if (summary(); as s) {
+            <g class="ov-summary" aria-hidden="true" [attr.transform]="'translate(' + s.x + ',' + s.y + ')'">
+              <rect class="ov-panel" x="0" y="0" [attr.width]="s.w" [attr.height]="s.h" rx="6" />
+              <text class="ov-sum-title" [attr.x]="9" y="17">{{ s.title }}</text>
+              @for (row of s.rows; track row.key; let i = $index) {
+                <text class="ov-sum-row" [attr.x]="9" [attr.y]="26 + i * 16 + 11">{{ row.text }}</text>
+              } @empty {
+                <text class="ov-sum-none" [attr.x]="9" [attr.y]="37">No shared identities</text>
+              }
+            </g>
+          }
+        </svg>
+      }
+    </div>
+
+    <!-- legend: every circle style mapped (the two catch-alls read differently
+         from tags AND from each other — they are different arms with different
+         futures, not one "leftovers" bag). -->
+    <div class="grouped-legend">
+      <span class="lg-item">
+        <svg class="lg-swatch" width="18" height="18" aria-hidden="true">
+          <g class="roster-node rn-tag"><circle class="rn-circle" cx="9" cy="9" r="7" /></g>
+        </svg>
+        role attribute — identities carrying it
+      </span>
+      <span class="lg-item">
+        <svg class="lg-swatch" width="18" height="18" aria-hidden="true">
+          <g class="roster-node rn-no-tag"><circle class="rn-circle" cx="9" cy="9" r="7" /></g>
+        </svg>
+        no role attribute — managed, but ungrouped
+      </span>
+      <span class="lg-item">
+        <svg class="lg-swatch" width="18" height="18" aria-hidden="true">
+          <g class="roster-node rn-unmanaged"><circle class="rn-circle" cx="9" cy="9" r="7" /></g>
+        </svg>
+        unmanaged host — not an identity
+      </span>
+    </div>
+  </section>
+</div>

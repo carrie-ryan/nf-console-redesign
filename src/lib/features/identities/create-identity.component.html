@@ -80,14 +80,14 @@
 
         <div class="form-group">
           <div class="field-hdr">
-            <label class="form-label" for="id-attrs">SELECT OR CREATE IDENTITY ATTRIBUTES</label>
+            <label class="form-label" for="id-attrs">SELECT OR CREATE IDENTITY ROLE ATTRIBUTES</label>
             <span class="field-tag">OPTIONAL</span>
           </div>
           <div class="tag-input-wrap">
             @for (attr of attributes(); track attr) {
               <span class="tag-chip">
                 {{ attr }}
-                <button class="tag-chip-x" type="button" (click)="removeAttribute(attr)" aria-label="Remove attribute">
+                <button class="tag-chip-x" type="button" (click)="removeAttribute(attr)" aria-label="Remove role attribute">
                   <i class="fa-solid fa-xmark"></i>
                 </button>
               </span>
@@ -97,7 +97,7 @@
               class="tag-bare-input"
               [(ngModel)]="attributeInput"
               (keydown)="onAttributeKeydown($event)"
-              [placeholder]="attributes().length === 0 ? 'Add attributes to group Identities' : ''"
+              [placeholder]="attributes().length === 0 ? 'Add role attributes to group Identities' : ''"
               autocomplete="off" />
           </div>
           <p class="field-hint">Press Enter or comma to add. Prefix with # for role attributes (e.g. #users).</p>

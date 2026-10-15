@@ -1,0 +1,66 @@
+<div class="page-header">
+  <div class="page-header-content">
+    <h1>External providers</h1>
+    <p>Device-posture providers connected to this network</p>
+  </div>
+  <a routerLink="/external-providers/new" class="btn btn-primary">
+    <i class="fa-solid fa-plus"></i> Add provider
+  </a>
+</div>
+
+<div class="list-body">
+  @if (data.providerConnections().length === 0) {
+    <div class="section-card empty-card">
+      <app-empty-state
+        icon="fa-solid fa-plug"
+        title="No providers connected yet.">
+        <a routerLink="/external-providers/new" class="btn btn-primary">
+          <i class="fa-solid fa-plus"></i> Add provider
+        </a>
+      </app-empty-state>
+    </div>
+  } @else {
+    <div class="section-card table-card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Provider</th>
+            <th>Data</th>
+            <th>Mode</th>
+            <th>Matches on</th>
+            <th>Used by</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (conn of data.providerConnections(); track conn.id) {
+            <tr class="row-link" (click)="open(conn)">
+              <td class="name-cell">
+                <a [routerLink]="['/external-providers', conn.id]" (click)="$event.stopPropagation()">{{ conn.name }}</a>
+                @if (needsAttention(conn)) {
+                  <span class="field-badge pill-degraded">Needs attention</span>
+                }
+              </td>
+              <td>{{ providerLabel(conn) }}</td>
+              <td>{{ acquisitionSummary(conn) }}</td>
+              <td>
+                <span class="field-badge" [class]="conn.mode === 'observe' ? 'pill-inactive' : 'pill-active'">{{ modeLabel(conn.mode) }}</span>
+              </td>
+              <td>{{ matchSummary(conn) }}</td>
+              <td [class.cell-empty]="usedBy(conn) === 'Not used'">{{ usedBy(conn) }}</td>
+              <!-- The menu's own clicks shouldn't also open the row. -->
+              <td class="actions-cell" (click)="$event.stopPropagation()">
+                <app-action-menu [items]="menuItems(conn)" [ariaLabel]="'Actions for ' + conn.name" />
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+@if (deleting(); as conn) {
+  <app-delete-provider-dialog [connection]="conn" (deleted)="deleting.set(null)" (closed)="deleting.set(null)" />
+}

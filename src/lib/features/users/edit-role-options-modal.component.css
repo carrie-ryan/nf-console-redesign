@@ -1,0 +1,73 @@
+/* ─── Header ─────────────────────────────────────────────────────── */
+.ero-title { display: inline-flex; align-items: center; gap: 0.625rem; }
+
+.ero-illus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-full);
+  background: var(--brand-primary-light);
+  color: var(--brand-primary);
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+/* Which role is being edited — the legacy dialog's subtitle line. */
+.ero-subject {
+  margin: 0 0 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.ero-scope {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--color-text-3);
+  margin-left: 0.375rem;
+}
+
+/* ─── Option rows ────────────────────────────────────────────────── */
+.ero-opt {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  column-gap: 0.625rem;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.ero-opt + .ero-opt { margin-top: 0.625rem; }
+.ero-opt:hover { background: var(--color-surface-2); border-color: var(--color-border-strong); }
+
+/* Hidden input + styled span — the checkbox pattern used across this repo. */
+.ero-opt input { position: absolute; opacity: 0; pointer-events: none; }
+
+.check-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-top: 0.0625rem;
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: 4px;
+  background: var(--color-surface);
+  color: #fff;
+  font-size: 0.625rem;
+  flex-shrink: 0;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.ero-opt input:checked + .check-box { background: var(--brand-primary); border-color: var(--brand-primary); }
+.ero-opt input:not(:checked) + .check-box i { display: none; }
+.ero-opt input:focus-visible + .check-box { box-shadow: 0 0 0 3px var(--color-focus-ring); }
+
+.ero-opt-body { display: flex; flex-direction: column; gap: 0.1875rem; min-width: 0; }
+.ero-opt-title { font-size: 0.8125rem; font-weight: 600; color: var(--color-text); }
+.ero-opt-hint { font-size: 0.875rem; line-height: 1.5; color: var(--color-text-2); }

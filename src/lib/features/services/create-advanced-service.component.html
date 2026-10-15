@@ -67,7 +67,7 @@
 
         <div class="form-group">
           <div class="field-hdr">
-            <label class="form-label" for="adv-attrs">SERVICE ATTRIBUTES</label>
+            <label class="form-label" for="adv-attrs">SERVICE ROLE ATTRIBUTES</label>
             <span class="field-tag">OPTIONAL</span>
           </div>
           <div class="tag-input-wrap">
@@ -84,7 +84,7 @@
               class="tag-bare-input"
               [(ngModel)]="attributeInput"
               (keydown)="onAttrKeydown($event)"
-              [placeholder]="attributes().length === 0 ? 'Add attributes to group Services' : ''"
+              [placeholder]="attributes().length === 0 ? 'Add role attributes to group Services' : ''"
               autocomplete="off" />
           </div>
           <p class="field-hint">Press Enter or comma to add. Prefix with # for role attributes.</p>

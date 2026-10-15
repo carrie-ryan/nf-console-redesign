@@ -1,0 +1,223 @@
+@if (content(); as c) {
+  <div class="id-detail">
+
+    <!-- ── back to the group this identity was drilled from ──
+         Rendered ONLY when the payload carries an origin; identity-detail opened
+         from anywhere else simply has no back control and closes instead. This is
+         the body's own affordance, NOT the shell header arrow — that stays gated
+         off for every drawer type, this one included. -->
+    @if (originGroup(); as origin) {
+      <button type="button" class="idt-back" (click)="backToGroup()">
+        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+        Back to <span class="idt-back-name">{{ origin.data.title }}</span>
+      </button>
+    }
+
+    <!-- ── tab strip ── -->
+    <div class="idt-tabs" role="tablist" aria-label="Identity detail views">
+      <button
+        type="button"
+        class="idt-tab"
+        role="tab"
+        [class.active]="tab() === 'summary'"
+        [attr.aria-selected]="tab() === 'summary'"
+        (click)="select('summary')">
+        <i class="fa-solid fa-id-card" aria-hidden="true"></i> Summary
+      </button>
+      <button
+        type="button"
+        class="idt-tab"
+        role="tab"
+        [class.active]="tab() === 'traffic'"
+        [attr.aria-selected]="tab() === 'traffic'"
+        (click)="select('traffic')">
+        <i class="fa-solid fa-table-list" aria-hidden="true"></i> Traffic
+        <!-- the count is shown even at 0: an identity with no observed traffic
+             is a real state, and hiding the badge would hide that -->
+        <span class="idt-count">{{ destinationCount() }}</span>
+      </button>
+    </div>
+
+    @if (tab() === 'summary') {
+      <!-- ── SUMMARY ─────────────────────────────────────────────────────── -->
+      <section class="idt-panel" role="tabpanel" aria-label="Summary">
+        <dl class="idt-facts">
+          <div class="idt-fact">
+            <dt>Name</dt>
+            <dd class="idt-strong">{{ c.identity.name }}</dd>
+          </div>
+          <div class="idt-fact">
+            <dt>Type</dt>
+            <dd>{{ c.identity.type }}</dd>
+          </div>
+          <div class="idt-fact">
+            <dt>Status</dt>
+            <dd class="idt-status">
+              <!-- same dot convention as the Identities table -->
+              <span
+                class="status-dot"
+                [class.status-dot--online]="c.identity.status === 'online'"
+                [class.status-dot--pending]="c.identity.status === 'pending'"
+                [class.status-dot--offline]="c.identity.status === 'offline' || c.identity.status === 'degraded'"
+                aria-hidden="true"></span>
+              {{ c.identity.status }}
+            </dd>
+          </div>
+          <div class="idt-fact">
+            <dt>Created</dt>
+            <dd>{{ formatDate(c.identity.createdAt) }}</dd>
+          </div>
+          <div class="idt-fact">
+            <dt>Auth policy</dt>
+            <dd>{{ c.identity.authPolicy ?? '—' }}</dd>
+          </div>
+          <div class="idt-fact">
+            <dt>Enrollment</dt>
+            <dd>{{ c.identity.enrollmentType ?? '—' }}</dd>
+          </div>
+          <div class="idt-fact idt-fact-wide">
+            <dt>Role attributes</dt>
+            <dd>
+              @if (c.identity.attributes.length > 0) {
+                <!-- same chip treatment as the roster-group rows this drawer was
+                     opened from, so a tag reads as the same object either side -->
+                <span class="rg-chips">
+                  @for (a of c.identity.attributes; track a) {
+                    <span class="rg-chip">{{ a }}</span>
+                  }
+                </span>
+              } @else {
+                <span class="idt-none">No role attributes — this identity groups under nothing</span>
+              }
+            </dd>
+          </div>
+        </dl>
+      </section>
+    } @else {
+      <!-- ── TRAFFIC ─────────────────────────────────────────────────────── -->
+      <section class="idt-panel" role="tabpanel" aria-label="Traffic">
+        @if (trafficRows().length > 0) {
+          <p class="idt-lede">
+            Destinations this identity was observed dialing, one row per distinct
+            address, circuits summed over the capture window. All are selected to
+            start — untick any you don't want a policy for.
+          </p>
+
+          <!-- the house `.data-table` (global), same as the Raw Traffic sub-table -->
+          <table class="data-table idt-table">
+            <thead>
+              <tr>
+                <!-- select-all. Unlike the Raw traffic table (~82 identity rows, where
+                     a global box would select the whole capture), this table is ONE
+                     identity's handful of destinations — so this box is the direct
+                     analogue of that table's parent-row checkbox. -->
+                <th class="idt-check">
+                  <label class="row-check">
+                    <input type="checkbox"
+                      [checked]="allDestinationsSelected()"
+                      [indeterminate]="someDestinationsSelected()"
+                      (change)="toggleAllDestinations()"
+                      aria-label="Select all destinations" />
+                    <span class="check-box" aria-hidden="true"><i class="fa-solid fa-check"></i></span>
+                  </label>
+                </th>
+                <th>Destination</th>
+                <th>App protocol</th>
+                <th>Egress IP</th>
+                <th class="num">Egress port</th>
+                <th class="num">Circuits</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of trafficRows(); track r.hostPort) {
+                <tr class="idt-row" [class.is-selected]="isDestinationSelected(r.hostPort)"
+                  (click)="toggleDestination(r.hostPort)">
+                  <td class="idt-check">
+                    <label class="row-check" (click)="$event.stopPropagation()">
+                      <input type="checkbox"
+                        [checked]="isDestinationSelected(r.hostPort)"
+                        (change)="toggleDestination(r.hostPort)"
+                        [attr.aria-label]="'Select ' + r.hostPort" />
+                      <span class="check-box" aria-hidden="true"><i class="fa-solid fa-check"></i></span>
+                    </label>
+                  </td>
+                  <td><code class="idt-mono">{{ r.hostPort }}</code></td>
+                  <td class="idt-soft">{{ r.appProtocol }}</td>
+                  <td><code class="idt-mono">{{ r.egressIp }}</code></td>
+                  <td class="num">{{ r.egressPort }}</td>
+                  <td class="num idt-strong">{{ r.circuits }}</td>
+                </tr>
+              }
+            </tbody>
+            <tfoot>
+              <!-- the identity's totals, NOT the selection's: this row summarises the
+                   observed data, and the selection is reported beside the action -->
+              <tr>
+                <td colspan="5">{{ destinationCount() }} destinations</td>
+                <td class="num idt-strong">{{ totalCircuits() }}</td>
+              </tr>
+            </tfoot>
+          </table>
+
+          <!-- ── ACTION ──
+               Lives INSIDE the populated branch, beside the rows it acts on: the
+               selection and the control that consumes it are never separated, and an
+               action on the empty state becomes structurally impossible rather than
+               merely guarded. (This is why it is no longer on the Summary tab.) -->
+          <div class="idt-action">
+            <div class="idt-action-row">
+              <span class="idt-sel-count">
+                {{ selectedDestinationCount() }} of {{ destinationCount() }} selected
+              </span>
+              <button type="button" class="btn btn-primary idt-create-btn"
+                [disabled]="!canCreatePolicy()" (click)="createServicePolicy()">
+                <i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Create service policy
+              </button>
+            </div>
+            <p class="idt-action-hint">
+              @if (canCreatePolicy()) {
+                Defines an intercept service for each selected destination, and a dial
+                policy granting <strong>{{ c.identity.name }}</strong> — carving them out
+                of wildcard discovery.
+              } @else {
+                Select at least one destination to carve into a service + dial policy.
+              }
+            </p>
+          </div>
+        } @else {
+          <!-- EMPTY STATE — a statement about the capture, not a failure. This
+               identity is on the roster and real; it simply never appeared as a
+               source in the observed flows. The wording tracks whether it is
+               tagged, so neither branch asserts something untrue. -->
+          <div class="idt-empty">
+            <i class="fa-solid fa-wave-square" aria-hidden="true"></i>
+            <h4>No observed traffic</h4>
+            @if (c.identity.attributes.length > 0) {
+              <p>
+                <strong>{{ c.identity.name }}</strong> carries
+                {{ c.identity.attributes.length === 1 ? 'a role attribute' : 'role attributes' }} and is
+                grouped on the role attribute map, but it was not seen as a traffic source
+                anywhere in the discovery capture — so there are no destinations to roll up.
+              </p>
+            } @else {
+              <p>
+                <strong>{{ c.identity.name }}</strong> is enrolled and on the roster, but it
+                was not seen as a traffic source anywhere in the discovery capture — so there
+                are no destinations to roll up.
+              </p>
+            }
+            <p class="idt-empty-note">
+              This is what the data says, not a failed lookup: the capture records
+              flows by dialing identity, and none carry this one.
+            </p>
+          </div>
+        }
+      </section>
+    }
+
+    <!-- The action used to sit HERE, outside both tabs. It now lives inside the
+         Traffic panel, next to the destination rows it acts on — selection and
+         action must not be separable. The Summary tab therefore has no action. -->
+
+  </div>
+}

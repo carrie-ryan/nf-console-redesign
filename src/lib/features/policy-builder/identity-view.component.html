@@ -1,0 +1,175 @@
+@let l = layout();
+
+<section class="iv-identity" aria-labelledby="iv-name">
+  <div class="iv-id-head">
+    <div class="iv-avatar" aria-hidden="true"><i class="fa-solid" [class.fa-user]="!l.identity.routerName" [class.fa-tower-broadcast]="!!l.identity.routerName"></i></div>
+    <div>
+      <div class="iv-name-row">
+        <h2 class="iv-name" id="iv-name">{{ l.identity.name }}</h2>
+        @if (l.identity.routerName; as rn) {
+          <span class="iv-router-tag" [title]="'The identity of router ' + rn"><i class="fa-solid fa-tower-broadcast" aria-hidden="true"></i> router</span>
+        }
+        <app-export-report-button [scope]="exportScope()" [slug]="l.identity.name" [what]="'what ' + l.identity.name + ' may reach'" />
+      </div>
+      <div class="tag-input-wrap iv-attrs" role="group" [attr.aria-label]="'Attributes of ' + l.identity.name">
+        @for (a of l.identity.attributes; track a) {
+          <span class="tag-chip" [class.added]="addedInDraft(a)" [title]="addedInDraft(a) ? 'Added in the draft' : a">
+            {{ a }}
+            @if (addedInDraft(a)) {<span class="visually-hidden">(added in the draft)</span>}
+            <button class="tag-chip-x" type="button" (click)="removeAttribute(a)" [attr.aria-label]="'Remove ' + a + ' from ' + l.identity.name">
+              <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+          </span>
+        }
+        @for (a of removedInDraft(); track a) {
+          <span class="tag-chip iv-attr-removed" title="Removed in the draft"><s>{{ a }}</s>&ngsp;<span class="visually-hidden">(removed in the draft)</span></span>
+        }
+        <app-search-picker inputId="iv-attr-add" [items]="attributeOptions()" [selected]="chosenAttributes()" noun="attributes"
+          [allowFree]="true" [placeholder]="l.identity.attributes.length ? 'Add attribute' : 'No attributes — add one'" (picked)="addAttribute($event)" />
+      </div>
+      @if (attributeError(); as err) {
+        <p class="iv-attr-error" role="alert"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> {{ err }}</p>
+      }
+    </div>
+  </div>
+  <div class="iv-routers">
+    <div class="iv-routers-head">
+      <h3 class="iv-h">Its routers <span class="iv-h-note">from edge router policies</span></h3>
+      @if (!locked()) {
+        <button type="button" class="btn btn-secondary btn-sm iv-routers-btn" [attr.aria-label]="'Routers for ' + l.identity.name"
+          (click)="routers.emit()">
+          <i class="fa-solid fa-route" aria-hidden="true"></i> Routers
+        </button>
+      }
+    </div>
+    <ul class="iv-router-list">
+      @for (r of l.routers; track r.id) {
+        <li [class.offline]="!r.isOnline">
+          <span class="dot" aria-hidden="true"></span>
+          <span class="r-name">{{ r.name }}</span>
+          <span class="r-state">{{ r.isOnline ? 'online' : 'offline' }}</span>
+          <span class="r-via">via
+            @for (name of r.via; track $index; let last = $last) {{{ name }}@if (r.viaSystem[$index]) {&ngsp;<span class="system-tag" title="Created by Ziti for this router — read-only"><i class="fa-solid fa-lock" aria-hidden="true"></i> system</span>}@if (!last) {, }}
+          </span>
+        </li>
+      } @empty {
+        <li class="iv-muted">None — no edge router policy grants it a router.</li>
+      }
+    </ul>
+  </div>
+</section>
+
+<div class="iv-lists">
+  <section class="iv-list" aria-labelledby="iv-can-h">
+    <h3 class="iv-h" id="iv-can-h">
+      <i class="fa-solid fa-circle-check iv-ok" aria-hidden="true"></i> Can connect
+      <span class="iv-count">{{ l.canConnect.length }}</span>
+    </h3>
+    @for (r of l.canConnect; track r.serviceId) {
+      <ng-container *ngTemplateOutlet="row; context: { $implicit: r }" />
+    } @empty {
+      <p class="iv-empty">No service it can connect to.</p>
+    }
+  </section>
+
+  <section class="iv-list" aria-labelledby="iv-cant-h">
+    <h3 class="iv-h" id="iv-cant-h">
+      <i class="fa-solid fa-circle-exclamation iv-bad" aria-hidden="true"></i> Authorized, can't connect
+      <span class="iv-count">{{ l.cantConnect.length }}</span>
+    </h3>
+    @for (g of reasonGroups(); track g.reason) {
+      @let open = groupOpen(g);
+      <div class="iv-rgroup">
+        <button type="button" class="iv-rgroup-head" [attr.aria-expanded]="open" (click)="toggleGroup(g)">
+          <i class="fa-solid fa-chevron-right iv-chev" [class.open]="open" aria-hidden="true"></i>
+          <span class="iv-reason" [class.iv-reason-warn]="g.reason === 'no host serving yet'">{{ g.reason }}</span>
+          <span class="iv-rgroup-n">{{ g.rows.length }} {{ g.rows.length === 1 ? 'service' : 'services' }}</span>
+        </button>
+        @if (open) {
+          @for (r of g.rows; track r.serviceId) {
+            <ng-container *ngTemplateOutlet="row; context: { $implicit: r }" />
+          }
+        } @else {
+          <p class="iv-rgroup-preview">{{ preview(g) }}</p>
+        }
+      </div>
+    } @empty {
+      <p class="iv-empty">Nothing it is authorized for is out of reach.</p>
+    }
+  </section>
+
+  <section class="iv-list" aria-labelledby="iv-host-h">
+    <h3 class="iv-h" id="iv-host-h">
+      <i class="fa-solid fa-server iv-host" aria-hidden="true"></i> Can host
+      <span class="iv-count">{{ l.canHost.length }}</span>
+    </h3>
+    @for (r of l.canHost; track r.serviceId) {
+      <ng-container *ngTemplateOutlet="row; context: { $implicit: r, host: true }" />
+    } @empty {
+      <p class="iv-empty">It hosts no services.</p>
+    }
+  </section>
+</div>
+
+<section class="iv-why" aria-labelledby="iv-why-h">
+  <label class="iv-h" id="iv-why-h" for="iv-why">Why can't it reach…?</label>
+  @if (l.notDialAuthorized.length) {
+    <select id="iv-why" class="form-control iv-why-select" (change)="pickWhy($any($event.target).value)">
+      <option value="" [selected]="!whyServiceId()">Pick a service it can't dial</option>
+      @for (s of l.notDialAuthorized; track s.id) {
+        <option [value]="s.id" [selected]="s.id === whyServiceId()">{{ s.name }}</option>
+      }
+    </select>
+    @if (why(); as w) {
+      <div class="iv-why-result" aria-live="polite">
+        @if (w.message) {
+          <p>{{ w.message }}</p>
+        } @else {
+          <p>No dial policy covering&ngsp;<strong>{{ w.serviceName }}</strong>&ngsp;matches {{ w.identityName }}:</p>
+          <ul>
+            @for (d of w.policies; track d.policyId) {
+              <li>
+                <strong>{{ d.policyName }}</strong>&ngsp;<span class="iv-muted">({{ d.semantic === 'AllOf' ? 'all of' : 'any of' }})</span>
+                — {{ d.why }}
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    }
+  } @else {
+    <p class="iv-empty">It is Dial-authorized for every service.</p>
+  }
+</section>
+
+<ng-template #row let-r let-host="host">
+  <article class="iv-row" [class.iv-row-bad]="r.reason">
+    <div class="iv-row-head">
+      <a class="iv-svc" [routerLink]="[]" [queryParams]="{ service: r.serviceId, identity: null }"
+        queryParamsHandling="merge">{{ r.serviceName }}</a>
+      @if (!host) {
+        @for (other of overlapsOf(r.serviceId); track other) {
+          <span class="iv-overlap" [title]="'Its intercept overlaps ' + other + '’s; its tunneller can’t tell which one a connection means'">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> overlaps with {{ other }}</span>
+        }
+      }
+      @if (r.reason) {
+        <span class="iv-reason" [class.iv-reason-warn]="r.reason === 'no host serving yet'">{{ r.reason }}</span>
+      } @else if (host) {
+        <span class="iv-status" [class.iv-status-ok]="r.status === 'AUTHORIZED_REACHABLE'">{{ statusText(r.status) }}</span>
+      }
+    </div>
+    <p class="iv-grants">
+      <span class="iv-muted">{{ host ? 'Bind' : 'Dial' }} via</span>&ngsp;
+      @for (g of r.grants; track g.policyId; let last = $last) {
+        <span class="iv-grant">{{ g.policyName }}&ngsp;<span class="iv-by">{{ g.by === 'name' ? 'by name' : 'by rule' }}</span>@if (grantExpiry(g); as at) {&ngsp;<app-expiry-pill [expiresAt]="at" />}</span>@if (!last) {, }
+      }
+    </p>
+    @if (r.reason === 'no shared router' || r.reason === 'routers offline') {
+      <p class="iv-route">
+        Its routers: {{ l.routers.length ? routerNames(l.routers) : 'none' }}
+        · {{ r.serviceName }} uses: {{ r.serviceRouters.length ? routerNames(r.serviceRouters) : 'none' }}
+      </p>
+    }
+  </article>
+</ng-template>

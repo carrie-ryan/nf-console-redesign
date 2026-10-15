@@ -359,11 +359,8 @@
                     }
                   }
                 </td>
-                <td class="col-actions">
-                  <div class="action-btns">
-                    <button class="btn btn-sm" type="button" (click)="reschedulingMuteId.set(mute.id)">Reschedule</button>
-                    <button class="btn btn-sm" type="button" (click)="revokingMuteId.set(mute.id)">Revoke</button>
-                  </div>
+                <td class="col-actions" (click)="$event.stopPropagation()">
+                  <app-action-menu [items]="muteMenuItems(mute)" [ariaLabel]="'Actions for mute'" />
                 </td>
               </tr>
             }

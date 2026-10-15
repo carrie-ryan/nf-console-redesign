@@ -88,7 +88,7 @@
 }
 
 .checklist-badge {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--brand-primary);
   background: var(--brand-primary-light);
@@ -104,7 +104,7 @@
   background: #F0FDF4;
   border: 1px solid #86EFAC;
   border-radius: 8px;
-  color: var(--color-success);
+  color: var(--color-success-text);
   font-size: 0.875rem;
   font-weight: 500;
   margin-bottom: 1.25rem;
@@ -186,7 +186,7 @@
 }
 
 .step-desc {
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   color: var(--color-text-2);
   margin: 0 0 0.75rem;
   line-height: 1.5;
@@ -268,7 +268,7 @@
 }
 
 .hstat__of {
-  font-size: 0.6875rem;
+  font-size: 0.875rem;
   color: var(--color-text-2);
 }
 
@@ -368,7 +368,7 @@
 }
 
 .insights-value--danger {
-  color: var(--color-danger);
+  color: var(--color-danger-text);
   font-weight: 600;
 }
 
@@ -394,7 +394,7 @@
 
 /* Static, non-interactive "N dismissed" count (demo transparency only). */
 .concern-dismissed-count {
-  font-size: 0.6875rem;
+  font-size: 0.875rem;
   color: var(--color-text-3);
   white-space: nowrap;
 }
@@ -448,7 +448,7 @@
   outline-offset: 2px;
 }
 .concern-btn--dismiss:hover {
-  color: var(--color-danger);
+  color: var(--color-danger-text);
 }
 
 /* Inline confirm/cancel pair (swaps in place of the × on first click). */
@@ -462,10 +462,10 @@
   color: var(--color-text-2);
 }
 .concern-btn--yes:hover {
-  color: var(--color-success);
+  color: var(--color-success-text);
 }
 .concern-btn--no:hover {
-  color: var(--color-danger);
+  color: var(--color-danger-text);
 }
 
 /* Panels row */
@@ -518,7 +518,7 @@
   border-radius: 999px;
   background: var(--color-surface-2);
   color: var(--color-text-3);
-  font-size: 0.6875rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   cursor: default;
 }
@@ -561,7 +561,7 @@
   gap: 1.25rem;
   justify-content: center;
   margin-top: 0.5rem;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   color: var(--color-text-2);
 }
 
@@ -622,9 +622,9 @@
 }
 
 .sev-info    { color: var(--color-info); }
-.sev-warning { color: var(--color-warning); }
-.sev-error   { color: var(--color-danger); }
-.sev-success { color: var(--color-success); }
+.sev-warning { color: var(--color-warning-text); }
+.sev-error   { color: var(--color-danger-text); }
+.sev-success { color: var(--color-success-text); }
 
 .event-body {
   display: flex;
@@ -639,7 +639,7 @@
 }
 
 .event-time {
-  font-size: 0.6875rem;
+  font-size: 0.875rem;
   color: var(--color-text-3);
 }
 
@@ -669,7 +669,7 @@
 }
 
 .billing-days {
-  font-size: 0.6875rem;
+  font-size: 0.875rem;
   color: var(--color-text-3);
 }
 
@@ -710,7 +710,7 @@
 }
 
 .chart-caption {
-  font-size: 0.6875rem;
+  font-size: 0.875rem;
   color: var(--color-text-3);
   margin: 0;
   text-align: center;
@@ -870,11 +870,11 @@
   font-size: 1rem;
 }
 .alert-card__icon--failure {
-  color: var(--color-danger);
+  color: var(--color-danger-text);
   background: color-mix(in srgb, var(--color-danger) 12%, transparent);
 }
 .alert-card__icon--calm {
-  color: var(--color-success);
+  color: var(--color-success-text);
   background: color-mix(in srgb, var(--color-success) 12%, transparent);
 }
 .alert-card__body {
@@ -890,12 +890,12 @@
   color: var(--color-text);
 }
 .alert-card__sub {
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   color: var(--color-text-2);
 }
 /* No-terminator breakdown clause within the consolidated failures banner. */
 .alert-card__sub-em {
-  color: var(--color-danger);
+  color: var(--color-danger-text);
   font-weight: 600;
 }
 .alert-card__chevron {

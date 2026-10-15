@@ -1,0 +1,117 @@
+.at-fail-count { font-weight: 600; color: var(--color-danger-text); }
+
+.at-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.at-row {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+}
+
+.at-row.at-failing { border-color: var(--color-danger-border); background: var(--color-danger-bg); }
+
+.at-row-h {
+  display: flex;
+  align-items: baseline;
+  gap: 0.375rem;
+}
+
+.at-row-h i { color: var(--color-success-text); }
+.at-failing .at-row-h i { color: var(--color-danger-text); }
+
+.at-text { font-weight: 600; }
+
+.at-mark {
+  margin-left: auto;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--brand-accent);
+}
+
+.at-note,
+.at-why {
+  margin: 0.125rem 0 0;
+  font-size: 0.875rem;
+  color: var(--color-text-2);
+}
+
+.at-why { color: var(--color-text); }
+
+.at-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.at-remove { color: var(--color-danger-text); }
+
+.at-add { align-self: flex-start; }
+
+.at-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.at-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+/* This service · failing elsewhere · the rest (collapsed). */
+.at-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.at-group-h {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-text-2);
+}
+
+.at-where {
+  margin: 0 0 0.125rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-danger-text);
+}
+
+.at-others {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  align-self: flex-start;
+  padding: 0.125rem 0.25rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  font: inherit;
+  font-size: 0.8125rem;
+  color: var(--color-text-2);
+  cursor: pointer;
+}
+
+.at-others i { font-size: 0.6875rem; }
+.at-others:hover { color: var(--brand-primary); }
+.at-others:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--color-focus-ring); }

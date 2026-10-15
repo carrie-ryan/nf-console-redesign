@@ -20,6 +20,7 @@ import {
   resolveDialAuthorizationGraph,
 } from './authorization-resolver';
 import { explainCell, type ExplainCellContext } from './cell-explanation';
+import type { Identity, Policy, Service } from '../../shared/services/mock-data.service';
 
 describe('explainCell — per-member authorization status + exclusion reasons', () => {
   const { pairs, segmentNodes } = resolveDialAuthorizationGraph(
@@ -152,6 +153,24 @@ describe('explainCell — per-member authorization status + exclusion reasons', 
         else expect(s.reason).toBeDefined();
       }
     }
+  });
+
+  it('mixed AllOf: missingRoles lists # terms only, never @refs (Mark43 shape)', () => {
+    const T = '2026-10-01T00:00:00Z';
+    const ident = (id: string, attributes: string[]): Identity =>
+      ({ id, name: id, createdAt: T, status: 'online', type: 'device', attributes });
+    const identities = [ident('host-x', ['#grp-a']), ident('only-a', ['#grp-a', '#a'])];
+    const services: Service[] = [{ id: 'svc-t', name: 'svc-t', createdAt: T, status: 'online', protocol: 'tcp',
+      interceptAddress: 't:1', hostAddress: '10.0.0.1:1', attributes: ['#svc-t', '#t'] }];
+    const policies: Policy[] = [{ id: 'mixed', name: 'mixed', createdAt: T, status: 'active', type: 'dial',
+      semantic: 'AllOf', identityRoles: ['@host-x', '#a', '#b'], serviceRoles: ['#t'], postureCheckRoles: [] }];
+    const { pairs, segmentNodes } = resolveDialAuthorizationGraph(identities, services, policies, '#grp-', '#svc-');
+    const cell = explainCell('#grp-a', '#svc-t', { identities, services, policies, pairs, segmentNodes });
+    expect(idExpl(cell, 'host-x')?.status).toBe('authorized');
+    const onlyA = idExpl(cell, 'only-a')!;
+    expect(onlyA.status).toBe('excluded');
+    expect(onlyA.reason?.kind).toBe('failed-allof');
+    expect(onlyA.reason?.missingRoles).toEqual(['#b']);
   });
 
   // Resolver output unchanged — nothing in this increment touched the resolver.

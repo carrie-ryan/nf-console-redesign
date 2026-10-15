@@ -1,0 +1,167 @@
+<header class="pe-header">
+  <div class="pe-avatar" aria-hidden="true"><i class="fa-solid fa-vial-circle-check"></i></div>
+  <div class="pe-heading">
+    <h2 class="pe-title">Access tests</h2>
+    <span class="pe-subtitle">
+      @if (checking()) {
+        {{ progress() }}
+      } @else {
+        {{ results().length }} {{ results().length === 1 ? 'test' : 'tests' }} ·
+        @if (failing()) {<span class="at-fail-count">{{ failing() }} failing in this draft</span>} @else {all pass in this draft}
+      }
+    </span>
+  </div>
+  <button type="button" class="pe-icon-btn" (click)="closed.emit()" aria-label="Close access tests">
+    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+  </button>
+</header>
+
+<div class="pe-body">
+  <p class="pe-hint">Checked against every draft; a draft that fails any of them can't be committed. Changes here go into the draft.</p>
+  @if (editError(); as err) {
+    <p class="pe-error" role="alert"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> {{ err }}</p>
+  }
+
+  @if (checking()) {
+    <p class="pe-hint at-checking" role="status"><i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> {{ progress() }}</p>
+  }
+  <section class="at-group" aria-labelledby="at-here-h">
+    <h3 class="at-group-h" id="at-here-h">This service · {{ serviceName() }}</h3>
+    @if (here().length) {
+      <ul class="at-list">
+        @for (r of here(); track r.test.id) {<ng-container *ngTemplateOutlet="rowTpl; context: { $implicit: r, label: null }" />}
+      </ul>
+    } @else {
+      <p class="pe-hint">No tests for {{ serviceName() }} yet</p>
+    }
+    @if (form() && form()!.id === null) {
+      <ng-container *ngTemplateOutlet="formTpl" />
+    } @else if (!form()) {
+      <button type="button" class="btn btn-secondary btn-sm at-add" (click)="startAdd()">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i> Add test
+      </button>
+    }
+  </section>
+
+  @if (otherFailing().length) {
+    <section class="at-group" aria-labelledby="at-broken-h">
+      <h3 class="at-group-h" id="at-broken-h">Failing on other services</h3>
+      <ul class="at-list">
+        @for (r of otherFailing(); track r.test.id) {<ng-container *ngTemplateOutlet="rowTpl; context: { $implicit: r, label: otherLabel(r) }" />}
+      </ul>
+    </section>
+  }
+
+  @if (otherPassing().length) {
+    <section class="at-group">
+      <button type="button" class="at-others" [attr.aria-expanded]="othersOpen()" aria-controls="at-others-list" (click)="othersOpen.set(!othersOpen())">
+        <i class="fa-solid" [class.fa-chevron-right]="!othersOpen()" [class.fa-chevron-down]="othersOpen()" aria-hidden="true"></i>
+        {{ otherPassing().length }} other {{ otherPassing().length === 1 ? 'test' : 'tests' }} passing
+      </button>
+      @if (othersOpen()) {
+        <ul class="at-list" id="at-others-list">
+          @for (r of otherPassing(); track r.test.id) {<ng-container *ngTemplateOutlet="rowTpl; context: { $implicit: r, label: null }" />}
+        </ul>
+      }
+    </section>
+  }
+
+  @if (removed().length) {
+    <p class="pe-hint">Removed in this draft: {{ removed().length }} — discard the draft to bring them back.</p>
+  }
+</div>
+
+<ng-template #rowTpl let-r let-label="label">
+  <li class="at-row" [class.at-failing]="!r.pass">
+    @if (label) {<p class="at-where">{{ label }}</p>}
+    <div class="at-row-h">
+      <i class="fa-solid" [class.fa-circle-check]="r.pass" [class.fa-circle-xmark]="!r.pass" aria-hidden="true"></i>
+      <span class="at-text">{{ r.text }}</span>
+      <span class="visually-hidden">{{ r.pass ? 'passes' : 'fails' }}</span>
+      @if (mark(r.test.id); as m) {<span class="at-mark">{{ m }} in draft</span>}
+    </div>
+    @if (r.test.note) {<p class="at-note">{{ r.test.note }}</p>}
+    @if (!r.pass) {
+      <p class="at-why">
+        @if (r.problem) {
+          {{ r.problem }}
+        } @else {
+          @for (o of r.offenders.slice(0, 3); track o.identityId; let last = $last) {<strong>{{ o.name }}</strong> — <app-test-reason [parts]="o.parts" (open)="openLink.emit($event)" />@if (!last) {; }}
+          @if (r.offenders.length > 3) { · +{{ r.offenders.length - 3 }} more}
+        }
+      </p>
+    }
+    <div class="at-actions">
+      <button type="button" class="pe-more" (click)="startEdit(r.test)" [attr.aria-label]="'Edit test: ' + r.text">Edit</button>
+      <button type="button" class="pe-more at-remove" (click)="remove(r.test)" [attr.aria-label]="'Remove test: ' + r.text">Remove</button>
+    </div>
+    @if (form()?.id === r.test.id) {<ng-container *ngTemplateOutlet="formTpl" />}
+  </li>
+</ng-template>
+
+<ng-template #formTpl>
+  @if (form(); as f) {
+    <form class="at-form" (submit)="$event.preventDefault(); save()" [attr.aria-label]="f.id ? 'Edit test' : 'New test'">
+      <div class="pe-field">
+        <label class="form-label" for="at-names">Identities by name</label>
+        <div class="tag-input-wrap">
+          @for (n of listOf(f.names); track n) {
+            <span class="tag-chip"><i class="fa-solid fa-user" aria-hidden="true"></i>{{ n }}
+              <button class="tag-chip-x" type="button" (click)="removeFrom('names', n)" [attr.aria-label]="'Remove ' + n">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+              </button>
+            </span>
+          }
+          <app-search-picker inputId="at-names" [items]="identityItems()" [selected]="setOf(f.names)" noun="identities" [allowFree]="true"
+            placeholder="Search identities by name or attribute" (picked)="addTo('names', $event)" />
+        </div>
+      </div>
+      <div class="pe-field">
+        <label class="form-label" for="at-attrs">…or anyone with</label>
+        <div class="tag-input-wrap">
+          @for (a of listOf(f.attributes); track a) {
+            <span class="tag-chip">{{ a }}
+              <button class="tag-chip-x" type="button" (click)="removeFrom('attributes', a)" [attr.aria-label]="'Remove ' + a">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+              </button>
+            </span>
+          }
+          <app-search-picker inputId="at-attrs" [items]="attributeItems()" [selected]="setOf(f.attributes)" noun="attributes" [allowFree]="true"
+            placeholder="#attribute — Enter to add" (picked)="addTo('attributes', $event)" />
+        </div>
+        <p class="pe-hint">An identity matches by name, or by having any of the attributes.</p>
+      </div>
+      <div class="at-form-row">
+        <div class="pe-field">
+          <label class="form-label" for="at-kind">Rule</label>
+          <select id="at-kind" class="form-control" (change)="patchForm({ kind: $any($event.target).value })">
+            @for (k of kinds; track k) {<option [value]="k" [selected]="k === f.kind">{{ kindLabel[k] }}</option>}
+          </select>
+        </div>
+        <div class="pe-field">
+          <label class="form-label" for="at-service">Service</label>
+          <select id="at-service" class="form-control" (change)="patchForm({ serviceId: $any($event.target).value })">
+            @for (s of services(); track s.id) {<option [value]="s.id" [selected]="s.id === f.serviceId">{{ s.name }}</option>}
+          </select>
+        </div>
+      </div>
+      <p class="pe-hint">
+        @if (f.kind === 'mustConnect') {
+          Every match must be able to connect: authorized, an online route, posture, and an active host.
+        } @else {
+          Checks authorization only: a match fails it even with no route or posture.
+        }
+      </p>
+      <div class="pe-field">
+        <label class="form-label" for="at-note">Why</label>
+        <input id="at-note" class="form-control" [value]="f.note" (input)="patchForm({ note: $any($event.target).value })" autocomplete="off" />
+      </div>
+      <div class="pe-actions">
+        <button type="submit" class="btn btn-primary btn-sm" [disabled]="!formValid()">
+          <i class="fa-solid fa-plus" aria-hidden="true"></i> {{ f.id ? 'Save to draft' : 'Add to draft' }}
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="form.set(null)">Cancel</button>
+      </div>
+    </form>
+  }
+</ng-template>

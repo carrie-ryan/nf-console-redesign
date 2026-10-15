@@ -1,0 +1,41 @@
+<section class="sl" aria-labelledby="sl-h">
+  <div class="sl-head">
+    <h2 class="sl-h" id="sl-h">Pick a service</h2>
+    <app-export-report-button [scope]="exportScope()" [slug]="query().trim() ? 'filtered-services' : 'all-services'"
+      [what]="query().trim() ? 'the ' + shown().length + ' services listed' : 'every service'"
+      [count]="shown().length" [disabled]="shown().length === 0" />
+  </div>
+  <p class="sl-sub">See who can host it and who can dial it — then change that in a draft.</p>
+  <div class="sl-search">
+    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+    <input type="search" class="form-control" placeholder="Search by name, attribute or address"
+      aria-label="Search services" aria-controls="sl-list" [value]="query()"
+      (input)="query.set($any($event.target).value)" />
+  </div>
+  <p class="sl-count" aria-live="polite">
+    {{ shown().length }} of {{ rows().length }} {{ rows().length === 1 ? 'service' : 'services' }}
+  </p>
+  <ul class="sl-list" id="sl-list">
+    @for (r of shown(); track r.id) {
+      <li (appInView)="markSeen(r.id)">
+        <a class="sl-row" [routerLink]="[]" [queryParams]="{ service: r.id }" queryParamsHandling="merge">
+          <span class="sl-name">{{ r.name }}</span>
+          <span class="sl-policies" [class.sl-none]="r.bind === 0 && r.dial === 0">
+            {{ countText(r) }}
+            @if (r.viaAll) {
+              <span class="sl-all">· {{ r.viaAll }} for all services</span>
+            }
+          </span>
+          @if (verdict(r.id); as v) {
+            <span class="sl-verdict" [class.sl-bad]="v.canConnect === 0 && v.tone !== 'warn'" [class.sl-warn]="v.tone === 'warn'">{{ v.text }}</span>
+          } @else {
+            <span class="sl-verdict sl-pending">Checking…</span>
+          }
+          <span class="sl-meta">{{ r.interceptAddress }}@for (a of r.attributes; track a) {&ngsp;<span class="sl-attr">{{ a }}</span>}</span>
+        </a>
+      </li>
+    } @empty {
+      <li class="sl-empty">No service matches “{{ query() }}”.</li>
+    }
+  </ul>
+</section>

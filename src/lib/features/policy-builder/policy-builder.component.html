@@ -1,0 +1,198 @@
+<div class="page-header">
+  <div>
+    <h1>Policy Builder</h1>
+    <p>{{ mode() === 'service' ? 'Who hosts a service, and who is permitted to dial it' : 'What one identity can reach, and why' }}</p>
+  </div>
+  <div class="pb-header-actions">
+    @if (mode() === 'service' && selectedId()) {
+      <button type="button" class="btn btn-secondary" (click)="changeService()">
+        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Change service
+      </button>
+    }
+    <app-demo-panel />
+  </div>
+</div>
+
+<!-- On a service view, leave room under the canvas for the assistant's launcher. -->
+<div class="pb-body" [class.pb-body-assist]="mode() === 'service' && selectedId()" [class.pb-locked]="locked()">
+  @if (draft.error(); as err) {
+    <div class="draft-bar draft-error" role="alert">
+      <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+      <span><strong>Draft can't be applied — showing live data.</strong> {{ err }}</span>
+      <button type="button" class="btn btn-secondary btn-sm" (click)="discard()">Discard</button>
+    </div>
+  } @else if (draft.ops().length) {
+    <div class="draft-bar" role="status">
+      <i class="fa-solid fa-pen-ruler" aria-hidden="true"></i>
+      <span><strong>Draft</strong> · {{ changeCount() }}</span>
+      @if (!locked()) {
+        <span class="sep" aria-hidden="true">·</span>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="discard()">Discard</button>
+      }
+      <button type="button" class="btn btn-primary btn-sm draft-review-btn" (click)="openReview()"
+        [attr.aria-pressed]="reviewing()">
+        <i class="fa-solid fa-list-check" aria-hidden="true"></i> Review changes
+      </button>
+      <ng-container *ngTemplateOutlet="testsBtn" />
+    </div>
+    @let sub = approval.submission();
+    @if (sub?.status === 'submitted') {
+      <!-- Submitted: locked until withdrawn, approved or sent back. -->
+      <div class="draft-review-state draft-submitted" role="status">
+        <i class="fa-solid fa-lock" aria-hidden="true"></i>
+        <span><strong>Submitted for review</strong> · {{ sub!.by }} · {{ sub!.at | date: 'HH:mm' }}</span>&ngsp;<span class="sep" aria-hidden="true">·</span>&ngsp;@if (approval.viewerIsSubmitter()) {<button type="button" class="draft-state-link draft-withdraw" (click)="withdraw()">Withdraw</button>} @else {<button type="button" class="draft-state-link" (click)="openReview()">Review it</button>}
+      </div>
+    } @else if (approval.approved(); as a) {
+      <div class="draft-review-state draft-approved" role="status">
+        <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+        <span><strong>Approved by {{ a.by }}</strong></span>
+        @if (approval.viewer() === 'author') {
+          &ngsp;<span class="sep" aria-hidden="true">·</span>&ngsp;<button type="button" class="btn btn-primary btn-sm draft-commit-approved" (click)="commitApproved()">
+            <i class="fa-solid fa-upload" aria-hidden="true"></i> Commit
+          </button>
+        }
+        @if (commitError(); as err) {<span class="draft-state-error" role="alert">{{ err }}</span>}
+      </div>
+    } @else if (approval.changesRequested(); as c) {
+      <div class="draft-review-state draft-changes" role="status">
+        <i class="fa-solid fa-comment-dots" aria-hidden="true"></i>
+        <span><strong>Changes requested by {{ c.by }}</strong>@if (c.note) {: “{{ c.note }}”}</span>
+      </div>
+    }
+    @if (liveNotice(); as n) {
+      <!-- Live changed underneath the draft: the latest change, a way to the review. -->
+      <button type="button" class="draft-live" [class.draft-live-conflict]="n.conflict" (click)="openReview()">
+        <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+        <span class="draft-live-text">{{ n.text }}@if (n.earlier) {<span class="draft-live-more"> · +{{ n.earlier }} earlier</span>}</span>&ngsp;
+        @if (n.conflict) {<span class="draft-live-tag">conflicts with your draft</span>&ngsp;}
+        <span class="draft-live-link">Review <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
+      </button>
+    }
+  } @else if (barMessage(); as m) {
+    @if (m.kind === 'committed') {
+      <div class="draft-bar draft-done" role="status">
+        <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+        <span><strong>{{ m.text }}</strong> <a routerLink="/policies">View policies</a></span>
+        <ng-container *ngTemplateOutlet="testsBtn" />
+        <button type="button" class="draft-x" (click)="dismissMessage()" aria-label="Dismiss">
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+      </div>
+    } @else {
+      <div class="draft-bar draft-discarded" role="status">
+        <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+        <span><strong>{{ m.text }}</strong> · <button type="button" class="draft-undo" (click)="undoDiscard()">Undo</button></span>
+        <ng-container *ngTemplateOutlet="testsBtn" />
+        <button type="button" class="draft-x" (click)="dismissMessage()" aria-label="Dismiss">
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+      </div>
+    }
+  } @else if (mode() === 'service' && selectedId()) {
+    <!-- No draft: the bar stays, quietly, as the way to the access tests. -->
+    <div class="draft-bar draft-idle" role="status">
+      <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+      <span>No changes in draft</span>
+      <ng-container *ngTemplateOutlet="testsBtn" />
+    </div>
+  }
+
+  <ng-template #testsBtn>
+    @if (mode() === 'service' && selectedId()) {
+      <button type="button" class="btn btn-secondary btn-sm draft-tests-btn" [class.failing]="testsFailing()" (click)="openTests()"
+        [attr.aria-pressed]="testsOpen()">
+        <i class="fa-solid fa-vial-circle-check" aria-hidden="true"></i> {{ testsLabel() }}
+      </button>
+      <button type="button" class="btn btn-secondary btn-sm draft-history-btn" (click)="openHistory()" [attr.aria-pressed]="historyOpen()">
+        <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> History
+      </button>
+    }
+  </ng-template>
+
+  @if (mode() === 'identity') {
+    @if (selectedIdentityId(); as iid) {
+      <div class="pb-split" [class.editing]="identityPanelOpen()">
+        <div class="section-card iv-card">
+          <button type="button" class="pb-back" (click)="backFromIdentity()">
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> {{ backLabel() }}
+          </button>
+          <app-identity-view [identityId]="iid" [locked]="locked()" (routers)="openRouting({ kind: 'identity', identityId: iid })" />
+        </div>
+        @if (reviewing()) {
+          <app-draft-review class="pb-panel" serviceId="" [reasonLinks]="false" (closed)="closePanel()" (committed)="onCommitted($event)" />
+        } @else if (routing(); as subj) {
+          <app-router-access-panel class="pb-panel" [subject]="subj" (closed)="closePanel()" (openPolicy)="openRouterPolicy($event)" />
+        } @else if (routerPolicy(); as rp) {
+          <ng-container *ngTemplateOutlet="routerEditor; context: { $implicit: rp }" />
+        }
+      </div>
+    }
+  } @else if (selectedId(); as id) {
+    <div class="pb-split" [class.editing]="panelOpen()">
+      <div class="pb-main">
+        <div class="section-card">
+          <app-service-view [serviceId]="id" [withIds]="withIds()" [locked]="locked()" [selectedPolicyId]="editingId()"
+            (addService)="addService($event)" (removeService)="removeService($event)" (openRouterPolicy)="openRouterPolicy($event)"
+            [detailsServiceId]="showingService()" (serviceDetails)="openServiceDetails($event)"
+            (editPolicy)="edit($event)" (addRule)="addRule($event, id)" (routerGap)="openGap($event)"
+            (postureOpen)="openPosture($event)" (viewCheck)="openCheck($event)" (editStrategy)="openStrategy($event)"
+            (editHost)="openHost($event)" (openMembers)="openMembers($event)"
+            (editRouting)="openRouting({ kind: 'service', serviceId: $event })" (groupRouters)="openRouting({ kind: 'group', groupId: $event.groupId, serviceId: $event.serviceId })" />
+        </div>
+        <app-assist-panel [serviceId]="id" [locked]="locked()" (routerGap)="openGap($event)" />
+      </div>
+      @if (reviewing()) {
+        <app-draft-review class="pb-panel" [serviceId]="id" (closed)="closePanel()" (committed)="onCommitted($event)"
+          (openLink)="openReasonLink($event)" />
+      } @else if (editingId(); as pid) {
+        <app-policy-editor class="pb-panel" [policyId]="pid" [focus]="editFocus()" [pending]="editPending()?.pending ?? null"
+          [highlight]="editPending()?.highlight ?? []" (closed)="closePanel()" (viewCheck)="openCheck($event)"
+          (addTest)="openTestForm($event)" (tagIdentities)="openTagging($event)" />
+      } @else if (gap(); as g) {
+        <app-router-gap class="pb-panel" [serviceId]="g.serviceId" [groupId]="g.groupId" [kind]="g.gapKind" (closed)="closePanel()"
+          (openPolicy)="openRouterPolicy($event)" />
+      } @else if (posture(); as pp) {
+        <app-posture-panel class="pb-panel" [serviceId]="pp.serviceId" [groupId]="pp.groupId" (closed)="closePanel()"
+          (reviewFix)="reviewPostureFix($event)" (editPolicy)="edit($event)" (viewCheck)="openCheck($event)" />
+      } @else if (checkView(); as cid) {
+        <app-posture-check-summary class="pb-panel" [checkId]="cid" (closed)="closePanel()" />
+      } @else if (strategyEdit(); as sid) {
+        <app-service-strategy-editor class="pb-panel" [serviceId]="sid" (closed)="closePanel()" />
+      } @else if (hostEdit(); as hid) {
+        <app-host-editor class="pb-panel" [identityId]="hid" (closed)="closePanel()" />
+      } @else if (membersOf(); as gid) {
+        <app-member-drawer class="pb-panel" [groupId]="gid" [serviceIds]="canvasIds()" (closed)="closePanel()" />
+      } @else if (tagging(); as attr) {
+        <app-member-drawer class="pb-panel" [tagAttribute]="attr" (closed)="closePanel()" />
+      } @else if (historyOpen()) {
+        <app-history-panel class="pb-panel" (closed)="closePanel()" (reverted)="openReview()" />
+      } @else if (testsOpen()) {
+        <app-access-tests-panel class="pb-panel" [serviceId]="id" [prefill]="testPrefill()" (closed)="closePanel()" (openLink)="openReasonLink($event)" />
+      } @else if (routerPolicy(); as rp) {
+        <ng-container *ngTemplateOutlet="routerEditor; context: { $implicit: rp }" />
+      } @else if (routing(); as subj) {
+        <app-router-access-panel class="pb-panel" [subject]="subj" (closed)="closePanel()" (openPolicy)="openRouterPolicy($event)" />
+      } @else if (showingService(); as sid) {
+        <app-service-details class="pb-panel" [serviceId]="sid" (closed)="closePanel()" (editPolicy)="edit($event)" />
+      }
+    </div>
+  } @else {
+    <div class="pb-split" [class.editing]="reviewing() || routerPolicy()">
+      <div class="section-card">
+        <app-service-list />
+      </div>
+      @if (reviewing()) {
+        <app-draft-review class="pb-panel" serviceId="" [reasonLinks]="false" (closed)="closePanel()" (committed)="onCommitted($event)" />
+      } @else if (routerPolicy(); as rp) {
+        <!-- From the Policies tabs: a router policy no service on a canvas fits. -->
+        <ng-container *ngTemplateOutlet="routerEditor; context: { $implicit: rp }" />
+      }
+    </div>
+  }
+</div>
+
+<ng-template #routerEditor let-rp>
+  <app-router-policy-editor class="pb-panel" [target]="rp.target" [policyId]="rp.policyId" [pending]="rp.pending ?? null"
+    [pendingKind]="rp.pendingKind ?? 'create'" [highlight]="rp.highlight ?? []"
+    (closed)="closePanel()" />
+</ng-template>

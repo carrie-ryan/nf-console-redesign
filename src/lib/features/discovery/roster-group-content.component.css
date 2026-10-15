@@ -1,0 +1,130 @@
+:host { display: block; }
+
+.rg { display: flex; flex-direction: column; gap: 1.125rem; }
+
+/* ─── kind banner ─────────────────────────────────────────────────────── */
+.rg-banner {
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
+}
+.rg-banner.kind-tag { background: var(--color-info-bg); border-color: var(--color-info-border); }
+.rg-banner.kind-unmanaged { background: var(--color-warning-bg); border-color: var(--color-warning-border); }
+
+.rg-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.4rem;
+}
+.rg-label {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--color-text);
+  font-family: var(--font-mono, ui-monospace, monospace);
+}
+.rg-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+.badge-tag { background: var(--color-surface); color: var(--brand-primary); border: 1px solid var(--color-info-border); }
+.badge-no-tag { background: var(--color-surface); color: var(--color-text-3); border: 1px solid var(--color-border); }
+.badge-unmanaged { background: var(--color-surface); color: var(--color-warning-text); border: 1px solid var(--color-warning-border); }
+
+.rg-explain {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--color-text-2);
+}
+
+/* ─── member list ─────────────────────────────────────────────────────── */
+.rg-h {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0 0 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.rg-tally { font-size: 0.875rem; font-weight: 600; color: var(--color-text-3); }
+
+.rg-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.25rem; }
+
+/* An IDENTITY row is a button (opens identity-detail); a HOST row stays a plain
+   <li>. Both share this box so the two lists read as one list of members, and
+   only the identity rows carry the hover/focus affordance below. */
+.rg-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.625rem;
+  padding: 0.5rem 0.625rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 6px);
+  background: var(--color-surface);
+  font-size: 0.78125rem;
+}
+/* clickable identity row: reset the UA button box, then add the affordance */
+.rg-row-btn {
+  width: 100%;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.1s ease, border-color 0.1s ease;
+}
+.rg-row-btn:hover {
+  background: var(--color-surface-2);
+  border-color: var(--brand-primary);
+}
+.rg-row-btn:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 1px;
+}
+.rg-row-btn:hover .rg-caret { color: var(--brand-primary); }
+
+/* trailing cluster: the tag chips (or "no tag") plus the drill caret */
+.rg-trail { display: inline-flex; align-items: center; gap: 0.5rem; min-width: 0; }
+.rg-caret { font-size: 0.6875rem; color: var(--color-text-3); flex-shrink: 0; }
+
+.rg-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-weight: 600;
+  color: var(--color-text);
+  min-width: 0;
+}
+.rg-name i { color: var(--color-text-3); font-size: 0.75rem; }
+.rg-ip { font-family: var(--font-mono, ui-monospace, monospace); }
+.rg-row-host .rg-name i { color: var(--color-warning-text); }
+
+.rg-note { font-size: 0.875rem; color: var(--color-text-3); white-space: nowrap; }
+
+/* full tag set per row — the open circle's tag is marked, the rest are the
+   overlap (why one identity occupies more than one circle) */
+.rg-chips { display: flex; flex-wrap: wrap; gap: 0.25rem; justify-content: flex-end; }
+.rg-chip {
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+  color: var(--color-text-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.rg-chip-open {
+  background: var(--color-info-bg);
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}

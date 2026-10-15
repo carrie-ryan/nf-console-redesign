@@ -28,7 +28,7 @@
       @for (attr of attrA(); track attr) {
         <span class="tag-chip">
           {{ attr }}
-          <button class="tag-chip-x" type="button" (click)="removeAttrA(attr)" aria-label="Remove attribute">
+          <button class="tag-chip-x" type="button" (click)="removeAttrA(attr)" aria-label="Remove role">
             <i class="fa-solid fa-xmark"></i>
           </button>
         </span>
@@ -59,7 +59,7 @@
       @for (attr of attrB(); track attr) {
         <span class="tag-chip">
           {{ attr }}
-          <button class="tag-chip-x" type="button" (click)="removeAttrB(attr)" aria-label="Remove attribute">
+          <button class="tag-chip-x" type="button" (click)="removeAttrB(attr)" aria-label="Remove role">
             <i class="fa-solid fa-xmark"></i>
           </button>
         </span>
@@ -118,7 +118,7 @@
         <option value="AllOf">AllOf</option>
       </select>
       <p class="field-hint">
-        AnyOf grants a match on any listed attribute; AllOf requires every listed attribute to match.
+        AnyOf grants a match on any listed role; AllOf requires every listed role to match.
       </p>
     </div>
   </div>

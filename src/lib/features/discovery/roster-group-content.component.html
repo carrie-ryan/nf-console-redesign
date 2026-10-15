@@ -1,0 +1,98 @@
+@if (content(); as c) {
+  <div class="rg">
+    <!-- kind banner: what this circle IS, and how many it holds -->
+    <div [class]="'rg-banner kind-' + c.kind">
+      <div class="rg-head">
+        <span class="rg-label">{{ c.title }}</span>
+        @switch (c.kind) {
+          @case ('no-tag') {
+            <span class="rg-badge badge-no-tag"><i class="fa-solid fa-layer-group"></i> Catch-all</span>
+          }
+          @case ('unmanaged') {
+            <span class="rg-badge badge-unmanaged"><i class="fa-solid fa-triangle-exclamation"></i> Not identities</span>
+          }
+          @default {
+            <span class="rg-badge badge-tag"><i class="fa-solid fa-tag"></i> Role attribute</span>
+          }
+        }
+      </div>
+      <p class="rg-explain">
+        @switch (c.kind) {
+          @case ('no-tag') {
+            Managed identities carrying no role attribute at all. They are enrolled and real —
+            they simply group under nothing, so no role-attribute policy can reach them.
+          }
+          @case ('unmanaged') {
+            Observed source hosts that resolve to <strong>no identity</strong>. These are
+            addresses seen in the traffic capture, not principals — they cannot be tagged
+            or granted until they are enrolled.
+          }
+          @default {
+            Identities carrying <strong>{{ c.title }}</strong>. An identity appears under every
+            role attribute it carries, so a row here may also appear under another circle.
+            @if (alsoTaggedCount() > 0) {
+              <strong>{{ alsoTaggedCount() }}</strong> of these also carry another role attribute.
+            }
+          }
+        }
+      </p>
+    </div>
+
+    <!-- ── members ── -->
+    <section class="rg-section">
+      <h4 class="rg-h">
+        {{ c.kind === 'unmanaged' ? 'Hosts' : 'Identities' }}
+        <span class="rg-tally">{{ c.count }} total</span>
+      </h4>
+
+      @if (c.kind === 'unmanaged') {
+        <!-- HOST rows stay display only: an unmanaged host resolves to no
+             Identity, so there is nothing to open. Not a button, not focusable —
+             the absence of an affordance IS the statement. -->
+        <ul class="rg-list">
+          @for (h of c.hosts; track h.ingressIp) {
+            <li class="rg-row rg-row-host">
+              <span class="rg-name">
+                <i class="fa-solid fa-network-wired" aria-hidden="true"></i>
+                <span class="rg-ip">{{ h.display }}</span>
+              </span>
+              <span class="rg-note">no identity</span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <!-- IDENTITY rows open that identity's detail drawer (replacing this one). -->
+        <ul class="rg-list">
+          @for (m of c.identities; track m.id) {
+            <li>
+              <button
+                type="button"
+                class="rg-row rg-row-btn"
+                [attr.aria-label]="'Show details for ' + m.name"
+                (click)="openIdentity(m)">
+                <span class="rg-name">
+                  <i class="fa-solid fa-user" aria-hidden="true"></i>
+                  {{ m.name }}
+                </span>
+                <span class="rg-trail">
+                  @if (m.attributes.length > 0) {
+                    <!-- the row's FULL tag set: the tag whose circle is open is marked,
+                         every other tag it carries shows the overlap explicitly -->
+                    <span class="rg-chips">
+                      @for (a of m.attributes; track a) {
+                        <span class="rg-chip" [class.rg-chip-open]="a === openedTag()">{{ a }}</span>
+                      }
+                    </span>
+                  } @else {
+                    <span class="rg-note">no role attribute</span>
+                  }
+                  <i class="fa-solid fa-chevron-right rg-caret" aria-hidden="true"></i>
+                </span>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  </div>
+}

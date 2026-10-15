@@ -1,0 +1,36 @@
+<div class="cp" (focusout)="onFocusOut($event)">
+  <button #trigger type="button" class="form-control cp-trigger" [id]="triggerId()"
+    aria-haspopup="true" [attr.aria-expanded]="open()"
+    (click)="toggle($event)" (keydown)="onTriggerKeydown($event)">
+    @if (selected(); as p) {
+      <span class="cp-trigger-name">{{ p.label }}</span>
+    } @else {
+      <span class="cp-placeholder">Select a provider…</span>
+    }
+    <i class="fa-solid fa-chevron-down cp-chevron" aria-hidden="true"></i>
+  </button>
+
+  @if (open()) {
+    <div class="cp-panel" role="group" aria-label="Providers" (keydown)="onPanelKeydown($event)">
+      <ul class="cp-list">
+        @for (p of listed(); track p.providerType) {
+          @let on = p.providerType === selectedType();
+          <li class="cp-row" [class.cp-row--selected]="on">
+            <button type="button" class="cp-pick" data-cp-pick
+              [attr.aria-current]="on ? 'true' : null" (click)="pick(p.providerType)">
+              <span class="cp-row-top">
+                <span class="cp-name">{{ p.label }}</span>
+                @if (on) {
+                  <i class="fa-solid fa-check cp-check" aria-hidden="true"></i>
+                }
+              </span>
+            </button>
+          </li>
+        }
+      </ul>
+      <button type="button" class="cp-new" data-cp-pick (click)="addNew()">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i> Add new provider…
+      </button>
+    </div>
+  }
+</div>

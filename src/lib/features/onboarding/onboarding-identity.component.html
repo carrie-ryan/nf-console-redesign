@@ -30,13 +30,13 @@
       </div>
 
       <div class="ob-field">
-        <label class="form-label" for="ob-id-attrs">Attributes</label>
+        <label class="form-label" for="ob-id-attrs">Role attributes</label>
         <div class="tag-input-wrap">
           @for (attr of attributes(); track attr) {
             <span class="tag-chip">
               {{ attr }}
               @if (!saved()) {
-                <button class="tag-chip-x" type="button" (click)="removeAttribute(attr)" aria-label="Remove attribute">
+                <button class="tag-chip-x" type="button" (click)="removeAttribute(attr)" aria-label="Remove role attribute">
                   <i class="fa-solid fa-xmark"></i>
                 </button>
               }

@@ -1,0 +1,20 @@
+.list-body { padding: 1.5rem; }
+.empty-card { padding: 0; }
+.page-header-content { display: flex; flex-direction: column; gap: 0.25rem; }
+
+/* Not `overflow: hidden` — that would clip the row action menu at the card edge (see posture-checks). */
+.table-card { padding: 0; overflow: visible; }
+.table-card .data-table { border-collapse: separate; border-spacing: 0; }
+.table-card .data-table thead th:first-child { border-top-left-radius: var(--radius-lg); }
+.table-card .data-table thead th:last-child { border-top-right-radius: var(--radius-lg); }
+.table-card .data-table tbody tr:last-child td { border-bottom: none; }
+.table-card .data-table tbody tr:last-child td:first-child { border-bottom-left-radius: var(--radius-lg); }
+.table-card .data-table tbody tr:last-child td:last-child { border-bottom-right-radius: var(--radius-lg); }
+
+.name-cell { font-weight: 500; }
+.name-cell a { color: var(--brand-primary); text-decoration: none; }
+.name-cell a:hover { text-decoration: underline; }
+.name-cell .field-badge { margin-left: 0.5rem; }
+.cell-empty { color: var(--color-text-3); }
+.actions-cell { width: 3rem; }
+.row-link { cursor: pointer; }

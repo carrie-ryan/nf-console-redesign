@@ -1,0 +1,287 @@
+@if (policy(); as p) {
+  <header class="pe-header">
+    <div class="pe-avatar" aria-hidden="true"><i class="fa-solid fa-pen-to-square"></i></div>
+    <div class="pe-heading">
+      <h2 class="pe-title" id="pe-title">Edit policy</h2>
+      <span class="pe-subtitle">{{ p.id }}@if (isPending()) { · change not in draft yet} @else if (mark(); as m) { · {{ m }} in draft}</span>
+    </div>
+    <button type="button" class="pe-icon-btn" (click)="closed.emit()" aria-label="Close policy editor">
+      <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+    </button>
+  </header>
+
+  <div class="pe-body">
+    @if (editError(); as err) {
+      <p class="pe-error" role="alert">
+        <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> That change can't be applied: {{ err }}
+      </p>
+    }
+
+    <div class="pe-field">
+      <label class="form-label" for="pe-name">Name</label>
+      <input id="pe-name" class="form-control" [value]="p.name" (input)="rename($any($event.target).value)"
+        autocomplete="off" />
+    </div>
+
+    <div class="pe-field">
+      <span class="form-label" id="pe-type-label">Type</span>
+      <p class="pe-readonly" aria-labelledby="pe-type-label">
+        {{ p.type === 'dial' ? 'Dial' : 'Bind' }}
+        @if (mark() === 'new') {
+          <span class="pe-hint">· set by the lane you added it from</span>
+        } @else {
+          <span class="pe-hint">— can't be changed on an existing policy</span>
+        }
+      </p>
+    </div>
+
+    <fieldset class="pe-field pe-semantic" aria-describedby="pe-semantic-hint">
+      <legend class="form-label">Match attributes</legend>
+      <div class="pe-seg">
+        <label [class.on]="p.semantic === 'AllOf'">
+          <input type="radio" name="pe-semantic" value="AllOf" [checked]="p.semantic === 'AllOf'"
+            (change)="setSemantic('AllOf')" /> all of
+        </label>
+        <label [class.on]="p.semantic === 'AnyOf'">
+          <input type="radio" name="pe-semantic" value="AnyOf" [checked]="p.semantic === 'AnyOf'"
+            (change)="setSemantic('AnyOf')" /> any of
+        </label>
+      </div>
+      <p class="pe-hint" id="pe-semantic-hint">Applies to identities and services.</p>
+    </fieldset>
+
+    <div class="pe-field pe-expiry">
+      <label class="form-label" for="pe-expires">Expires</label>
+      <div class="pe-expiry-row">
+        <select id="pe-expires" class="form-control pe-expires-select" aria-describedby="pe-expiry-note"
+          (change)="setPolicyExpiry($any($event.target).value)">
+          <option value="never" [selected]="expiryChoice() === 'never'">Never</option>
+          @for (o of presets; track o.id) {
+            <option [value]="o.id" [selected]="expiryChoice() === o.id">In {{ o.label }}</option>
+          }
+          <option value="date" [selected]="expiryChoice() === 'date'">On a date…</option>
+        </select>
+        @if (showPolicyDate()) {
+          <input type="datetime-local" class="form-control pe-expires-date" aria-label="Policy expiry date and time"
+            [value]="dateValue(p.expiresAt)" [min]="minDate()" (change)="setPolicyDate($any($event.target).value)" />
+        }
+        @if (p.expiresAt; as at) {<app-expiry-pill [expiresAt]="at" />}
+      </div>
+      <p class="pe-hint" id="pe-expiry-note">
+        @if (p.expiresAt; as at) {
+          Deleted {{ expiryDate(at) }}.&ngsp;
+        }
+        Ziti has no native expiry: NetFoundry's scheduler removes it. A named identity can also expire on its own — use the clock on its chip.
+      </p>
+    </div>
+
+    @if (isPending() && (preview() === null || preview()!.length)) {
+      <div class="pe-preview" role="status">
+        <p class="pe-preview-h"><i class="fa-solid fa-eye" aria-hidden="true"></i> Preview if added</p>
+        @if (preview(); as lines) {
+          <ul>
+            @for (line of lines; track line) {<li>{{ line }}</li>}
+          </ul>
+        } @else {
+          <p class="pe-hint">Calculating…</p>
+        }
+      </div>
+    }
+
+    @if (hostWarnings().length) {
+      <div class="pe-preview pe-warn" role="status">
+        <p class="pe-preview-h"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Broad host rule</p>
+        <ul>
+          @for (w of hostWarnings(); track w.serviceId) {<li>{{ w.parts[0].text }}</li>}
+        </ul>
+      </div>
+    }
+
+    @if (conflictWarnings().length) {
+      <div class="pe-preview pe-warn pe-overlap" role="status">
+        <p class="pe-preview-h"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Overlapping intercepts</p>
+        <ul>
+          @for (w of conflictWarnings(); track w.serviceIds.join()) {<li>{{ w.text }}</li>}
+        </ul>
+      </div>
+    }
+
+    @if (sides(); as s) {
+      <ng-container *ngTemplateOutlet="side; context: { $implicit: 'identity', m: s.identity }" />
+      <ng-container *ngTemplateOutlet="side; context: { $implicit: 'service', m: s.service }" />
+      <ng-container *ngTemplateOutlet="side; context: { $implicit: 'posture', m: s.posture }" />
+    }
+
+    @if (isPending()) {
+      <div class="pe-actions">
+        <button type="button" class="btn btn-primary btn-sm" (click)="addToDraft()">
+          <i class="fa-solid fa-plus" aria-hidden="true"></i> Add to draft
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="closed.emit()">Cancel</button>
+      </div>
+    } @else {
+      <div class="pe-danger">
+        <button type="button" class="btn btn-secondary btn-sm pe-delete" (click)="deletePolicy()">
+          <i class="fa-solid fa-trash" aria-hidden="true"></i> Delete policy
+        </button>
+      </div>
+    }
+  </div>
+
+  <ng-template #side let-side let-m="m">
+    @let n = m.noun;
+    <section class="pe-side" [attr.aria-labelledby]="'pe-' + side + '-h'">
+      <h3 class="pe-side-h" [id]="'pe-' + side + '-h'">{{ n.title }}</h3>
+      @if (side === 'posture') {
+        <p class="pe-hint pe-posture-note">{{ postureNote() }}</p>
+      }
+
+      @if (side !== 'posture') {
+      <div class="pe-sub">
+        <label class="pe-sub-h" [for]="'pe-' + side + '-named'">Named {{ n.many }}</label>
+        <p class="pe-hint">Always included, whatever their attributes.</p>
+        <div class="tag-input-wrap">
+          @for (c of m.named; track c.role) {
+            <span class="tag-chip" [class.missing]="!c.found" [class.added]="isAdded(c.role)"
+              [title]="isAdded(c.role) ? 'Added by this fix' : c.found ? c.role : c.role + ' matches nothing'">
+              <i class="fa-solid" [class]="c.router ? 'fa-tower-broadcast' : n.icon" aria-hidden="true"></i>
+              {{ c.name }}
+              @if (isAdded(c.role)) {<span class="visually-hidden">(added by this fix)</span>}
+              @if (side === 'identity') {
+                <!-- The clock button; once the entry expires, it shows the countdown itself. -->
+                <button class="tag-chip-x pe-entry-clock" type="button" [class.on]="!!c.expiresAt" (click)="toggleEntryMenu(c.role)"
+                  [attr.aria-expanded]="entryMenu() === c.role" [attr.aria-controls]="'pe-entry-exp-' + $index"
+                  [attr.aria-label]="(c.expiresAt ? 'Change when ' + c.name + ' expires' : 'Set when ' + c.name + ' expires') + ' from this policy'"
+                  [title]="c.expiresAt ? 'Expires ' + expiryDate(c.expiresAt) : 'Make ' + c.name + ' expire'">
+                  @if (c.expiresAt; as at) {
+                    <app-expiry-pill class="pe-chip-pill" [expiresAt]="at" [short]="true" />
+                  } @else {
+                    <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                  }
+                </button>
+              }
+              <button class="tag-chip-x" type="button" (click)="removeRole(side, c.role)" [attr.aria-label]="'Remove ' + c.name">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+              </button>
+            </span>
+            @if (side === 'identity' && entryMenu() === c.role) {
+              <div class="pe-entry-menu" role="group" [id]="'pe-entry-exp-' + $index" [attr.aria-label]="c.name + ' expires'">
+                <span class="pe-entry-menu-h">{{ c.name }} expires</span>
+                <div class="pe-entry-opts">
+                  <button type="button" class="pe-entry-opt" [class.on]="!c.expiresAt" (click)="setEntryPreset(c.role, 'never')">Never</button>
+                  @for (o of presets; track o.id) {
+                    <button type="button" class="pe-entry-opt" (click)="setEntryPreset(c.role, o.id)">{{ o.label }}</button>
+                  }
+                </div>
+                <input type="datetime-local" class="form-control pe-entry-date" [attr.aria-label]="c.name + ' expiry date and time'"
+                  [value]="dateValue(c.expiresAt)" [min]="minDate()" (change)="setEntryDate(c.role, $any($event.target).value)" />
+              </div>
+            }
+          }
+          <app-search-picker [inputId]="'pe-' + side + '-named'" [items]="m.nameItems" [selected]="m.chosen" [noun]="n.many"
+            [placeholder]="'Search ' + n.many + ' by name or attribute'" (picked)="addRole(side, $event)" />
+        </div>
+      </div>
+
+      <div class="pe-sub">
+        <label class="pe-sub-h" [for]="'pe-' + side + '-terms'">Attribute rule</label>
+        <p class="pe-hint">{{ p.semantic === 'AllOf' ? 'Matches entities with all of these.' : 'Matches entities with any of these.' }}</p>
+        <!-- Above the field: the open suggestion list would cover it below. -->
+        @for (t of m.untagged; track t) {
+          <p class="pe-untagged" role="note">
+            <i class="fa-solid fa-tag" aria-hidden="true"></i>
+            <span>No identity has {{ t }}</span> ·&ngsp;<button type="button" class="pe-more pe-tag-ids" (click)="tagIdentities.emit(t)"
+              [attr.aria-label]="'Tag identities with ' + t">Tag identities</button>
+          </p>
+        }
+        @if (exclusion()?.side === side) {
+          <p class="pe-exclude" role="status">
+            <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+            @if (side === 'identity') {
+              <span>Ziti can't exclude. Use a narrower attribute, or add a must-not test.</span>&ngsp;
+              <button type="button" class="pe-more pe-exclude-test" (click)="addExclusionTest()"
+                [attr.aria-label]="'Add test: ' + (exclusion()!.attribute || 'these identities') + ' must not ' + (p.type === 'bind' ? 'host' : 'dial')">Add test</button>
+            } @else {
+              <span>Ziti can't exclude. Use a narrower attribute.</span>
+            }
+          </p>
+        }
+        <div class="tag-input-wrap">
+          @for (t of m.terms; track t) {
+            <span class="tag-chip" [class.added]="isAdded(t)" [title]="isAdded(t) ? 'Added by this fix' : t">
+              {{ t }}
+              @if (isAdded(t)) {<span class="visually-hidden">(added by this fix)</span>}
+              <button class="tag-chip-x" type="button" (click)="removeRole(side, t)" [attr.aria-label]="'Remove ' + t">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+              </button>
+            </span>
+          }
+          <app-search-picker [inputId]="'pe-' + side + '-terms'" [items]="m.attrItems" [selected]="m.chosen" noun="attributes"
+            [allowFree]="true" placeholder="#attribute — Enter to add" (picked)="addRole(side, $event)" />
+        </div>
+      </div>
+
+      } @else {
+        <!-- Checks are referenced here, never defined: pick existing ones by name or attribute. -->
+        <div class="pe-sub">
+          <label class="pe-sub-h" for="pe-posture-pick">Required checks</label>
+          <p class="pe-hint">Pick a check by name, or an attribute to require every check that has it.</p>
+          <div class="tag-input-wrap">
+            @for (c of m.named; track c.role) {
+              <span class="tag-chip" [class.missing]="!c.found" [class.added]="isAdded(c.role)"
+                [title]="isAdded(c.role) ? 'Added by this fix' : c.found ? c.role : c.role + ' matches no check'">
+                <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                {{ c.name }}
+                @if (isAdded(c.role)) {<span class="visually-hidden">(added by this fix)</span>}
+                <button class="tag-chip-x" type="button" (click)="removeRole(side, c.role)" [attr.aria-label]="'Remove ' + c.name">
+                  <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+              </span>
+            }
+            @for (t of m.terms; track t) {
+              <span class="tag-chip" [class.added]="isAdded(t)" [title]="isAdded(t) ? 'Added by this fix' : 'Every check with ' + t">
+                {{ t }}
+                @if (isAdded(t)) {<span class="visually-hidden">(added by this fix)</span>}
+                <button class="tag-chip-x" type="button" (click)="removeRole(side, t)" [attr.aria-label]="'Remove ' + t">
+                  <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+              </span>
+            }
+            <app-search-picker inputId="pe-posture-pick" [items]="checkItems()" [selected]="m.chosen" noun="posture checks"
+              placeholder="Search checks by name or attribute" (picked)="addRole(side, $event)" />
+          </div>
+        </div>
+      }
+
+      @if (side === 'posture') {
+        <p class="pe-count" aria-live="polite">
+          <strong>{{ m.count }}</strong>@if (m.matched.length) {:}
+          @for (c of m.matched; track c.id; let last = $last) {
+            <button type="button" class="pe-more pe-check-link" (click)="viewCheck.emit(c.id)" [attr.aria-label]="'Posture check ' + c.name + ' — details'">
+              <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>{{ c.name }}</button>@if (!last) {, }
+          }
+        </p>
+        <p class="pe-hint pe-new-check-hint">
+          Need a new check? <a class="pe-new-check-link" routerLink="/posture-checks" [queryParams]="{ returnTo: returnTo() }">Create it in Posture Checks</a>
+        </p>
+      } @else {
+      <p class="pe-count" aria-live="polite">
+        <strong>{{ m.count }}</strong>
+        @if (m.names.length) {
+          <span class="pe-sample">: {{ shownNames(side, m.names).join(', ') }}</span>
+          @if (m.more) {
+            <span class="pe-sample">{{ expandedSides().has(side) ? ' · ' : ', ' }}</span>
+            <button type="button" class="pe-more" [attr.aria-expanded]="expandedSides().has(side)"
+              (click)="toggleMatches(side)">{{ expandedSides().has(side) ? 'show fewer' : '+' + m.more + ' more' }}</button>
+          }
+        }
+      </p>
+      }
+    </section>
+  </ng-template>
+} @else {
+  <div class="pe-body">
+    <p class="pe-hint">This policy isn't in the draft any more.</p>
+    <button type="button" class="btn btn-secondary btn-sm" (click)="closed.emit()">Close</button>
+  </div>
+}

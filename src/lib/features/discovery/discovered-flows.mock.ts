@@ -121,6 +121,17 @@ const DEST_PROTOCOL: ReadonlyMap<string, DiscoveredFlow['protocol']> = new Map([
   ['opcua-historian.plant:4840', 'tcp'],
   ['s7-plc.plant:102', 'tcp'],
   ['modbus-rtu.plant:502', 'tcp'],
+  // ── MANAGED ESTATE: the application tiers the tagged roster dials ──
+  ['payments-api.corp:8443', 'https'],
+  ['payments-db.corp:5432', 'tcp'],
+  ['crm-api.corp:8443', 'https'],
+  ['crm-db.corp:1433', 'tcp'],
+  ['logistics-api.plant:8443', 'https'],
+  ['logistics-db.plant:5432', 'tcp'],
+  ['analytics-api.corp:8443', 'https'],
+  ['analytics-db.corp:1433', 'tcp'],
+  ['sso.corp:443', 'https'],
+  ['backup.corp:445', 'tcp'],
 ]);
 
 // ─── App-level (L7) protocol per destination ──────────────────────────────────
@@ -158,6 +169,18 @@ const DEST_APP_PROTOCOL: ReadonlyMap<string, AppProtocol> = new Map([
   ['opcua-historian.plant:4840', 'opcua'],
   ['s7-plc.plant:102', 's7'],
   ['modbus-rtu.plant:502', 'modbus'],
+  // managed estate — note NO new AppProtocol members were needed: every tier
+  // speaks something the union already carries.
+  ['payments-api.corp:8443', 'https'],
+  ['payments-db.corp:5432', 'postgres'],
+  ['crm-api.corp:8443', 'https'],
+  ['crm-db.corp:1433', 'mssql'],
+  ['logistics-api.plant:8443', 'https'],
+  ['logistics-db.plant:5432', 'postgres'],
+  ['analytics-api.corp:8443', 'https'],
+  ['analytics-db.corp:1433', 'mssql'],
+  ['sso.corp:443', 'https'],
+  ['backup.corp:445', 'smb'],
 ]);
 
 // ─── CloudZiti Traffic-Analysis column data ───────────────────────────────────
@@ -212,6 +235,19 @@ const DEST_META: ReadonlyMap<string, DestMeta> = new Map([
   ['opcua-historian.plant:4840', { egressIp: '10.70.4.11', egressPort: 4840, egressEntityName: 'Line-4 OT Gateway', serviceName: '' }],
   ['s7-plc.plant:102',      { egressIp: '10.70.4.12', egressPort: 102,   egressEntityName: 'Line-4 OT Gateway',  serviceName: '' }],
   ['modbus-rtu.plant:502',  { egressIp: '10.70.4.13', egressPort: 502,   egressEntityName: 'Line-4 OT Gateway',  serviceName: '' }],
+  // ── MANAGED ESTATE tiers. serviceName stays '' throughout: none of these is a
+  //    real record in MockDataService.services() (only gitlab/api/db are), and the
+  //    NAMING HONESTY rule above applies to them exactly as to the capture. ──
+  ['payments-api.corp:8443',     { egressIp: '10.20.11.10', egressPort: 8443, egressEntityName: 'Payments API Cluster',  serviceName: '' }],
+  ['payments-db.corp:5432',      { egressIp: '10.20.11.20', egressPort: 5432, egressEntityName: 'Payments DB Primary',   serviceName: '' }],
+  ['crm-api.corp:8443',          { egressIp: '10.40.11.10', egressPort: 8443, egressEntityName: 'CRM API Cluster',       serviceName: '' }],
+  ['crm-db.corp:1433',           { egressIp: '10.40.11.20', egressPort: 1433, egressEntityName: 'CRM DB Primary',        serviceName: '' }],
+  ['logistics-api.plant:8443',   { egressIp: '10.70.6.10',  egressPort: 8443, egressEntityName: 'WMS API Cluster',       serviceName: '' }],
+  ['logistics-db.plant:5432',    { egressIp: '10.70.6.20',  egressPort: 5432, egressEntityName: 'WMS DB Primary',        serviceName: '' }],
+  ['analytics-api.corp:8443',    { egressIp: '10.20.21.10', egressPort: 8443, egressEntityName: 'Analytics API Cluster', serviceName: '' }],
+  ['analytics-db.corp:1433',     { egressIp: '10.20.21.20', egressPort: 1433, egressEntityName: 'Analytics Warehouse',   serviceName: '' }],
+  ['sso.corp:443',               { egressIp: '10.10.9.10',  egressPort: 443,  egressEntityName: 'Identity Provider',     serviceName: '' }],
+  ['backup.corp:445',            { egressIp: '10.10.9.40',  egressPort: 445,  egressEntityName: 'Backup Vault',          serviceName: '' }],
 ]);
 
 // ─── the CIDR-first blocks ────────────────────────────────────────────────────
@@ -345,16 +381,250 @@ const CIDR_BLOCKS: CidrBlockSpec[] = [
   },
 ];
 
+/**
+ * ─── the MANAGED ESTATE's observed traffic ────────────────────────────────────
+ *
+ * Authored in the SAME terse spec as the capture above, and expanded by the same
+ * builder — the only difference is that every source here carries an `enrolledId`
+ * pointing at a tagged roster identity (`id-0NN`), so `buildFlows` stamps a real
+ * `dialingIdentityId` and nothing is an observed address.
+ *
+ * TAG-COHERENT BY CONSTRUCTION. The dial-sets were derived from each identity's
+ * attributes, so the traffic corroborates the grouping rather than sitting beside
+ * it: ROLE picks the tier a host talks to, APPLICATION picks which instance of
+ * that tier, and a person (tagged with an app but no role, because a person is
+ * not a tier) reaches the app's front door and the shared services instead.
+ *
+ *   #role-web    → its application's API   + sso
+ *   #role-api    → its application's DB     + sso + dns
+ *   #role-db     → backup                   + dns
+ *   #role-worker → its application's DB     + backup   (+ mes, on the plant)
+ *   a person     → sso + its application's API + wiki
+ *   no app tag   → shared services only (dns / ntp / bastion / api)
+ *
+ * Several destinations are SHARED with the capture above (dns.corp:53,
+ * ntp.corp:123, bastion.corp:22, wiki.corp:443, api.corp:443, mes.corp:8080).
+ * That overlap is deliberate — without it the flow map would render two
+ * disconnected halves and the clustering would never see the two populations as
+ * related.
+ *
+ * One ingress IP per identity, one /24 per application: `IdentityGroup` in
+ * raw-traffic.component.ts documents a 1:1 identity↔ingressIp invariant and
+ * silently shows only the first IP if it is broken.
+ */
+const MANAGED_BLOCKS: CidrBlockSpec[] = [
+
+  // ── Payments application tiers (us-east) ──
+  {
+    cidr: '10.20.10.0/24',
+    sources: [
+      { ip: '10.20.10.11', enrolledId: 'id-022', enrolledName: 'pay-web-01', dials: [
+        ['payments-api.corp:8443', 180], ['sso.corp:443', 60],
+      ] },
+      { ip: '10.20.10.12', enrolledId: 'id-023', enrolledName: 'pay-web-02', dials: [
+        ['payments-api.corp:8443', 187], ['sso.corp:443', 67],
+      ] },
+      { ip: '10.20.10.13', enrolledId: 'id-024', enrolledName: 'pay-web-03', dials: [
+        ['payments-api.corp:8443', 194], ['sso.corp:443', 74],
+      ] },
+      { ip: '10.20.10.14', enrolledId: 'id-025', enrolledName: 'pay-api-01', dials: [
+        ['payments-db.corp:5432', 261], ['sso.corp:443', 66], ['dns.corp:53', 171],
+      ] },
+      { ip: '10.20.10.15', enrolledId: 'id-026', enrolledName: 'pay-api-02', dials: [
+        ['payments-db.corp:5432', 245], ['sso.corp:443', 50], ['dns.corp:53', 155],
+      ] },
+      { ip: '10.20.10.16', enrolledId: 'id-027', enrolledName: 'pay-api-03', dials: [
+        ['payments-db.corp:5432', 252], ['sso.corp:443', 57], ['dns.corp:53', 162],
+      ] },
+      { ip: '10.20.10.17', enrolledId: 'id-028', enrolledName: 'pay-db-01', dials: [
+        ['backup.corp:445', 109], ['dns.corp:53', 139],
+      ] },
+      { ip: '10.20.10.18', enrolledId: 'id-029', enrolledName: 'pay-db-02', dials: [
+        ['backup.corp:445', 93], ['dns.corp:53', 123],
+      ] },
+      { ip: '10.20.10.19', enrolledId: 'id-030', enrolledName: 'pay-worker-01', dials: [
+        ['payments-db.corp:5432', 140], ['backup.corp:445', 50],
+      ] },
+      { ip: '10.20.10.20', enrolledId: 'id-031', enrolledName: 'pay-worker-02', dials: [
+        ['payments-db.corp:5432', 147], ['backup.corp:445', 57],
+      ] },
+      { ip: '10.20.10.21', enrolledId: 'id-032', enrolledName: 'pay-ops-anna', dials: [
+        ['sso.corp:443', 71], ['payments-api.corp:8443', 56], ['wiki.corp:443', 13],
+      ] },
+      { ip: '10.20.10.22', enrolledId: 'id-033', enrolledName: 'pay-ops-ben', dials: [
+        ['sso.corp:443', 78], ['payments-api.corp:8443', 63], ['wiki.corp:443', 20],
+      ] },
+      { ip: '10.20.10.23', enrolledId: 'id-034', enrolledName: 'pay-qa-01', dials: [
+        ['payments-db.corp:5432', 255], ['sso.corp:443', 60], ['dns.corp:53', 165],
+      ] },
+      { ip: '10.20.10.24', enrolledId: 'id-035', enrolledName: 'pay-cache-01', dials: [
+        ['payments-db.corp:5432', 152], ['backup.corp:445', 62],
+      ] },
+    ],
+  },
+
+  // ── Analytics application tiers (us-east) ──
+  {
+    cidr: '10.20.20.0/24',
+    sources: [
+      { ip: '10.20.20.11', enrolledId: 'id-063', enrolledName: 'ana-web-01', dials: [
+        ['analytics-api.corp:8443', 180], ['sso.corp:443', 60],
+      ] },
+      { ip: '10.20.20.12', enrolledId: 'id-064', enrolledName: 'ana-api-01', dials: [
+        ['analytics-db.corp:1433', 247], ['sso.corp:443', 52], ['dns.corp:53', 157],
+      ] },
+      { ip: '10.20.20.13', enrolledId: 'id-065', enrolledName: 'ana-api-02', dials: [
+        ['analytics-db.corp:1433', 254], ['sso.corp:443', 59], ['dns.corp:53', 164],
+      ] },
+      { ip: '10.20.20.14', enrolledId: 'id-066', enrolledName: 'ana-db-01', dials: [
+        ['backup.corp:445', 111], ['dns.corp:53', 141],
+      ] },
+      { ip: '10.20.20.15', enrolledId: 'id-067', enrolledName: 'ana-db-02', dials: [
+        ['backup.corp:445', 95], ['dns.corp:53', 125],
+      ] },
+      { ip: '10.20.20.16', enrolledId: 'id-068', enrolledName: 'ana-worker-01', dials: [
+        ['analytics-db.corp:1433', 142], ['backup.corp:445', 52],
+      ] },
+      { ip: '10.20.20.17', enrolledId: 'id-069', enrolledName: 'ana-worker-02', dials: [
+        ['analytics-db.corp:1433', 149], ['backup.corp:445', 59],
+      ] },
+      { ip: '10.20.20.18', enrolledId: 'id-070', enrolledName: 'ana-ds-ivan', dials: [
+        ['sso.corp:443', 73], ['analytics-api.corp:8443', 58], ['wiki.corp:443', 15],
+      ] },
+      { ip: '10.20.20.19', enrolledId: 'id-071', enrolledName: 'ana-ds-julia', dials: [
+        ['sso.corp:443', 80], ['analytics-api.corp:8443', 65], ['wiki.corp:443', 22],
+      ] },
+      { ip: '10.20.20.20', enrolledId: 'id-072', enrolledName: 'ana-etl-01', dials: [
+        ['analytics-db.corp:1433', 147], ['backup.corp:445', 57],
+      ] },
+    ],
+  },
+
+  // ── CRM application tiers (eu) ──
+  {
+    cidr: '10.40.10.0/24',
+    sources: [
+      { ip: '10.40.10.11', enrolledId: 'id-036', enrolledName: 'crm-web-01', dials: [
+        ['crm-api.corp:8443', 180], ['sso.corp:443', 60],
+      ] },
+      { ip: '10.40.10.12', enrolledId: 'id-037', enrolledName: 'crm-web-02', dials: [
+        ['crm-api.corp:8443', 187], ['sso.corp:443', 67],
+      ] },
+      { ip: '10.40.10.13', enrolledId: 'id-038', enrolledName: 'crm-web-03', dials: [
+        ['crm-api.corp:8443', 194], ['sso.corp:443', 74],
+      ] },
+      { ip: '10.40.10.14', enrolledId: 'id-039', enrolledName: 'crm-api-01', dials: [
+        ['crm-db.corp:1433', 261], ['sso.corp:443', 66], ['dns.corp:53', 171],
+      ] },
+      { ip: '10.40.10.15', enrolledId: 'id-040', enrolledName: 'crm-api-02', dials: [
+        ['crm-db.corp:1433', 245], ['sso.corp:443', 50], ['dns.corp:53', 155],
+      ] },
+      { ip: '10.40.10.16', enrolledId: 'id-041', enrolledName: 'crm-db-01', dials: [
+        ['backup.corp:445', 102], ['dns.corp:53', 132],
+      ] },
+      { ip: '10.40.10.17', enrolledId: 'id-042', enrolledName: 'crm-db-02', dials: [
+        ['backup.corp:445', 109], ['dns.corp:53', 139],
+      ] },
+      { ip: '10.40.10.18', enrolledId: 'id-043', enrolledName: 'crm-worker-01', dials: [
+        ['crm-db.corp:1433', 133], ['backup.corp:445', 43],
+      ] },
+      { ip: '10.40.10.19', enrolledId: 'id-044', enrolledName: 'crm-worker-02', dials: [
+        ['crm-db.corp:1433', 140], ['backup.corp:445', 50],
+      ] },
+      { ip: '10.40.10.20', enrolledId: 'id-045', enrolledName: 'crm-sales-dana', dials: [
+        ['sso.corp:443', 87], ['crm-api.corp:8443', 72], ['wiki.corp:443', 29],
+      ] },
+      { ip: '10.40.10.21', enrolledId: 'id-046', enrolledName: 'crm-sales-erik', dials: [
+        ['sso.corp:443', 71], ['crm-api.corp:8443', 56], ['wiki.corp:443', 13],
+      ] },
+      { ip: '10.40.10.22', enrolledId: 'id-047', enrolledName: 'crm-sales-fiona', dials: [
+        ['sso.corp:443', 78], ['crm-api.corp:8443', 63], ['wiki.corp:443', 20],
+      ] },
+      { ip: '10.40.10.23', enrolledId: 'id-048', enrolledName: 'crm-report-01', dials: [
+        ['crm-db.corp:1433', 255], ['sso.corp:443', 60], ['dns.corp:53', 165],
+      ] },
+    ],
+  },
+
+  // ── Logistics / WMS application tiers (plant) ──
+  {
+    cidr: '10.70.5.0/24',
+    sources: [
+      { ip: '10.70.5.11', enrolledId: 'id-049', enrolledName: 'log-web-01', dials: [
+        ['logistics-api.plant:8443', 180], ['sso.corp:443', 60],
+      ] },
+      { ip: '10.70.5.12', enrolledId: 'id-050', enrolledName: 'log-web-02', dials: [
+        ['logistics-api.plant:8443', 187], ['sso.corp:443', 67],
+      ] },
+      { ip: '10.70.5.13', enrolledId: 'id-051', enrolledName: 'log-api-01', dials: [
+        ['logistics-db.plant:5432', 254], ['sso.corp:443', 59], ['dns.corp:53', 164], ['mes.corp:8080', 62],
+      ] },
+      { ip: '10.70.5.14', enrolledId: 'id-052', enrolledName: 'log-api-02', dials: [
+        ['logistics-db.plant:5432', 261], ['sso.corp:443', 66], ['dns.corp:53', 171], ['mes.corp:8080', 69],
+      ] },
+      { ip: '10.70.5.15', enrolledId: 'id-053', enrolledName: 'log-db-01', dials: [
+        ['backup.corp:445', 95], ['dns.corp:53', 125],
+      ] },
+      { ip: '10.70.5.16', enrolledId: 'id-054', enrolledName: 'log-db-02', dials: [
+        ['backup.corp:445', 102], ['dns.corp:53', 132],
+      ] },
+      { ip: '10.70.5.17', enrolledId: 'id-055', enrolledName: 'log-worker-01', dials: [
+        ['logistics-db.plant:5432', 149], ['backup.corp:445', 59], ['mes.corp:8080', 67],
+      ] },
+      { ip: '10.70.5.18', enrolledId: 'id-056', enrolledName: 'log-worker-02', dials: [
+        ['logistics-db.plant:5432', 133], ['backup.corp:445', 43], ['mes.corp:8080', 51],
+      ] },
+      { ip: '10.70.5.19', enrolledId: 'id-057', enrolledName: 'log-worker-03', dials: [
+        ['logistics-db.plant:5432', 140], ['backup.corp:445', 50], ['mes.corp:8080', 58],
+      ] },
+      { ip: '10.70.5.20', enrolledId: 'id-058', enrolledName: 'log-scanner-01', dials: [
+        ['sso.corp:443', 87], ['logistics-api.plant:8443', 72], ['wiki.corp:443', 29],
+      ] },
+      { ip: '10.70.5.21', enrolledId: 'id-059', enrolledName: 'log-scanner-02', dials: [
+        ['sso.corp:443', 71], ['logistics-api.plant:8443', 56], ['wiki.corp:443', 13],
+      ] },
+      { ip: '10.70.5.22', enrolledId: 'id-060', enrolledName: 'log-floor-gita', dials: [
+        ['sso.corp:443', 78], ['logistics-api.plant:8443', 63], ['wiki.corp:443', 20],
+      ] },
+      { ip: '10.70.5.23', enrolledId: 'id-061', enrolledName: 'log-floor-hana', dials: [
+        ['sso.corp:443', 85], ['logistics-api.plant:8443', 70], ['wiki.corp:443', 27],
+      ] },
+      { ip: '10.70.5.24', enrolledId: 'id-062', enrolledName: 'log-hmi-01', dials: [
+        ['logistics-api.plant:8443', 202], ['sso.corp:443', 82],
+      ] },
+    ],
+  },
+
+  // ── Shared infrastructure — no application of its own ──
+  {
+    cidr: '10.20.30.0/24',
+    sources: [
+      { ip: '10.20.30.11', enrolledId: 'id-073', enrolledName: 'infra-bastion-01', dials: [
+        ['dns.corp:53', 200], ['ntp.corp:123', 110], ['bastion.corp:22', 30],
+      ] },
+      { ip: '10.20.30.12', enrolledId: 'id-074', enrolledName: 'infra-monitor-01', dials: [
+        ['dns.corp:53', 207], ['ntp.corp:123', 117], ['api.corp:443', 42],
+      ] },
+      { ip: '10.20.30.13', enrolledId: 'id-075', enrolledName: 'edge-gw-plant-01', dials: [
+        ['dns.corp:53', 214], ['ntp.corp:123', 124],
+      ] },
+      { ip: '10.20.30.14', enrolledId: 'id-076', enrolledName: 'edge-gw-eu-01', dials: [
+        ['dns.corp:53', 221], ['ntp.corp:123', 131],
+      ] },
+    ],
+  },
+];
+
 // ─── expand terse CIDR spec → full DiscoveredFlow records ──────────────────────
 // Timestamps are a stable ~4-week window (no Date.now — deterministic mock).
 
 const WINDOW_FIRST_SEEN = '2026-07-08T09:00:00Z';
 const WINDOW_LAST_SEEN = '2026-08-05T17:00:00Z';
 
-function buildFlows(): DiscoveredFlow[] {
+function buildFlows(blocks: CidrBlockSpec[], startAt = 0): DiscoveredFlow[] {
   const flows: DiscoveredFlow[] = [];
-  let n = 0;
-  for (const block of CIDR_BLOCKS) {
+  let n = startAt;
+  for (const block of blocks) {
     for (const src of block.sources) {
       // Derived enrollment: enrolled → real disc id; unenrolled → null identity id
       // (an observed ADDRESS, never a principal). The IP is NOT coerced into the id;
@@ -389,4 +659,28 @@ function buildFlows(): DiscoveredFlow[] {
   return flows;
 }
 
-export const DISCOVERED_FLOWS: DiscoveredFlow[] = buildFlows();
+/**
+ * The DISCOVERY CAPTURE only — the six /24 blocks someone pointed discovery at,
+ * where most sources resolve to no identity. Exported separately because it is a
+ * FIXED, hand-authored scenario: an engineering cluster with drift, a low-volume
+ * wiki tail, a vendor DMZ that clusters with nobody, and one cluster carrying
+ * both enrolled and unenrolled members. discovery-engine.spec.ts pins against
+ * this, so the engine's behaviour is tested on a controlled input rather than on
+ * however much demo traffic the roster happens to carry.
+ */
+export const DISCOVERY_CAPTURE_FLOWS: DiscoveredFlow[] = buildFlows(CIDR_BLOCKS);
+
+/**
+ * EVERYTHING the network observed — the capture plus the managed estate's own
+ * traffic. This is what the app renders: Raw traffic, the flow map, the
+ * per-identity Traffic tab, and (deliberately) the discovery clustering, which
+ * therefore sees already-tagged hosts alongside the unknown ones.
+ *
+ * Flow ids stay positional and stable: the capture keeps flow-001…flow-097 and
+ * the estate continues from there, so an id never changes meaning when the
+ * estate grows.
+ */
+export const DISCOVERED_FLOWS: DiscoveredFlow[] = [
+  ...DISCOVERY_CAPTURE_FLOWS,
+  ...buildFlows(MANAGED_BLOCKS, DISCOVERY_CAPTURE_FLOWS.length),
+];

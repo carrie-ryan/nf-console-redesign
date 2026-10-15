@@ -4,7 +4,7 @@
 .ob-form-card { display: flex; flex-direction: column; gap: 1.25rem; }
 .ob-field { display: flex; flex-direction: column; }
 
-.field-hint { margin: 0.375rem 0 0; font-size: 0.75rem; color: var(--color-text-3); }
+.field-hint { margin: 0.375rem 0 0; font-size: 0.875rem; color: var(--color-text-3); }
 
 /* Type + Semantic side by side (Service Policy); Semantic alone otherwise. */
 .pf-inline {
@@ -100,7 +100,7 @@ select.form-control { cursor: pointer; }
   line-height: 1.5;
 }
 
-.tag-bare-input::placeholder { color: var(--color-text-3); }
+.tag-bare-input::placeholder { color: var(--color-text-disabled); }
 
 /* ─── Accordion (Show More Options) ──────────────────────────────────── */
 .ob-accordion {
@@ -198,7 +198,7 @@ select.form-control { cursor: pointer; }
   transition: color var(--transition-fast), background var(--transition-fast);
 }
 
-.pol-tag-remove:hover { color: var(--color-danger); background: var(--color-danger-bg); }
+.pol-tag-remove:hover { color: var(--color-danger-text); background: var(--color-danger-bg); }
 
 .pol-tag-add {
   display: flex;

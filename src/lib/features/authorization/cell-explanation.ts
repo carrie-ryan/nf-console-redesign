@@ -45,7 +45,7 @@ export interface ExclusionReason {
   nearestPolicyId?: string;
   /** Human name of that policy (failed-allof only) — for eyeballing. */
   nearestPolicyName?: string;
-  /** The specific required roles the member lacks (failed-allof only). */
+  /** The specific required '#' terms the member lacks (failed-allof only). Never '@refs'. */
   missingRoles?: string[];
 }
 
@@ -111,7 +111,8 @@ function reasonForExcluded(
   let best: { policy: Policy; missing: string[] } | null = null;
 
   for (const p of cellPolicies) {
-    const roles = rolesOf(p);
+    // '@refs' sit outside the semantic, so they are never "missing" — '#' terms only.
+    const roles = rolesOf(p).filter((r) => !r.startsWith('@'));
     if (roles.length === 0) continue;
     const missing = roles.filter(
       (r) => !roleSatisfied(r, member.attributes, member.name, member.id),

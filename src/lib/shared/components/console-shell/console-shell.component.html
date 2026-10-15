@@ -8,6 +8,14 @@
     </main>
   </div>
   <app-drawer />
+  <!-- Always present so screen readers announce a toast when one appears. -->
+  <div class="toast-region" aria-live="polite">
+    @if (toasts.current(); as t) {
+      @for (toast of [t]; track toast.id) {
+        <app-toast [message]="toast.message" [variant]="toast.variant" (dismissed)="toasts.dismiss(toast.id)" />
+      }
+    }
+  </div>
   @if (policyLauncher.launch(); as launch) {
     <app-construct-policy-modal
       [destinations]="launch.destinations"

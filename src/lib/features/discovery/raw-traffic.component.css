@@ -50,7 +50,7 @@
   flex-shrink: 0;
 }
 .sel-count {
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--color-text-2);
   font-variant-numeric: tabular-nums;
@@ -141,12 +141,17 @@ col.rc-circuits { width: 15%; }
 /* Fixed widths that SUM with the trailing spacer to 100% — the spacer (auto,
    no width) absorbs all leftover on the right so the real columns pack LEFT
    instead of the browser inflating the first column. */
+/* Identity-level select box. Same width treatment as the sub-table's sd-check, so
+   the group row's box and its destinations' boxes read as one column family. */
+col.idc-check { width: 2.5rem; }
 col.idc-chevron { width: 2.75rem; }
 col.idc-entity { width: 16rem; }
 col.idc-ingress { width: 10rem; }
 col.idc-dests { width: 8rem; }
 col.idc-circuits { width: 8rem; }
 /* col.idc-spacer — no width; takes the remaining space on the right. */
+.id-table td.idc-check,
+.id-table th.idc-check { overflow: visible; text-overflow: clip; }
 .id-table td.idc-chevron,
 .id-table th.idc-chevron {
   text-align: center;
@@ -210,7 +215,7 @@ col.sd-circuits { width: 6rem; }
   border-radius: var(--radius-sm);
   background: var(--color-surface-2);
   color: var(--color-text-3);
-  font-size: 0.625rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;

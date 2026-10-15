@@ -254,7 +254,7 @@ export class CreateAdvancedServiceComponent {
       hostAddress: `${this.address}:${this.port}`,
       attributes: this.attributes(),
       encryptionRequired: this.encryptionRequired,
-      terminatorStrategy: this.terminatorStrategy || undefined,
+      terminatorStrategy: (this.terminatorStrategy || undefined) as Service['terminatorStrategy'],
       tags: this.tags().length
         ? Object.fromEntries(this.tags().map(t => [t.key, t.value]))
         : undefined,

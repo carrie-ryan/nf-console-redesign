@@ -1,0 +1,45 @@
+/* Same bottom rhythm as the form's .form-group fields, so the action bar's divider clears the preview.
+   Collapses when nothing renders (manual mapping). */
+:host { display: block; margin-bottom: 1.5rem; }
+:host:empty { display: none; }
+
+.mk-join { margin: 0.375rem 0 0; font-size: 0.8125rem; color: var(--color-text-2); }
+.mk-join b { color: var(--color-text); font-weight: 600; }
+
+.mk-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning-border);
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  color: var(--color-text);
+}
+.mk-warning i { color: var(--color-warning-text); margin-top: 0.1rem; flex-shrink: 0; }
+
+.mk-rate {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  color: var(--color-text-2);
+}
+.mk-rate-hdr { display: flex; justify-content: space-between; align-items: baseline; }
+.mk-rate-value { font-size: 1rem; color: var(--color-text); }
+.mk-bar {
+  display: flex;
+  height: 0.375rem;
+  margin-top: 0.5rem;
+  border-radius: var(--radius-full);
+  background: var(--color-warning-border);
+  overflow: hidden;
+}
+.mk-bar-ok { background: var(--color-success); }
+.mk-rate-sub { margin: 0.375rem 0 0; font-size: 0.875rem; color: var(--color-text-3); }
+.mk-reasons { margin: 0.5rem 0 0; padding: 0; list-style: none; }
+.mk-reasons li { display: flex; justify-content: space-between; gap: 1rem; padding: 0.125rem 0; }
+.mk-count { font-variant-numeric: tabular-nums; color: var(--color-text); }

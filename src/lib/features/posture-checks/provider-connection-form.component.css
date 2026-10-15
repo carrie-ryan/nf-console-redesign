@@ -1,0 +1,82 @@
+:host { display: block; }
+
+/* ─── Card (same rhythm as the posture check form's cards) ───────── */
+.section-card > :last-child { margin-bottom: 0; }
+
+.card-heading { margin: 0 0 1.25rem; font-size: 0.9375rem; font-weight: 600; color: var(--color-text); }
+.card-heading--hinted { margin-bottom: 0.375rem; }
+
+.card-hint { margin: 0 0 1.25rem; font-size: 0.875rem; line-height: 1.5; color: var(--color-text-3); }
+
+/* Divides the card into a second titled group (Device matching). */
+.card-subheading {
+  margin: 0 0 0.375rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* ─── Fields (.pc-field*, .pc-warning and .opt-chip* live in styles.css) ─── */
+.conn-summary { margin: 0.25rem 0 0; font-size: 0.8125rem; color: var(--color-text-2); }
+
+/* The shared-use note opens the edit card, so it takes the hint's place in the rhythm. */
+.conn-usage { margin: 0 0 1.25rem; }
+
+/* ─── Chips: the Acquisition pair locks for event-only providers ─── */
+.opt-chip:disabled { cursor: not-allowed; }
+.opt-chip:disabled:not(.opt-chip-on) { opacity: 0.5; background: none; }
+
+/* ─── Manual mapping table ───────────────────────────────────────── */
+.mapping-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.mapping-table td { padding: 0.5rem 0.75rem; }
+.mapping-table th { padding: 0.5rem 0.75rem; }
+.mapping-table tbody tr:last-child td { border-bottom: none; }
+.mapping-table tbody tr:hover td { background: none; }
+.mapping-remove-cell { width: 1%; }
+
+.mapping-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: none;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--color-text-3);
+  cursor: pointer;
+}
+.mapping-remove:hover { background: var(--color-surface-2); color: var(--color-text); }
+
+/* Add mapping + Import CSV… in a row, each sized to its label (a bare .pc-field child
+   would stretch full width and read as an input). Add's dashed border reads as "add". */
+.mapping-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+.mapping-add {
+  border-style: dashed;
+  border-color: var(--brand-primary);
+  background: transparent;
+  color: var(--brand-primary);
+  font-weight: 500;
+}
+.mapping-add:hover { border-style: solid; background: var(--brand-primary-light); }
+
+/* ─── Actions ────────────────────────────────────────────────────── */
+.conn-form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--color-border);
+}
+
+/* Only shown after a save attempt with fields missing. */
+.conn-blocked { margin: 0 auto 0 0; font-size: 0.875rem; font-weight: 500; color: var(--color-danger-text); }
+.form-control[aria-invalid="true"] { border-color: var(--color-danger); }

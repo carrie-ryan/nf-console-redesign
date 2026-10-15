@@ -1,0 +1,129 @@
+<header class="rg-header">
+  <div class="rg-avatar md-avatar" aria-hidden="true"><i class="fa-solid fa-users"></i></div>
+  <div class="rg-heading">
+    <h2 class="rg-title">{{ groupId() ? 'Members' : 'Identities' }}</h2>
+    <span class="rg-subtitle">{{ subtitle() }}</span>
+  </div>
+  <button type="button" class="rg-icon-btn" (click)="closed.emit()" [attr.aria-label]="groupId() ? 'Close members' : 'Close identities'">
+    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+  </button>
+</header>
+
+@if (drawer(); as d) {
+  <div class="md-controls">
+    <p class="md-summary">{{ d.summary }}</p>
+    <div class="md-search">
+      <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+      <input type="search" class="md-search-input" [value]="query()" (input)="search($any($event.target).value)"
+        placeholder="Search by name or attribute" aria-label="Search members by name or attribute" />
+    </div>
+    @if (filters().length) {
+    <div class="md-chips" role="group" aria-label="Filter by status">
+      @for (f of filters(); track f.key) {
+        <button type="button" [class]="'md-chip md-chip-' + f.key" [attr.aria-pressed]="chips().has(f.key)"
+          [disabled]="!counts()[f.key] && !chips().has(f.key)" (click)="toggleChip(f.key)">
+          {{ f.label }} <span class="md-chip-n">{{ counts()[f.key].toLocaleString('en-US') }}</span>
+        </button>
+      }
+    </div>
+    }
+    @if (d.services.length > 1) {
+      <ol class="md-legend" aria-label="Services, numbered as in each row">
+        @for (s of d.services; track s.id; let i = $index) {
+          <li><span class="md-num">{{ i + 1 }}</span>{{ s.name }}</li>
+        }
+      </ol>
+    }
+    <p class="md-count" aria-live="polite">{{ shownText() }}</p>
+
+    <!-- Selection: pick identities, then add or remove an attribute on them (one draft op). -->
+    <div class="md-select-row">
+      <button type="button" class="md-chip md-select-toggle" [attr.aria-pressed]="selecting()" (click)="toggleSelecting()">
+        <i class="fa-regular fa-square-check" aria-hidden="true"></i> Select
+      </button>
+      @if (selecting()) {
+        <span class="md-sel-n" aria-live="polite">{{ selected().size.toLocaleString('en-US') }} selected</span>
+        <button type="button" class="md-link md-select-all" [disabled]="!rows().length" (click)="selectAllMatching()">
+          Select all {{ rows().length.toLocaleString('en-US') }} matching
+        </button>
+        @if (selected().size) {
+          <button type="button" class="md-link" (click)="clearSelection()">Clear</button>
+        }
+      }
+    </div>
+    @if (selecting()) {
+      <div class="md-tag" role="group" aria-label="Tag the selected identities">
+        <div class="md-tag-actions">
+          <button type="button" class="md-chip md-tag-add" [attr.aria-pressed]="action() === 'add'" (click)="setAction('add')">
+            <i class="fa-solid fa-tag" aria-hidden="true"></i> Add attribute
+          </button>
+          <button type="button" class="md-chip md-tag-remove" [attr.aria-pressed]="action() === 'remove'" (click)="setAction('remove')">
+            <i class="fa-solid fa-eraser" aria-hidden="true"></i> Remove attribute
+          </button>
+        </div>
+        @if (action(); as a) {
+          <div class="md-tag-row">
+            <div class="tag-input-wrap md-tag-attr">
+              @if (attribute(); as attr) {
+                <span class="tag-chip">{{ attr }}
+                  <button class="tag-chip-x" type="button" (click)="attribute.set('')" [attr.aria-label]="'Change ' + attr">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                  </button>
+                </span>
+              } @else {
+                <app-search-picker inputId="md-tag-attr" [items]="attributeOptions()" noun="attributes" [allowFree]="a === 'add'"
+                  [placeholder]="a === 'add' ? '#attribute to add' : 'An attribute they carry'" (picked)="pickAttribute($event)" />
+              }
+            </div>
+            <button type="button" class="btn btn-primary btn-sm md-apply" [disabled]="!changing().length" (click)="applyTag()">
+              {{ attribute() ? applyLabel() : (a === 'add' ? 'Add' : 'Remove') }}
+            </button>
+          </div>
+          @if (attribute() && !selected().size) {
+            <p class="md-tag-hint">Select the identities to {{ a === 'add' ? 'tag' : 'untag' }} below.</p>
+          } @else if (skipNote(); as note) {
+            <p class="md-tag-hint">{{ note }}</p>
+          }
+        }
+        @if (tagResult(); as r) {
+          <p class="md-tag-result" [class.md-tag-error]="!r.ok" role="status">
+            <i class="fa-solid" [class.fa-circle-check]="r.ok" [class.fa-circle-exclamation]="!r.ok" aria-hidden="true"></i> {{ r.text }}
+          </p>
+        }
+      </div>
+    }
+  </div>
+
+  <div class="md-viewport" #viewport (scroll)="onScroll($event)">
+    @let w = window();
+    <ul class="md-rows" [style.height.px]="rows().length * rowHeight" [attr.aria-label]="shownText()">
+      @for (r of w.rows; track r.id) {
+        <li class="md-row" [class.md-row-sel]="selecting()" [class.md-row-on]="selecting() && isSelected(r.id)"
+          [style.top.px]="w.offset + $index * rowHeight" [style.height.px]="rowHeight">
+          @if (selecting()) {
+            <input type="checkbox" class="md-check" [checked]="isSelected(r.id)" (change)="toggleRow(r.id)"
+              [attr.aria-label]="'Select ' + r.name" />
+          }
+          <span class="md-line">
+            @if (r.router) {<i class="fa-solid fa-tower-broadcast md-router" title="Router identity" aria-hidden="true"></i>}
+            <a class="md-name" [routerLink]="[]" [queryParams]="{ identity: r.id }" queryParamsHandling="merge"
+              [attr.aria-label]="r.name + (r.router ? ' (router)' : '') + ' — ' + statusLabel(r.statuses) + ' — open its identity view'">{{ r.name }}</a>
+            <span class="md-attrs" aria-hidden="true">{{ r.attributes.join(' ') }}</span>
+          </span>
+          <span class="md-line md-statuses" aria-hidden="true">
+            @for (s of r.statuses; track $index) {
+              <span [class]="'md-st md-st-' + s" [title]="d.services[$index].name + ': ' + statusText[s]">
+                @if (d.services.length > 1) {<span class="md-num">{{ $index + 1 }}</span>}{{ statusText[s] }}
+              </span>
+            }
+          </span>
+        </li>
+      }
+    </ul>
+    @if (!rows().length) {
+      <p class="md-none">No members match.</p>
+    }
+  </div>
+} @else {
+  <div class="rg-body"><p class="rg-resolved">This group isn't on the canvas any more.</p></div>
+}

@@ -2,23 +2,31 @@
   <div class="page-header-content">
     <div class="title-row">
       <h1>Posture Checks</h1>
-      <span class="optional-badge">Optional for basic setup</span>
     </div>
     <p>Enforce device health requirements before granting access</p>
   </div>
-  <a routerLink="/posture-checks/new" class="btn btn-primary">
+  <a routerLink="/posture-checks/new" [queryParams]="params()" class="btn btn-primary">
     <i class="fa-solid fa-plus"></i> New Posture Check
   </a>
 </div>
 
-<div class="list-body" (click)="closeMenu()">
+<div class="list-body">
+  @if (back(); as url) {
+    <p class="pc-return" role="note">
+      <i class="fa-solid fa-pen-ruler" aria-hidden="true"></i>
+      <span>You came from the Policy Builder@if (hasDraft()) { — your draft is kept}.</span>
+      <a class="pc-return-link" [routerLink]="url.split('?')[0]" [queryParams]="returnQuery(url)">
+        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Back to Policy Builder
+      </a>
+    </p>
+  }
   @if (data.postureChecks().length === 0) {
     <div class="section-card empty-card">
       <app-empty-state
         icon="fa-solid fa-circle-check"
         title="No posture checks configured"
         message="Posture checks enforce device health requirements before granting access. They're optional but recommended for production networks.">
-        <a routerLink="/posture-checks/new" class="btn btn-primary">
+        <a routerLink="/posture-checks/new" [queryParams]="params()" class="btn btn-primary">
           <i class="fa-solid fa-plus"></i> Create a Posture Check
         </a>
       </app-empty-state>
@@ -33,7 +41,8 @@
             }
             <th>Name</th>
             <th>Type</th>
-            <th>Attributes</th>
+            <th>Connection</th>
+            <th>Role attributes</th>
             <th>Created At</th>
             <th></th>
           </tr>
@@ -45,7 +54,30 @@
                 <td class="col-id-toggle"><span class="id-value">{{ check.id }}</span></td>
               }
               <td class="name-cell">{{ check.name }}</td>
-              <td><span class="type-badge">{{ check.type }}</span></td>
+              <td>
+                <span class="type-badge">{{ check.type }}</span>
+                @if (check.type === 'ServiceProvider') {
+                  <div class="sp-detail sp-count">{{ conditionCount(check) }}</div>
+                }
+              </td>
+              <td>
+                @if (connectionDetail(check); as conn) {
+                  @if (conn.missing) {
+                    <div class="sp-missing" [title]="'No connection with id ' + (conn.connectionId || '(none)')">
+                      <i class="fa-solid fa-triangle-exclamation"></i> Connection missing
+                    </div>
+                  } @else {
+                    <a class="conn-name" [routerLink]="['/external-providers', check.connectionId]">{{ conn.name }}</a>
+                    <div class="sp-detail">{{ conn.provider }}</div>
+                    <a class="conn-link" [routerLink]="['/external-providers', check.connectionId]" [queryParams]="{ tab: 'matching' }"
+                      [attr.aria-label]="'Device matching for ' + conn.name">
+                      Device matching <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                    </a>
+                  }
+                } @else {
+                  <span class="cell-empty" aria-label="No connection">—</span>
+                }
+              </td>
               <td class="attrs-cell">
                 <div class="attrs-wrap">
                   @for (attr of check.attributes; track attr) {
@@ -54,31 +86,8 @@
                 </div>
               </td>
               <td class="date-cell">{{ check.createdAt.slice(0, 10) }}</td>
-              <td class="actions-cell" (click)="$event.stopPropagation()">
-                <div class="action-menu">
-                  <button
-                    class="btn-icon"
-                    (click)="toggleMenu(check.id, $event)"
-                    [attr.aria-label]="'Actions for ' + check.name">
-                    <i class="fa-solid fa-ellipsis-vertical"></i>
-                  </button>
-                  @if (openMenuId() === check.id) {
-                    <div class="dropdown-menu" role="menu">
-                      <button class="dropdown-item" role="menuitem">
-                        <i class="fa-solid fa-pen"></i> Edit
-                      </button>
-                      @if (prefs.isPowerUser()) {
-                        <button class="dropdown-item" role="menuitem">
-                          <i class="fa-solid fa-code"></i> View API
-                        </button>
-                      }
-                      <div class="dropdown-divider"></div>
-                      <button class="dropdown-item dropdown-item--danger" role="menuitem">
-                        <i class="fa-solid fa-trash"></i> Delete
-                      </button>
-                    </div>
-                  }
-                </div>
+              <td class="actions-cell">
+                <app-action-menu [items]="menuItems(check)" [ariaLabel]="'Actions for ' + check.name" />
               </td>
             </tr>
           }
@@ -87,3 +96,13 @@
     </div>
   }
 </div>
+
+@if (deletingCheck(); as check) {
+  <app-confirm-dialog
+    title="Delete posture check"
+    [message]="deleteMessage(check)"
+    confirmLabel="Delete"
+    [danger]="true"
+    (confirmed)="deleteCheck(check.id)"
+    (cancelled)="deletingCheckId.set(null)" />
+}

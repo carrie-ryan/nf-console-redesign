@@ -1,0 +1,58 @@
+<header class="pe-header">
+  <div class="pe-avatar" aria-hidden="true"><i class="fa-solid fa-clock-rotate-left"></i></div>
+  <div class="pe-heading">
+    <h2 class="pe-title">History</h2>
+    <span class="pe-subtitle">{{ commits().length }} {{ commits().length === 1 ? 'commit' : 'commits' }} this session</span>
+  </div>
+  <button type="button" class="pe-icon-btn" (click)="closed.emit()" aria-label="Close history">
+    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+  </button>
+</header>
+
+<div class="pe-body">
+  <p class="pe-hint">Revert opens a new draft that undoes a commit; review and commit it like any other change.</p>
+  @if (draftPending()) {
+    <p class="pe-hint hp-pending"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Commit or discard the current draft to revert.</p>
+  }
+  @if (error(); as err) {
+    <p class="pe-error" role="alert"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> {{ err }}</p>
+  }
+
+  <ol class="hp-list">
+    @for (c of commits(); track c.id) {
+      <li class="hp-commit" [attr.aria-label]="'Commit ' + c.id">
+        <div class="hp-meta">
+          <span class="hp-id">{{ c.id }}</span>
+          <span>{{ c.at | date: 'HH:mm:ss' }}</span>
+          @if (c.observed) {<span class="hp-tag hp-tag-muted">observed</span>} @else if (c.review) {<span class="hp-tag hp-tag-review">review</span>} @else if (c.author === 'outside') {<span class="hp-tag hp-tag-live">outside the builder</span>}
+          @if (c.revertOf) {<span class="hp-tag">reverts {{ c.revertOf }}</span>}
+          @if (revertedBy(c.id); as by) {<span class="hp-tag hp-tag-muted">reverted by {{ by }}</span>}
+        </div>
+        <!-- "Terraform · Updated …" — or, for several changes, "Terraform · 2 changes" and the list. -->
+        <p class="hp-summary"><strong class="hp-actor">{{ c.actor }}</strong> · {{ c.changeLines.length === 1 ? c.changeLines[0] : c.changeLines.length + ' changes' }}</p>
+        @if (c.approvedBy) {
+          <p class="hp-approval"><i class="fa-solid fa-user-check" aria-hidden="true"></i> Committed by {{ c.actor }} · approved by {{ c.approvedBy }}</p>
+        }
+        @if (c.changeLines.length > 1) {
+          <ul class="hp-lines">
+            @for (line of c.changeLines; track $index) {<li>{{ line }}</li>}
+          </ul>
+        }
+        @if (conflictsOnly()?.commitId === c.id) {
+          <div class="hp-conflicts" role="status">
+            <p><strong>Nothing to revert</strong> — everything this commit touched has changed since.</p>
+            @for (name of conflictsOnly()!.conflicts; track name) {<p>Changed since: {{ name }} — not reverted</p>}
+          </div>
+        }
+        @if (!c.observed && !c.review) {
+          <button type="button" class="btn btn-secondary btn-sm hp-revert" [disabled]="draftPending()" (click)="revert(c.id)"
+            [attr.aria-label]="'Revert commit ' + c.id">
+            <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Revert
+          </button>
+        }
+      </li>
+    } @empty {
+      <li class="pe-hint">No commits yet. Commits from the draft review appear here.</li>
+    }
+  </ol>
+</div>

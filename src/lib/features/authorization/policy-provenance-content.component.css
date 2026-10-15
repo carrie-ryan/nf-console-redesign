@@ -39,7 +39,7 @@
   align-self: flex-start;
   padding: 0.15rem 0.55rem;
   border-radius: var(--radius-full);
-  font-size: 0.6875rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -47,7 +47,7 @@
 .badge-full { background: var(--color-success); color: #fff; }
 .badge-partial { background: var(--color-warning); color: #fff; }
 .badge-none { background: var(--color-text); color: var(--color-text-inverse); }
-.prov-count { font-size: 0.75rem; color: var(--color-text-2); }
+.prov-count { font-size: 0.875rem; color: var(--color-text-2); }
 
 /* ─── affirmative isolation ──────────────────────────────────────────── */
 .prov-isolated {
@@ -60,7 +60,7 @@
 }
 .prov-isolated > i { color: var(--color-text); font-size: 1.25rem; margin-top: 0.15rem; }
 .prov-isolated-lead { margin: 0 0 0.35rem; font-size: 0.875rem; font-weight: 700; color: var(--color-text); }
-.prov-isolated-sub { margin: 0; font-size: 0.8125rem; line-height: 1.55; color: var(--color-text-2); }
+.prov-isolated-sub { margin: 0; font-size: 0.875rem; line-height: 1.55; color: var(--color-text-2); }
 
 /* ─── policy list ────────────────────────────────────────────────────── */
 .prov-h {
@@ -77,7 +77,7 @@
 .prov-policy-count {
   text-transform: none;
   letter-spacing: 0;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--color-text-2);
 }
@@ -100,7 +100,7 @@
 .prov-badge {
   padding: 0.1rem 0.45rem;
   border-radius: var(--radius-sm);
-  font-size: 0.625rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -143,7 +143,7 @@
 .prov-member-tally {
   text-transform: none;
   letter-spacing: 0;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--color-text-2);
 }
@@ -166,17 +166,17 @@
 }
 
 .prov-member-name { display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.8125rem; font-weight: 600; color: var(--color-text); }
-.member-icon-ok { color: var(--color-success); }
-.member-icon-excluded { color: var(--color-warning); }
+.member-icon-ok { color: var(--color-success-text); }
+.member-icon-excluded { color: var(--color-warning-text); }
 
 .prov-member-reason { display: flex; flex-direction: column; gap: 0.15rem; padding-left: 1.35rem; }
-.reason-line { font-size: 0.75rem; color: var(--color-text-2); display: inline-flex; align-items: center; flex-wrap: wrap; gap: 0.3rem; }
+.reason-line { font-size: 0.875rem; color: var(--color-text-2); display: inline-flex; align-items: center; flex-wrap: wrap; gap: 0.3rem; }
 .reason-line-muted { color: var(--color-text-3); font-style: italic; }
-.reason-sub { font-size: 0.6875rem; color: var(--color-text-3); }
+.reason-sub { font-size: 0.875rem; color: var(--color-text-3); }
 
 .reason-chip {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.6875rem;
+  font-size: 0.8125rem;
   padding: 0.1rem 0.4rem;
   border-radius: var(--radius-sm);
   background: var(--color-warning);
@@ -184,4 +184,4 @@
   font-weight: 600;
 }
 
-.prov-member-more { margin: 0.25rem 0 0; font-size: 0.6875rem; color: var(--color-text-3); }
+.prov-member-more { margin: 0.25rem 0 0; font-size: 0.875rem; color: var(--color-text-3); }

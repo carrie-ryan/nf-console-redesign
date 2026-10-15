@@ -3,6 +3,7 @@ import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MockDataService, Policy } from '../../shared/services/mock-data.service';
 import { UserPrefsService } from '../../shared/services/user-prefs.service';
+import { entityMatchesRoles } from '../authorization/authorization-resolver';
 
 @Component({
   selector: 'app-create-policy',
@@ -28,7 +29,10 @@ export class CreatePolicyComponent {
   // Step 1
   name = '';
   policyType: 'dial' | 'bind' = 'dial';
-  semantic: 'AnyOf' | 'AllOf' = 'AnyOf';
+  // Signal-backed so the association previews below recompute on change.
+  private readonly semanticSig = signal<'AnyOf' | 'AllOf'>('AnyOf');
+  get semantic(): 'AnyOf' | 'AllOf' { return this.semanticSig(); }
+  set semantic(v: 'AnyOf' | 'AllOf') { this.semanticSig.set(v); }
 
   readonly typeDescriptions: Record<string, string> = {
     dial: 'Allows identities to access the service',
@@ -66,23 +70,20 @@ export class CreatePolicyComponent {
 
   readonly associatedServices = computed(() => {
     const roles = this.serviceAttrs();
-    if (roles.length === 0) return [];
-    if (roles.includes('#all')) return this.data.services();
-    return this.data.services().filter(s => s.attributes?.some(a => roles.includes(a)));
+    const semantic = this.semanticSig();
+    return this.data.services().filter(s => entityMatchesRoles(roles, semantic, s.attributes ?? [], s.name, s.id));
   });
 
   readonly associatedIdentities = computed(() => {
     const roles = this.identityAttrs();
-    if (roles.length === 0) return [];
-    if (roles.includes('#all')) return this.data.identities();
-    return this.data.identities().filter(i => i.attributes.some(a => roles.includes(a)));
+    const semantic = this.semanticSig();
+    return this.data.identities().filter(i => entityMatchesRoles(roles, semantic, i.attributes, i.name, i.id));
   });
 
   readonly associatedPostureChecks = computed(() => {
     const roles = this.postureAttrs();
-    if (roles.length === 0) return [];
-    if (roles.includes('#all')) return this.data.postureChecks();
-    return this.data.postureChecks().filter(p => p.attributes.some(a => roles.includes(a)));
+    const semantic = this.semanticSig();
+    return this.data.postureChecks().filter(p => entityMatchesRoles(roles, semantic, p.attributes, p.name, p.id));
   });
 
   onServiceAttrKeydown(event: KeyboardEvent): void {

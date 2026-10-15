@@ -1,0 +1,993 @@
+/* The canvas takes the width it is given (a side panel narrows it) and scrolls only
+   when the lanes can't fit at their minimum (1160px). The scrollbar stays visible, so a lane
+   past the edge is never silently clipped. */
+.sv-scroll { overflow-x: auto; }
+
+/* Styled WebKit scrollbars don't overlay-hide (macOS), so the overflow shows. */
+.sv-scroll::-webkit-scrollbar { height: 8px; }
+.sv-scroll::-webkit-scrollbar-thumb { border-radius: var(--radius-full); background: var(--color-border-strong); }
+.sv-scroll::-webkit-scrollbar-track { background: transparent; }
+
+@supports not selector(::-webkit-scrollbar) {
+  .sv-scroll { scrollbar-width: thin; scrollbar-color: var(--color-border-strong) transparent; }
+}
+
+/* Bind | gutter | Services | gutter | Dial. Lanes flex between their minimum and
+   maximum; the gutters are a fixed 150px, reserved for edges — nothing else renders
+   in them. Below the minimum total the canvas overflows (scrolls). Each lane spans
+   both rows via subgrid, so every header shares row 1 and every body shares row 2. */
+.canvas {
+  --side-min: 280px;
+  --services-min: 300px;
+  --lane-max: 360px;
+  --gutter: 150px;
+  position: relative;
+  display: grid;
+  grid-template-columns:
+    minmax(var(--side-min), var(--lane-max)) var(--gutter)
+    minmax(var(--services-min), var(--lane-max)) var(--gutter)
+    minmax(var(--side-min), var(--lane-max));
+  grid-template-rows: auto 1fr;
+  row-gap: 0.75rem;
+  width: 100%;
+  min-width: calc(2 * var(--side-min) + var(--services-min) + 2 * var(--gutter));
+  max-width: calc(3 * var(--lane-max) + 2 * var(--gutter));
+}
+
+.edges {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.edges marker path {
+  fill: var(--color-text-3);
+}
+
+/* Positioned so lanes paint above the edge overlay. */
+.lane {
+  position: relative;
+  min-width: 0;
+  grid-row: 1 / span 2;
+  display: grid;
+  grid-template-rows: subgrid;
+}
+
+.lane-bind { grid-column: 1; }
+.lane-service { grid-column: 3; }
+.lane-dial { grid-column: 5; }
+
+/* ─── lane headers ─────────────────────────────────────────────────────── */
+.lane-head h3 {
+  margin: 0 0 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-2);
+}
+
+.lane-total {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* ─── lane bodies ──────────────────────────────────────────────────────── */
+/* A policy with several groups: one container under its name. */
+.policy-box {
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 0.5rem 0.625rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-2);
+}
+
+.policy-box.marked:not(.selected) { border-style: dashed; border-color: var(--brand-primary); }
+
+/* Its policy is open in the editor. */
+.policy-box.selected {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 2px var(--brand-primary);
+  background: color-mix(in srgb, var(--brand-primary-light) 60%, var(--color-surface));
+}
+
+.policy-box .or { padding: 0.375rem 0; }
+
+.policy-box-hdr {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0 0.25rem 0.5rem;
+}
+
+.policy-box-name {
+  /* Its chips wrap below rather than truncate it. */
+  flex-shrink: 0;
+  max-width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.policy-box-name:hover { color: var(--brand-primary); text-decoration: underline; }
+.policy-box-name:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--color-focus-ring); }
+
+.policy-box-mark {
+  flex-shrink: 0;
+  padding: 0 0.375rem;
+  border-radius: var(--radius-full);
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning-border);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.policy-box-mark-new { background: var(--brand-primary-light); border-color: var(--brand-primary); color: var(--brand-primary); }
+.policy-box-mark-proposed { background: var(--brand-accent); border-color: var(--brand-accent); color: var(--color-text-inverse); }
+
+.lane-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.or {
+  padding: 0.625rem 0;
+  text-align: center;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-text-3);
+}
+
+.empty-rule {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  margin-top: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px dashed var(--brand-primary);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.lane-body > .empty-rule:first-child { margin-top: 0; }
+
+.empty-rule:hover { background: var(--brand-primary-light); }
+.empty-rule:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--color-focus-ring); }
+.empty-rule.selected { border-style: solid; box-shadow: 0 0 0 2px var(--brand-primary); }
+
+.empty-rule-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.empty-rule-text {
+  font-size: 0.875rem;
+  color: var(--brand-primary);
+}
+
+.add-rule {
+  align-self: flex-start;
+  margin-top: 0.75rem;
+}
+
+.service-body {
+  justify-content: center;
+  gap: 1rem;
+}
+
+.empty,
+.service {
+  outline: none;
+}
+
+.empty:focus-visible,
+.service:focus-visible {
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 96px;
+  padding: 0.75rem;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
+  color: var(--color-text-2);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+/* No host → the service is unreachable for everyone; this is a warning, not a blank. */
+.no-host {
+  flex-direction: column;
+  gap: 0.25rem;
+  border: 1px solid var(--color-warning-border);
+  background: var(--color-warning-bg);
+  color: var(--color-text);
+}
+
+.no-host i {
+  color: var(--color-warning-text);
+  font-size: 1rem;
+}
+
+.empty-summary {
+  font-weight: 600;
+  color: var(--color-warning-text);
+}
+
+.service {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  width: 100%;
+  min-height: 112px;
+  padding: 0.75rem 0;
+  border: 2px solid var(--brand-primary);
+  border-radius: var(--radius-lg);
+  background: var(--brand-primary-light);
+  box-shadow: var(--shadow-md);
+  font: inherit;
+  cursor: pointer;
+  transition: box-shadow 0.15s;
+}
+
+.service:hover { box-shadow: var(--shadow-lg, var(--shadow-md)), 0 0 0 3px var(--brand-primary-light); }
+.service.selected { box-shadow: 0 0 0 3px var(--color-focus-ring); }
+
+.svc-more {
+  margin-top: 0.125rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--brand-primary);
+}
+
+.service:hover .svc-more { text-decoration: underline; }
+
+.service i {
+  color: var(--brand-primary);
+  font-size: 1.125rem;
+}
+
+.svc-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.svc-id {
+  font-size: 0.875rem;
+  color: var(--color-text-3);
+}
+
+/* "Traffic shared across 2 hosts · smartrouting" — the strategy is read-only service config. */
+.traffic {
+  margin-top: 0.125rem;
+  padding: 0 0.75rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--color-text-2);
+}
+
+/* ─── eligible-router band ─────────────────────────────────────────────── */
+.routers-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.25rem;
+  margin: 0;
+}
+
+.routers-toggle {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.375rem;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.routers-toggle:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--color-focus-ring); }
+.routers-toggle:hover .routers-line { color: var(--color-text); }
+
+.routers-chev {
+  flex-shrink: 0;
+  width: 0.625rem;
+  font-size: 0.625rem;
+  color: var(--color-text-3);
+  transition: transform 0.15s;
+}
+
+.routers-chev.open { transform: rotate(90deg); }
+
+/* "Set up routing" (a gap) and "Edit routing" (always), on one line. */
+.routers-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.875rem;
+  margin: 0.375rem 0 0;
+}
+
+.routers-setup,
+.routers-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--brand-primary);
+  cursor: pointer;
+}
+
+.routers-edit { color: var(--color-text-2); font-weight: 500; }
+.routers-setup:hover,
+.routers-edit:hover { text-decoration: underline; }
+.routers-setup:focus-visible,
+.routers-edit:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--color-focus-ring); }
+
+.routers-outage {
+  margin: 0.375rem 0 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-danger-text);
+}
+
+.router-list {
+  margin: 0.375rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.router {
+  display: grid;
+  grid-template-columns: 8px auto auto 1fr;
+  align-items: center;
+  column-gap: 0.375rem;
+  line-height: 1.6;
+  font-size: 0.75rem;
+  color: var(--color-text);
+}
+
+.router + .router { margin-top: 0.125rem; }
+
+.r-via {
+  grid-column: 2 / -1;
+  font-size: 0.875rem;
+  line-height: 1.3;
+  color: var(--color-text-3);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  background: var(--color-success);
+}
+
+.r-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.r-state {
+  grid-column: 4;
+  justify-self: end;
+  color: var(--color-success-text);
+}
+
+.router.offline {
+  color: var(--color-text-3);
+}
+
+.router.offline .dot {
+  background: var(--color-text-3);
+}
+
+.router.offline .r-state {
+  color: var(--color-danger-text);
+  font-weight: 600;
+}
+
+/* Draft changes to the service's eligible routers. */
+.r-change {
+  flex-shrink: 0;
+  padding: 0 0.375rem;
+  border-radius: var(--radius-full);
+  background: var(--brand-primary-light);
+  border: 1px solid var(--brand-primary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--brand-primary);
+}
+
+.r-change-removed {
+  background: var(--color-surface-2);
+  border-color: var(--color-border-strong);
+  color: var(--color-text-2);
+}
+
+.router.removed .r-name { text-decoration: line-through; }
+
+/* "via <policy>": opens the SERP in the editor. */
+.r-via-link {
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  font: inherit;
+  color: var(--brand-primary);
+  cursor: pointer;
+}
+
+.r-via-link:hover { text-decoration: underline; }
+.r-via-link:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--color-focus-ring); }
+
+/* ─── where each edge lands ────────────────────────────────────────────── */
+/* Above the lanes, so an edge can run into the service node to its chip or name. */
+.edges { z-index: 1; }
+
+.edges marker.tone-ok path { fill: var(--color-success); }
+.edges marker.tone-warn path { fill: var(--color-warning); }
+.edges marker.tone-bad path { fill: var(--color-danger); }
+.edge.hot { stroke-width: 3; opacity: 1; }
+.edge.tone-bad.hot { stroke-width: 3.5; }
+
+/* ─── isolation ────────────────────────────────────────────────────────── */
+/* Something is isolated: the rest fades, keeping its status colours. */
+.edge.faded,
+app-service-view-group.faded,
+.policy-box.faded,
+.svc-card.faded,
+.canvas.isolating .lane-body > .or,
+.canvas.isolating .empty,
+.canvas.isolating .empty-rule:not(.kept),
+.canvas.isolating .add-rule { opacity: 0.25; }
+
+.edge,
+app-service-view-group,
+.policy-box,
+.svc-card,
+.or,
+.empty,
+.empty-rule,
+.add-rule { transition: opacity 150ms ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  .edge,
+  app-service-view-group,
+  .policy-box,
+  .svc-card,
+  .or,
+  .empty,
+  .empty-rule,
+  .add-rule { transition: none; }
+}
+
+/* The hovered/focused edge: redrawn on top (the original hides), thicker. */
+.edge.lifted { visibility: hidden; }
+.edge.raised { stroke-width: 4; opacity: 1; pointer-events: none; }
+.edge.tone-bad.raised { stroke-width: 4.5; }
+
+/* The hover target; non-green edges are buttons that open the gap panel. */
+.edge-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 12;
+  pointer-events: stroke;
+  outline: none;
+}
+
+.edge-hit.clickable { cursor: pointer; }
+.edge-hit:focus-visible { stroke: var(--color-focus-ring); stroke-opacity: 0.5; stroke-width: 8; }
+
+.edge-tip {
+  position: absolute;
+  z-index: 3;
+  max-width: 280px;
+  margin: 0;
+  padding: 0.375rem 0.625rem;
+  border-radius: var(--radius-md);
+  background: var(--color-text);
+  box-shadow: var(--shadow-md);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--color-text-inverse);
+  pointer-events: none;
+  transform: translate(12px, 12px);
+}
+
+.edge-tip.flip { transform: translate(calc(-100% - 12px), 12px); }
+
+/* ─── several services ─────────────────────────────────────────────────── */
+.service-body:has(.svc-card + .svc-card) { justify-content: flex-start; gap: 1.5rem; }
+
+.svc-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.service.secondary {
+  position: relative;
+  min-height: 88px;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+}
+
+.service.secondary:hover { box-shadow: var(--shadow-sm), 0 0 0 3px var(--brand-primary-light); }
+.service.secondary.selected { box-shadow: 0 0 0 3px var(--color-focus-ring); }
+
+/* The hosting line opens the terminator-strategy editor. */
+.hosting-btn {
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  font-family: inherit;
+  line-height: inherit;
+  cursor: pointer;
+}
+
+.hosting-btn:hover { color: var(--brand-primary); text-decoration: underline; }
+.hosting-btn:hover i { color: var(--brand-primary); }
+.hosting-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--color-focus-ring); }
+
+.svc-more-btn {
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.svc-more-btn:hover { text-decoration: underline; }
+.svc-more-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--color-focus-ring); }
+.service.secondary i.fa-server { color: var(--color-text-3); font-size: 1rem; }
+.service.secondary .svc-name { font-size: 0.875rem; }
+
+.svc-remove {
+  position: absolute;
+  top: 0.375rem;
+  right: 0.375rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  color: var(--color-text-2);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.svc-remove:hover { border-color: var(--color-danger); background: var(--color-danger-bg); color: var(--color-danger-text); }
+.svc-remove:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--color-focus-ring); }
+.service.secondary .svc-remove i { color: inherit; font-size: 0.875rem; }
+
+.svc-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.125rem 1.5rem 0;
+}
+
+.svc-chip.hot {
+  border-color: var(--brand-primary);
+  background: var(--brand-primary);
+  color: var(--color-text-inverse);
+}
+
+.svc-name.hot { color: var(--brand-primary); text-decoration: underline; }
+
+/* ─── at scale: compact lanes ──────────────────────────────────────────── */
+/* "Hover a policy to see its connections" — shown once, while edges hide at rest. */
+.hover-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.75rem;
+  padding: 0.375rem 0.375rem 0.375rem 0.75rem;
+  border: 1px solid var(--brand-primary);
+  border-radius: var(--radius-full);
+  background: var(--brand-primary-light);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.hover-hint > i { color: var(--brand-primary); }
+
+.hover-hint-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: none;
+  border-radius: var(--radius-full);
+  background: none;
+  color: var(--color-text-2);
+  cursor: pointer;
+}
+
+.hover-hint-close:hover { background: var(--color-surface); color: var(--color-text); }
+.hover-hint-close:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--color-focus-ring); }
+
+/* A lane's own column is content-sized; rows truncate (nowrap) instead of widening it. */
+.canvas.compact .lane { grid-template-columns: minmax(0, 1fr); }
+
+/* The services column sits at the top of its lane; script offsets it to follow the scroll. */
+.canvas.compact .service-body {
+  align-self: start;
+  justify-content: flex-start;
+  will-change: transform;
+}
+
+.c-filter {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.c-filter > i {
+  position: absolute;
+  left: 0.625rem;
+  font-size: 0.75rem;
+  color: var(--color-text-3);
+  pointer-events: none;
+}
+
+.c-filter-input {
+  width: 100%;
+  padding: 0.4375rem 0.625rem 0.4375rem 1.875rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  font: inherit;
+  font-size: 0.8125rem;
+  color: var(--color-text);
+}
+
+.c-filter-input:focus-visible { outline: none; border-color: var(--brand-primary); box-shadow: 0 0 0 3px var(--color-focus-ring); }
+
+.c-count {
+  margin: 0.375rem 0 0.5rem;
+  font-size: 0.875rem;
+  color: var(--color-text-3);
+}
+
+.c-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.c-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  width: 100%;
+  padding: 0.375rem 0.625rem;
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: opacity 150ms ease, border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.c-row.named { border-left-color: var(--brand-primary); }
+.c-row:hover { border-color: var(--brand-primary); background: var(--brand-primary-light); }
+.c-row:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--color-focus-ring); }
+.c-row.marked:not(.selected) { border-style: dashed; border-left-style: solid; }
+.c-row.selected { border-color: var(--brand-primary); box-shadow: 0 0 0 2px var(--brand-primary); }
+.c-row.faded { opacity: 0.25; }
+
+@media (prefers-reduced-motion: reduce) {
+  .c-row { transition: none; }
+}
+
+.c-line {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--color-text);
+}
+
+.c-line > i { flex-shrink: 0; width: 0.75rem; font-size: 0.6875rem; color: var(--color-text-3); }
+.c-row.named .c-line > i { color: var(--brand-primary); }
+
+.c-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.c-tag,
+.c-mark {
+  flex-shrink: 0;
+  padding: 0 0.3125rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-2);
+}
+
+.c-mark { background: var(--color-warning-bg); color: var(--color-text); }
+.c-mark-new { background: var(--brand-primary-light); color: var(--brand-primary); }
+
+.c-checks {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.1875rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-2);
+}
+
+.c-checks i { font-size: 0.625rem; }
+
+/* The worst problem: pushed to the row's end. */
+.c-badge {
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: 0 0.375rem;
+  border: 1px solid;
+  border-radius: var(--radius-full);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.c-badge-noRoute,
+.c-badge-blocked { border-color: var(--color-danger-border); background: var(--color-danger-bg); color: var(--color-danger-text); }
+.c-badge-bypassed { border-color: var(--color-warning-border); background: var(--color-warning-bg); color: var(--color-text); }
+
+.c-sub { padding-left: 1.125rem; color: var(--color-text-2); }
+
+.c-summary {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.c-members { flex-shrink: 0; margin-left: auto; color: var(--color-text-3); }
+
+.c-swatches { display: inline-flex; flex-shrink: 0; gap: 0.1875rem; }
+.c-swatch { overflow: visible; }
+.c-swatch .edge { stroke-width: 2.5; }
+
+/* An expanded row: the full group node, under a Collapse control. */
+.c-open {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0.25rem 0;
+}
+
+.c-collapse {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.125rem 0.25rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--brand-primary);
+  cursor: pointer;
+}
+
+.c-collapse i { font-size: 0.625rem; }
+.c-collapse:hover { text-decoration: underline; }
+.c-collapse:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--color-focus-ring); }
+
+.c-none {
+  padding: 0.75rem;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  color: var(--color-text-2);
+  text-align: center;
+}
+
+/* Too tall for the scroll container: the column scrolls on its own (script sets its max-height). */
+.canvas.compact .service-body.sv-col-scroll {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px;
+  scrollbar-width: thin;
+}
+
+/* ─── intercept overlap ───────────────────────────────────────────────────── */
+.overlap { display: flex; flex-direction: column; gap: 0.375rem; }
+
+.overlap-badge:hover { border-color: var(--color-warning); }
+.overlap-badge:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--color-focus-ring); }
+
+.overlap-panel {
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--color-warning-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  font-size: 0.75rem;
+  color: var(--color-text);
+}
+
+.overlap-lead { margin: 0 0 0.5rem; }
+
+.overlap-facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0.25rem 0.75rem; margin: 0 0 0.5rem; }
+.overlap-facts div { display: contents; }
+.overlap-facts dt { color: var(--color-text-3); font-weight: 500; }
+.overlap-facts dd { margin: 0; min-width: 0; }
+.overlap-addr { font-weight: 600; overflow-wrap: anywhere; }
+
+.overlap-h { margin: 0 0 0.25rem; font-weight: 600; }
+.overlap-ids { margin: 0; padding-left: 1rem; max-height: 9rem; overflow-y: auto; color: var(--color-text-2); }
+.overlap-id { color: var(--brand-primary); text-decoration: underline; text-underline-offset: 2px; }
+.overlap-id:focus-visible { outline: none; border-radius: var(--radius-sm); box-shadow: 0 0 0 3px var(--color-focus-ring); }
+
+/* ─── live changes from outside the builder ───────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.c-mark-live { border: 1px dashed var(--color-warning); background: var(--color-surface); text-transform: none; letter-spacing: 0; }
+
+/* No draft: what a live change touched flashes once. */
+.svc-card.live-flash .service,
+.c-row.live-flash {
+  animation: sv-live-flash 2.4s ease-out;
+}
+
+@keyframes sv-live-flash {
+  0%, 30% { box-shadow: 0 0 0 4px var(--color-warning); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .svc-card.live-flash .service,
+  .c-row.live-flash {
+    animation: none;
+    box-shadow: 0 0 0 3px var(--color-warning);
+  }
+}
+
+/* ─── legend card ──────────────────────────────────────────────────────── */
+/* In flow after the canvas; sticky, so while the canvas scrolls it stays at the bottom-left
+   of what's visible. Its containing block is the canvas card: it never rises past the
+   card's top (the draft bar is above it), and it stays under the assistant (z-index 60).
+   The dock lets clicks through beside the card. */
+.lg-dock {
+  position: sticky;
+  bottom: 1rem;
+  z-index: 4;
+  display: flex;
+  margin-top: 1rem;
+  pointer-events: none;
+}
+
+.lg-dock > * { pointer-events: auto; }
+
+/* ─── a service card's "⋯" menu (several services) ─────────────────────── */
+.service { position: relative; }
+
+.svc-menu-wrap {
+  position: absolute;
+  top: 0.375rem;
+  right: 0.375rem;
+  z-index: 2;
+}
+
+/* Beside × on an added service. */
+.service.secondary .svc-menu-wrap { right: calc(0.375rem + 1.75rem + 0.25rem); }
+
+.service .svc-menu-btn i { color: inherit; font-size: 0.875rem; }
+.svc-menu-btn:hover,
+.svc-menu-btn[aria-expanded='true'] { border-color: var(--brand-primary); color: var(--brand-primary); }
+.svc-menu-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--color-focus-ring); }
+
+.svc-menu {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 12rem;
+  padding: 0.25rem 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-lg, var(--shadow-md));
+}
+
+.svc-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 0.8125rem;
+  text-align: left;
+  white-space: nowrap;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.service .svc-menu-item i { width: 0.875rem; font-size: 0.75rem; color: var(--color-text-3); }
+.svc-menu-item:hover:not(:disabled),
+.svc-menu-item:focus-visible { outline: none; background: var(--brand-primary-light); color: var(--brand-primary); }
+.svc-menu-item:disabled { color: var(--color-text-disabled); cursor: progress; }

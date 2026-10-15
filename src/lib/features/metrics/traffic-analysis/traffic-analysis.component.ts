@@ -22,7 +22,12 @@ type TrafficSubtab = 'suggested' | 'raw' | 'flow';
 @Component({
   selector: 'app-traffic-analysis',
   standalone: true,
-  imports: [MetricsNavComponent, DiscoveryReviewComponent, RawTrafficComponent, SankeyChartComponent],
+  imports: [
+    MetricsNavComponent,
+    DiscoveryReviewComponent,
+    RawTrafficComponent,
+    SankeyChartComponent,
+  ],
   templateUrl: './traffic-analysis.component.html',
   styleUrl: './traffic-analysis.component.css'
 })

@@ -155,12 +155,12 @@
         </div>
 
         <div class="ob-field">
-          <label class="form-label" for="ob-svc-attrs">Service Attributes <span class="ob-optional">Optional</span></label>
+          <label class="form-label" for="ob-svc-attrs">Service role attributes <span class="ob-optional">Optional</span></label>
           <div class="tag-input-wrap">
             @for (attr of attributes(); track attr) {
               <span class="tag-chip">
                 {{ attr }}
-                <button class="tag-chip-x" type="button" (click)="removeAttribute(attr)" aria-label="Remove attribute">
+                <button class="tag-chip-x" type="button" (click)="removeAttribute(attr)" aria-label="Remove role attribute">
                   <i class="fa-solid fa-xmark"></i>
                 </button>
               </span>
@@ -170,7 +170,7 @@
               class="tag-bare-input"
               [(ngModel)]="attributeInput"
               (keydown)="onAttributeKeydown($event)"
-              [placeholder]="attributes().length === 0 ? 'Add attributes to group services' : ''"
+              [placeholder]="attributes().length === 0 ? 'Add role attributes to group services' : ''"
               autocomplete="off" />
           </div>
           <p class="field-hint">Add attributes and NetFoundry auto-creates the policies that authorize this service. Leave blank to define policies yourself on the next step. Press Enter or comma to add. Prefix with # for role attributes policies can target.</p>
@@ -188,7 +188,7 @@
             @for (id of accessIdentities(); track id) {
               <span class="tag-chip">
                 {{ id }}
-                <button class="tag-chip-x" type="button" (click)="removeAccessIdentity(id)" aria-label="Remove identity attribute">
+                <button class="tag-chip-x" type="button" (click)="removeAccessIdentity(id)" aria-label="Remove identity role">
                   <i class="fa-solid fa-xmark"></i>
                 </button>
               </span>
@@ -199,10 +199,10 @@
               [(ngModel)]="accessIdentityInput"
               (keydown)="onAccessIdentityKeydown($event)"
               (blur)="markTouched('accessIds')"
-              [placeholder]="accessIdentities().length === 0 ? 'Select identity attributes to grant access' : ''"
+              [placeholder]="accessIdentities().length === 0 ? 'Select identity roles to grant access' : ''"
               autocomplete="off" />
           </div>
-          <p class="field-hint">Press Enter or comma to add. Use #role or @identity attributes.</p>
+          <p class="field-hint">Press Enter or comma to add. Use #role-attributes or @identity refs.</p>
         </div>
 
         <div class="ob-field">
@@ -279,7 +279,7 @@
             @for (id of hostIdentities(); track id) {
               <span class="tag-chip">
                 {{ id }}
-                <button class="tag-chip-x" type="button" (click)="removeHostIdentity(id)" aria-label="Remove identity attribute">
+                <button class="tag-chip-x" type="button" (click)="removeHostIdentity(id)" aria-label="Remove identity role">
                   <i class="fa-solid fa-xmark"></i>
                 </button>
               </span>
@@ -290,10 +290,10 @@
               [(ngModel)]="hostIdentityInput"
               (keydown)="onHostIdentityKeydown($event)"
               (blur)="markTouched('hostIds')"
-              [placeholder]="hostIdentities().length === 0 ? 'Select identity attributes' : ''"
+              [placeholder]="hostIdentities().length === 0 ? 'Select identity roles' : ''"
               autocomplete="off" />
           </div>
-          <p class="field-hint">Press Enter or comma to add. Use #role or @identity attributes.</p>
+          <p class="field-hint">Press Enter or comma to add. Use #role-attributes or @identity refs.</p>
         </div>
 
         <div class="ob-field">

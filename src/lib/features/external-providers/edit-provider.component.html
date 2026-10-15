@@ -1,0 +1,38 @@
+@if (connection(); as conn) {
+  <header class="ap-header">
+    <a [routerLink]="['/external-providers', conn.id]" class="btn-back" [title]="'Back to ' + conn.name">
+      <i class="fa-solid fa-arrow-left"></i>
+    </a>
+    <h1>Edit {{ conn.name }}</h1>
+  </header>
+
+  <div class="ap-body">
+    <div class="ap-column">
+      <section class="section-card" aria-labelledby="ep-provider-heading">
+        <h2 class="ap-heading" id="ep-provider-heading">Provider</h2>
+        <p class="ap-value">{{ providerLabel() }}</p>
+        <p class="ap-field-hint">The provider can't be changed — posture checks store conditions keyed to its attributes.</p>
+      </section>
+
+      @if (usedBy().length; as used) {
+        <div class="ap-warning" role="status">
+          <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+          <div>
+            Used by {{ used }} posture check{{ used === 1 ? '' : 's' }} — changes apply to all of them:
+            @for (check of usedBy(); track check.id; let last = $last) {
+              <a [routerLink]="['/posture-checks', check.id, 'edit']">{{ check.name }}</a>{{ last ? '' : ', ' }}
+            }
+          </div>
+        </div>
+      }
+
+      <app-provider-connection-form [providerType]="conn.providerType" [connection]="conn" [showUsage]="false"
+        (saved)="onSaved($event)" (cancelled)="onCancelled()" />
+    </div>
+  </div>
+} @else {
+  <app-empty-state icon="fa-solid fa-plug-circle-xmark" title="Provider not found"
+    [message]="'No provider connection with id “' + id() + '”. It may have been deleted.'">
+    <a routerLink="/external-providers" class="btn btn-secondary">Back to External providers</a>
+  </app-empty-state>
+}

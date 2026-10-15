@@ -1,0 +1,51 @@
+<div class="cp" (focusout)="onFocusOut($event)">
+  <button #trigger type="button" class="form-control cp-trigger" [id]="triggerId()"
+    aria-haspopup="true" [attr.aria-expanded]="open()"
+    (click)="toggle($event)" (keydown)="onTriggerKeydown($event)">
+    @if (selected(); as c) {
+      <span class="cp-trigger-name">{{ c.name }}</span>
+      @if (needsAttention(c)) {
+        <span class="cp-badge">Needs attention</span>
+      }
+    } @else if (creating()) {
+      <span class="cp-trigger-name">＋ New connection</span>
+    } @else {
+      <span class="cp-placeholder">Select a connection…</span>
+    }
+    <i class="fa-solid fa-chevron-down cp-chevron" aria-hidden="true"></i>
+  </button>
+
+  @if (open()) {
+    <div class="cp-panel" role="group" aria-label="Connections" (keydown)="onPanelKeydown($event)">
+      <ul class="cp-list">
+        @for (c of connections(); track c.id) {
+          <li class="cp-row" [class.cp-row--selected]="c.id === selectedId()">
+            <button type="button" class="cp-pick" data-cp-pick
+              [attr.aria-current]="c.id === selectedId() ? 'true' : null" (click)="pick(c.id)">
+              <span class="cp-row-top">
+                <span class="cp-name">{{ c.name }}</span>
+                @if (c.mode === 'observe') {
+                  <span class="field-badge pill-inactive">Observe</span>
+                }
+                @if (needsAttention(c)) {
+                  <span class="cp-badge">Needs attention</span>
+                }
+                @if (c.id === selectedId()) {
+                  <i class="fa-solid fa-check cp-check" aria-hidden="true"></i>
+                }
+              </span>
+              <span class="cp-sub">{{ details(c) }}</span>
+            </button>
+            <button type="button" class="cp-edit" (click)="edit(c.id)"
+              [attr.aria-label]="'Edit ' + c.name" title="Edit connection">
+              <i class="fa-solid fa-pen" aria-hidden="true"></i>
+            </button>
+          </li>
+        }
+      </ul>
+      <button type="button" class="cp-new" data-cp-pick (click)="createNew()">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i> New connection…
+      </button>
+    </div>
+  }
+</div>

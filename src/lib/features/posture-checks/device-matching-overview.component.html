@@ -1,0 +1,98 @@
+@if (connection(); as conn) {
+  <div class="dm-body">
+    <div class="dm-column">
+      @let sum = summary();
+      @if (observe()) {
+        <div class="dm-observe" role="status">
+          <i class="fa-solid fa-eye" aria-hidden="true"></i>
+          <div>
+            <strong>Observe mode — dry run.</strong>
+            Results are recorded, but nothing is blocked yet. Figures below show what would happen if this connection enforced:
+            identities that would not match get each check's “Identity isn't mapped to a device” outcome (fail by default).
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" (click)="setMode(conn.id, 'enforce')">Start enforcing</button>
+        </div>
+      }
+      <!-- Committed strategy (set in the connection's config) -->
+      <section class="section-card">
+        <h2 class="dm-heading">How identities are matched</h2>
+        @if (joinSide(); as ziti) {
+          <p class="dm-join">Joins <b>{{ ziti }}</b> → <b>{{ providerLabel() }} device record</b></p>
+        } @else {
+          <p class="dm-join">Matches only identities pinned to a device in this connection’s manual mapping.</p>
+        }
+      </section>
+
+      <!-- Summary band -->
+      <section class="section-card" aria-live="polite">
+        <div class="dm-figures">
+          <div>
+            <div class="dm-figure-label">{{ observe() ? 'Would match' : 'Matched' }}</div>
+            <div class="dm-figure dm-figure--ok">{{ sum.matchedCount | number }}</div>
+            <div class="dm-figure-sub">
+              @if (matchKey() === 'manual') { Mapped manually }
+              @else if (pinnedCount()) { Includes {{ pinnedCount() | number }} pinned manually }
+              @else { {{ observe() ? 'Would match automatically' : 'Matched automatically' }} }
+            </div>
+          </div>
+          <div>
+            <div class="dm-figure-label">{{ observe() ? 'Would not match' : 'Unmatched' }}</div>
+            <div class="dm-figure dm-figure--miss">{{ sum.unmatchedCount | number }}</div>
+            <div class="dm-figure-sub">{{ observe() ? 'Resolve before enforcing' : 'Needs resolution' }}</div>
+          </div>
+          <div class="dm-rate">
+            <div class="dm-figure-label">{{ observe() ? 'Projected match rate' : 'Match rate' }}</div>
+            <div class="dm-figure">{{ sum.matchRate }}%</div>
+          </div>
+        </div>
+
+        <div class="dm-bar" role="img"
+          [attr.aria-label]="observe()
+            ? sum.matchRate + '% would match, ' + (100 - sum.matchRate) + '% would not match'
+            : sum.matchRate + '% matched, ' + (100 - sum.matchRate) + '% unmatched'">
+          <span class="dm-bar-ok" [style.width.%]="sum.matchRate"></span>
+        </div>
+
+        @if (missingAttribute(); as miss) {
+          <div class="conn-warning" role="status">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <div>
+              <strong>{{ miss.count | number }} identities have no “{{ matchTagKey() }}” tag</strong>
+              {{ miss.dominant ? (observe() ? '— the main reason this strategy would match so few.' : '— the main reason this strategy matches so few.') : '.' }}
+              Set it on each identity at enrollment, or match on identity name or ID.
+            </div>
+          </div>
+        }
+
+        <h3 class="dm-subheading">{{ observe() ? 'Why identities would not match' : 'Why identities are unmatched' }}</h3>
+        @if (sum.reasons.length) {
+          <ul class="dm-reasons">
+            @for (r of sum.reasons; track r.reason) {
+              <li>
+                <span class="dm-reason-count">{{ r.count | number }}</span>
+                <span class="dm-reason-label">{{ r.label }}</span>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="dm-join">{{ observe() ? 'Every in-scope identity would match a device.' : 'Every in-scope identity matches a device.' }}</p>
+        }
+      </section>
+
+      <section class="section-card">
+        <app-unmatched-identities-table [rows]="unmatched()" [scaledCount]="sum.unmatchedCount"
+          [mappings]="conn.manualMappings ?? []" [manualKey]="matchKey() === 'manual'"
+          [providerLabel]="providerLabel()" (mapped)="mapIdentities(conn.id, $event)" />
+      </section>
+
+      <p class="dm-note">
+        Mock — counts are computed from a {{ sum.total / displayScale }}-identity sample and scaled ×{{ displayScale }} for display; no live matching runs.
+      </p>
+    </div>
+  </div>
+} @else {
+  <app-empty-state icon="fa-solid fa-plug-circle-xmark" title="Connection not found"
+    [message]="'No provider connection with id “' + id() + '”. It may have been deleted.'">
+    <a routerLink="/posture-checks" class="btn btn-secondary">Back to Posture Checks</a>
+  </app-empty-state>
+}

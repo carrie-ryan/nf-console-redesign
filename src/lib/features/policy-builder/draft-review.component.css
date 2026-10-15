@@ -1,0 +1,334 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+/* ─── header (same structure as the policy editor's) ───────────────────── */
+.dr-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dr-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  background: var(--brand-primary-light);
+  color: var(--brand-primary);
+  font-size: 0.8125rem;
+}
+
+.dr-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.dr-title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.dr-subtitle {
+  font-size: 0.875rem;
+  color: var(--color-text-3);
+}
+
+.dr-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-2);
+  cursor: pointer;
+}
+
+.dr-icon-btn:hover { background: var(--color-surface-2); }
+.dr-icon-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--color-focus-ring); }
+
+/* ─── body ─────────────────────────────────────────────────────────────── */
+.dr-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.dr-h {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-2);
+}
+
+.dr-changes {
+  margin: 0;
+  padding-left: 1.125rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-text);
+}
+
+.dr-changes li + li { margin-top: 0.25rem; }
+
+.dr-note {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+  color: var(--color-text-2);
+}
+
+.dr-note i { color: var(--color-info); }
+
+.dr-row {
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.dr-row + .dr-row { margin-top: 0.5rem; }
+
+.dr-row.current {
+  border-color: var(--brand-primary);
+  background: var(--brand-primary-light);
+}
+
+.dr-row-h {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-bottom: 0.375rem;
+  font-size: 0.8125rem;
+}
+
+.dr-row-h i { color: var(--brand-primary); font-size: 0.75rem; }
+
+.dr-svc { font-weight: 600; color: var(--color-text); }
+
+.dr-tag {
+  margin-left: auto;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--brand-primary);
+}
+
+.dr-stats {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.125rem 0.75rem;
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.dr-stats > div { display: contents; }
+.dr-stats dt { color: var(--color-text-2); }
+.dr-stats dd { margin: 0; font-weight: 600; color: var(--color-text); }
+
+/* Deltas stay neutral — fewer dialers may be exactly the point of the draft.
+   Only "no change" is muted, so the moves stand out. */
+.dr-stats dd.d-same { color: var(--color-text-3); font-weight: 500; }
+
+.dr-line {
+  margin: 0.375rem 0 0;
+  font-size: 0.75rem;
+  color: var(--color-text);
+}
+
+.dr-loosen {
+  padding: 0.375rem 0.5rem;
+  border: 1px solid var(--color-warning-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-warning-bg);
+  font-weight: 500;
+}
+
+.dr-loosen i {
+  margin-right: 0.375rem;
+  color: var(--color-warning-text);
+}
+
+.dr-config i {
+  margin-right: 0.375rem;
+  color: var(--color-text-3);
+}
+
+.dr-posture i {
+  margin-right: 0.375rem;
+  color: var(--color-warning-text);
+}
+
+.dr-route i {
+  margin-right: 0.375rem;
+  color: var(--color-text-3);
+}
+
+/* A serving host the draft stops — runtime traffic moves, so it reads as a caution. */
+.dr-hosting {
+  padding: 0.375rem 0.5rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-warning-bg);
+  color: var(--color-text);
+}
+
+.dr-hosting i {
+  margin-right: 0.375rem;
+  color: var(--color-warning-text);
+}
+
+.dr-hosting-none {
+  background: var(--color-danger-bg);
+}
+
+.dr-hosting-none i { color: var(--color-danger-text); }
+
+.dr-error {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-danger-border);
+  border-radius: var(--radius-md);
+  background: var(--color-danger-bg);
+  font-size: 0.8125rem;
+  color: var(--color-danger-text);
+}
+
+.dr-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.dr-commit-note {
+  margin: 0 auto 0 0;
+  font-size: 0.875rem;
+  line-height: 1.35;
+  color: var(--color-text-3);
+}
+
+.dr-actions .btn { flex-shrink: 0; white-space: nowrap; }
+
+/* ─── access tests ─────────────────────────────────────────────────────── */
+.dr-test-fail {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-danger-border);
+  border-radius: var(--radius-md);
+  background: var(--color-danger-bg);
+  font-size: 0.75rem;
+}
+
+.dr-test-fail + .dr-test-fail { margin-top: 0.5rem; }
+
+.dr-test-name {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-danger-text);
+}
+
+.dr-test-name i { margin-right: 0.375rem; }
+
+.dr-test-note {
+  margin: 0.125rem 0 0;
+  color: var(--color-text-2);
+}
+
+.dr-test-who {
+  margin: 0.375rem 0 0;
+  padding-left: 1rem;
+  color: var(--color-text);
+}
+
+p.dr-test-who { padding-left: 0; }
+
+.dr-tests-ok i { color: var(--color-success-text); }
+
+.dr-blocked {
+  color: var(--color-danger-text);
+  font-weight: 500;
+}
+
+/* ─── conflicts: live changed under the draft ───────────────────────────── */
+.dr-cf {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--color-danger-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  font-size: 0.75rem;
+}
+
+.dr-cf + .dr-cf { margin-top: 0.5rem; }
+
+.dr-cf-title { margin: 0; font-size: 0.8125rem; font-weight: 600; color: var(--color-text); }
+.dr-cf-title i { margin-right: 0.375rem; color: var(--color-danger-text); }
+
+.dr-cf-sides { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.dr-cf-h { margin: 0 0 0.25rem; font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-3); }
+.dr-cf-list { margin: 0; padding: 0; list-style: none; color: var(--color-text-2); overflow-wrap: anywhere; }
+.dr-cf-list strong { color: var(--color-text); font-weight: 600; }
+.dr-cf-field { display: block; font-weight: 500; color: var(--color-text-3); }
+.dr-cf-none { color: var(--color-text-3); }
+
+.dr-cf-pick {
+  margin: 0;
+  padding: 0.5rem 0.625rem;
+  border: 1px solid var(--color-warning-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-warning-bg);
+}
+
+.dr-cf-pick legend { padding: 0; margin-bottom: 0.25rem; font-weight: 600; color: var(--color-text); }
+.dr-cf-pick label { display: flex; align-items: baseline; gap: 0.375rem; padding: 0.125rem 0; cursor: pointer; }
+.dr-cf-pick label > span:first-of-type { flex: 0 0 3rem; font-weight: 600; }
+.dr-cf-val { min-width: 0; overflow-wrap: anywhere; color: var(--color-text-2); }
+.dr-cf-pick label.on .dr-cf-val { color: var(--color-text); }
+
+.dr-cf-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.dr-cf-note { margin: 0; color: var(--color-text-3); }
+.dr-cf-error { margin: 0; color: var(--color-danger-text); }
+
+/* Required review: the reviewer's note and actions. */
+.dr-approval { display: flex; flex-direction: column; gap: 0.5rem; }
+.dr-review-note { font-size: 0.875rem; resize: vertical; }
+.dr-approved { color: var(--color-text); }
+.dr-approved i { color: var(--color-success-text); }
+
+/* A policy named in a warning: opens its editor. */
+.dr-link {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  color: var(--brand-primary);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.dr-link:disabled { color: inherit; text-decoration: none; cursor: default; }

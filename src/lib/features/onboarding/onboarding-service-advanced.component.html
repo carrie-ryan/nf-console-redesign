@@ -38,12 +38,12 @@
             </div>
 
             <div class="ob-field">
-              <label class="form-label" for="adv-svc-attrs">Service Attributes <span class="ob-optional">Optional</span></label>
+              <label class="form-label" for="adv-svc-attrs">Service role attributes <span class="ob-optional">Optional</span></label>
               <div class="tag-input-wrap">
                 @for (attr of attributes(); track attr) {
                   <span class="tag-chip">
                     {{ attr }}
-                    <button class="tag-chip-x" type="button" (click)="removeAttribute(attr)" aria-label="Remove attribute">
+                    <button class="tag-chip-x" type="button" (click)="removeAttribute(attr)" aria-label="Remove role attribute">
                       <i class="fa-solid fa-xmark"></i>
                     </button>
                   </span>
@@ -53,7 +53,7 @@
                   class="tag-bare-input"
                   [(ngModel)]="attributeInput"
                   (keydown)="onAttributeKeydown($event)"
-                  [placeholder]="attributes().length === 0 ? 'Add attributes to group services' : ''"
+                  [placeholder]="attributes().length === 0 ? 'Add role attributes to group services' : ''"
                   autocomplete="off" />
               </div>
               <p class="field-hint">Add attributes and NetFoundry auto-creates the policies that authorize this service. Leave blank to define policies yourself on the next step. Press Enter or comma to add. Prefix with # for role attributes policies can target.</p>
@@ -548,13 +548,13 @@
         <div class="adv-next">
           @if (attributes().length) {
             <p class="adv-next-lede">
-              Because this service has attributes, NetFoundry will
+              Because this service has role attributes, NetFoundry will
               <strong>auto-create</strong> the policies it needs from them — there's
               nothing to author by hand.
             </p>
           } @else {
             <p class="adv-next-lede">
-              This service has no attributes, so its policies aren't auto-created.
+              This service has no role attributes, so its policies aren't auto-created.
               You'll define them by hand on the <strong>Policy</strong> step next:
             </p>
             <ul class="adv-next-steps">

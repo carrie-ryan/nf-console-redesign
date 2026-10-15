@@ -1,0 +1,323 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  font-size: 0.8125rem;
+  color: var(--color-text);
+}
+
+p { margin: 0; }
+
+.iv-muted { color: var(--color-text-3); }
+
+.iv-h {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-2);
+}
+
+/* "Its routers" heading with the Routers button on the same line. */
+.iv-routers-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.iv-routers-head .iv-h { margin: 0; }
+
+.iv-h-note {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--color-text-3);
+}
+
+.iv-count {
+  margin-left: auto;
+  padding: 0 0.5rem;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-2);
+  font-size: 0.875rem;
+  color: var(--color-text-2);
+}
+
+/* ─── identity card ────────────────────────────────────────────────────── */
+.iv-identity {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1.5rem;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.iv-id-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.iv-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  background: var(--brand-primary-light);
+  color: var(--brand-primary);
+}
+
+.iv-name {
+  margin: 0 0 0.375rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.iv-attrs { margin-top: 0.375rem; max-width: 40rem; }
+
+/* Removed in the draft: still shown, struck through, until the draft goes. */
+.iv-attr-removed {
+  border-style: dashed;
+  border-color: var(--color-border-strong);
+  background: var(--color-surface-2);
+  color: var(--color-text-3);
+}
+
+.iv-attr-error { margin: 0.25rem 0 0; font-size: 0.75rem; color: var(--color-danger-text); }
+
+.iv-attr {
+  padding: 0.0625rem 0.5rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-full);
+  background: var(--color-surface-2);
+  font-size: 0.75rem;
+}
+
+.iv-router-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.75rem;
+}
+
+.iv-router-list li {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 0.375rem;
+  line-height: 1.5;
+}
+
+.iv-router-list li + li { margin-top: 0.25rem; }
+.iv-router-list li.iv-muted { display: block; }
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--color-success);
+}
+
+.r-state { color: var(--color-success-text); }
+
+.r-via {
+  grid-column: 2 / -1;
+  font-size: 0.875rem;
+  color: var(--color-text-3);
+}
+
+.offline { color: var(--color-text-3); }
+.offline .dot { background: var(--color-text-3); }
+.offline .r-state { color: var(--color-danger-text); font-weight: 600; }
+
+/* ─── the three lists ──────────────────────────────────────────────────── */
+.iv-lists {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+.iv-ok { color: var(--color-success-text); }
+.iv-bad { color: var(--color-danger-text); }
+.iv-host { color: var(--brand-primary); }
+
+.iv-empty { color: var(--color-text-3); }
+
+.iv-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.iv-row + .iv-row { margin-top: 0.5rem; }
+
+.iv-row-bad { border-color: var(--color-danger-border); }
+
+.iv-row-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.iv-svc {
+  font-weight: 600;
+  color: var(--brand-primary);
+  text-decoration: none;
+}
+
+.iv-svc:hover { text-decoration: underline; }
+.iv-svc:focus-visible { outline: none; border-radius: var(--radius-sm); box-shadow: 0 0 0 3px var(--color-focus-ring); }
+
+.iv-reason,
+.iv-status {
+  margin-left: auto;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.iv-reason { color: var(--color-danger-text); }
+.iv-reason-warn { color: var(--color-warning-text); }
+.iv-status { color: var(--color-warning-text); }
+.iv-status-ok { color: var(--color-success-text); }
+
+.iv-grants { font-size: 0.75rem; }
+
+.iv-by {
+  font-size: 0.875rem;
+  color: var(--color-text-3);
+}
+
+.iv-route {
+  font-size: 0.75rem;
+  color: var(--color-text-2);
+}
+
+/* ─── why not ──────────────────────────────────────────────────────────── */
+.iv-why {
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.iv-why-select { max-width: 320px; }
+
+.iv-why-result {
+  margin-top: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
+}
+
+.iv-why-result ul {
+  margin: 0.375rem 0 0;
+  padding-left: 1.125rem;
+}
+
+.iv-why-result li + li { margin-top: 0.25rem; }
+
+@media (max-width: 1100px) {
+  .iv-lists,
+  .iv-identity { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Offscreen rows skip layout and paint (the browser's own virtualisation). */
+.iv-row {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 64px;
+}
+
+/* Can't-connect services, grouped by reason. */
+.iv-rgroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.iv-rgroup + .iv-rgroup { margin-top: 0.75rem; }
+
+.iv-rgroup-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.iv-rgroup-head:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--color-focus-ring); }
+.iv-rgroup-head:hover .iv-rgroup-n { color: var(--brand-primary); }
+
+.iv-chev { flex-shrink: 0; width: 0.625rem; font-size: 0.625rem; color: var(--color-text-3); transition: transform 0.15s; }
+.iv-chev.open { transform: rotate(90deg); }
+
+@media (prefers-reduced-motion: reduce) {
+  .iv-chev { transition: none; }
+}
+
+.iv-rgroup-n { margin-left: auto; font-size: 0.75rem; color: var(--color-text-2); }
+/* In a group head the reason leads (in a row it sits at the end). */
+.iv-rgroup-head .iv-reason { margin-left: 0; font-size: 0.875rem; font-weight: 600; }
+
+.iv-rgroup-preview {
+  margin: 0 0 0 1.125rem;
+  font-size: 0.75rem;
+  color: var(--color-text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Its intercept overlaps another service this identity may dial. */
+.iv-overlap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0 0.375rem;
+  border: 1px solid var(--color-warning-border);
+  border-radius: 999px;
+  background: var(--color-warning-bg);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.iv-overlap i { color: var(--color-warning-text); }
+
+.iv-name-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; }
+
+/* A router identity: its tag beside the name. */
+.iv-router-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0 0.375rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-2);
+}

@@ -61,6 +61,19 @@ const UTILIZATION_TYPE_LABELS: Record<UtilizationEntityType, string> = {
 const UNHEALTHY_TOP_N = 10;
 
 /**
+ * Max NAMED slices in a usage pie; everything past this is rolled into one
+ * "Other" wedge. Without a cap the pie emits one wedge and one legend row per
+ * entity, so a roster of any real size buries the few entities that actually
+ * carry traffic under a tail of zero-width 0% rows — and USAGE_SLICE_COLORS has
+ * five colours, so the tail repeats them anyway. Same treatment, and the same
+ * number, as UTILIZATION_TOP_N / UNHEALTHY_TOP_N above.
+ */
+const USAGE_TOP_N = 10;
+
+/** Label for the rolled-up remainder slice. */
+const USAGE_OTHER_LABEL = 'Other';
+
+/**
  * Worst-first status ordering for the Unhealthy Entities panel: offline is more
  * urgent than degraded, so it sorts ahead. (Lower rank = worse = shown first.)
  */
@@ -131,10 +144,24 @@ interface UsageBreakdown {
   total: number;
 }
 
-/** Build ranked pie slices (worst-first by usage) from name/usage pairs. */
+/**
+ * Build ranked pie slices (biggest-first by usage) from name/usage pairs, capped
+ * at USAGE_TOP_N named entries plus one "Other" remainder.
+ *
+ * `total` is the total across EVERYTHING, not just the named slices, so the
+ * percentages still sum to 100 and the headline figure stays the true total.
+ * The remainder is only emitted when it is non-zero: entities with no usage
+ * contribute a zero-width wedge and a "0%" legend row, which is noise, so a tail
+ * of un-used entities collapses to nothing rather than to an "Other 0%".
+ */
 function buildUsageBreakdown(items: { name: string; usage: number }[]): UsageBreakdown {
-  const ranked = [...items].sort((a, b) => b.usage - a.usage);
-  const total = ranked.reduce((n, i) => n + i.usage, 0);
+  const sorted = [...items].sort((a, b) => b.usage - a.usage);
+  const total = sorted.reduce((n, i) => n + i.usage, 0);
+
+  const named = sorted.slice(0, USAGE_TOP_N);
+  const restUsage = sorted.slice(USAGE_TOP_N).reduce((n, i) => n + i.usage, 0);
+  const ranked =
+    restUsage > 0 ? [...named, { name: USAGE_OTHER_LABEL, usage: restUsage }] : named;
   const { cx, cy, r } = PIE;
   let angle = -Math.PI / 2; // start at 12 o'clock
 

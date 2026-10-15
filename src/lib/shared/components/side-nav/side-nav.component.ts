@@ -43,10 +43,11 @@ export class SideNavComponent {
       items: [
         { label: 'Policies',       subtitle: 'Who can access what',   icon: 'fa-solid fa-shield-halved',  path: '/policies' },
         { label: 'Microsegments',  subtitle: 'Policy segment map',    icon: 'fa-solid fa-diagram-project', path: '/segments' },
+        { label: 'Attribute Explorer', subtitle: 'Identities by role attribute', icon: 'fa-solid fa-circle-nodes', path: '/attribute-explorer' },
         { label: 'Posture Checks', subtitle: 'Device requirements',   icon: 'fa-solid fa-circle-check',   path: '/posture-checks' },
         { label: 'Authentication', subtitle: 'Auth methods',          icon: 'fa-solid fa-key',             path: '/authentication' },
         { label: 'Sessions',       subtitle: 'Active connections',    icon: 'fa-solid fa-wave-square',     path: '/sessions' },
-        { label: 'Integrations',   subtitle: 'External systems',      icon: 'fa-solid fa-plug',            path: '/integrations' },
+        { label: 'External providers', subtitle: 'External systems',  icon: 'fa-solid fa-plug',            path: '/external-providers' },
       ]
     },
     {
@@ -55,12 +56,19 @@ export class SideNavComponent {
         { label: 'Metrics',   subtitle: 'Latency & traffic',  icon: 'fa-solid fa-chart-bar',   path: '/metrics' },
         { label: 'Events',    subtitle: 'Network activity',   icon: 'fa-solid fa-bell',         path: '/events' },
         { label: 'Processes', subtitle: 'Provisioning logs',  icon: 'fa-solid fa-microchip',    path: '/processes' },
+        { label: 'Alerts',    subtitle: 'Detector alerts',    icon: 'fa-solid fa-triangle-exclamation', path: '/alerts' },
       ]
     },
     {
       label: 'Infrastructure',
       items: [
         { label: 'Managed Components', subtitle: 'NetFoundry-hosted', icon: 'fa-solid fa-layer-group', path: '/managed-components' },
+      ]
+    },
+    {
+      label: 'Organization',
+      items: [
+        { label: 'Users', subtitle: 'Console access & roles', icon: 'fa-solid fa-user-gear', path: '/users' },
       ]
     }
   ];

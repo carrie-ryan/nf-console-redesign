@@ -6,8 +6,9 @@
       <span class="intro-eyebrow"><i class="fa-solid fa-table-list"></i> Raw traffic</span>
       <h2>Observed flows by identity</h2>
       <p>
-        Every wildcard-intercepted identity and the destinations it dialed. Expand an identity, then
-        select the destinations to carve into a service + dial policy.
+        Every wildcard-intercepted identity and the destinations it dialed. Expanding an identity
+        selects its destinations — untick any you don't want — then carve the selection into a
+        service + dial policy.
       </p>
     </div>
 
@@ -23,6 +24,7 @@
   <div class="section-card table-card">
     <table class="data-table id-table">
       <colgroup>
+        <col class="idc-check" />
         <col class="idc-chevron" />
         <col class="idc-entity" />
         <col class="idc-ingress" />
@@ -32,6 +34,9 @@
       </colgroup>
       <thead>
         <tr>
+          <!-- no global select-all here on purpose: with ~82 identity groups it
+               would select the entire capture in one click -->
+          <th class="idc-check"></th>
           <th class="idc-chevron"></th>
           <th>Identity</th>
           <th>Ingress IP</th>
@@ -43,7 +48,21 @@
       <tbody>
         @for (g of identityGroups(); track g.identityId) {
           <!-- ── identity group row ── -->
-          <tr class="group-row" (click)="toggleExpand(g.identityId)">
+          <tr class="group-row" (click)="toggleExpand(g)">
+            <!-- takes ALL of this identity's destinations at once. stopPropagation
+                 is required: the row's own click toggles expand, so without it
+                 ticking the box would also open the sub-table (same reason the
+                 sub-rows carry it). -->
+            <td class="idc-check">
+              <label class="row-check" (click)="$event.stopPropagation()">
+                <input type="checkbox"
+                  [checked]="isIdentityFullySelected(g)"
+                  [indeterminate]="isIdentityPartlySelected(g)"
+                  (change)="toggleIdentity(g)"
+                  [attr.aria-label]="'Select all destinations for ' + g.displayName" />
+                <span class="check-box" aria-hidden="true"><i class="fa-solid fa-check"></i></span>
+              </label>
+            </td>
             <td class="idc-chevron">
               <i class="fa-solid fa-chevron-right chevron" [class.chevron--open]="isExpanded(g.identityId)"></i>
             </td>
@@ -63,6 +82,8 @@
           <!-- ── expanded per-destination sub-table ── -->
           @if (isExpanded(g.identityId)) {
             <tr class="detail-row">
+              <!-- two leading blanks now: the check column joined the chevron -->
+              <td></td>
               <td></td>
               <td colspan="5">
                 <div class="id-detail">

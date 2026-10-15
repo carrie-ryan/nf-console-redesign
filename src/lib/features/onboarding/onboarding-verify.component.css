@@ -66,7 +66,7 @@
   align-items: flex-start;
   gap: 0.5rem;
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   line-height: 1.5;
   color: var(--color-text-3);
 }
@@ -162,7 +162,7 @@
 
 .vf-item.is-done .vf-item-num {
   background: var(--color-surface);
-  color: var(--color-success);
+  color: var(--color-success-text);
 }
 
 .vf-item-text { display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; }
@@ -196,9 +196,9 @@
   border-radius: var(--radius-md);
 }
 
-.ob-saved-icon { color: var(--color-success); font-size: 1.25rem; flex-shrink: 0; }
+.ob-saved-icon { color: var(--color-success-text); font-size: 1.25rem; flex-shrink: 0; }
 .ob-saved-title { margin: 0; font-size: 0.875rem; font-weight: 600; color: var(--color-text); }
-.ob-saved-sub { margin: 0.125rem 0 0; font-size: 0.8125rem; color: var(--color-text-2); }
+.ob-saved-sub { margin: 0.125rem 0 0; font-size: 0.875rem; color: var(--color-text-2); }
 
 /* Built-entities chain */
 .vf-built {
@@ -233,7 +233,7 @@
   align-items: flex-start;
   gap: 0.5rem;
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   line-height: 1.5;
   color: var(--color-text-3);
 }
@@ -247,7 +247,7 @@
   align-items: flex-start;
   gap: 0.5rem;
   margin: 0;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   line-height: 1.5;
   color: var(--color-text-3);
 }
@@ -278,7 +278,7 @@
 
 .vf-save-tmpl-hint {
   margin: 0;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   color: var(--color-text-3);
 }
 
@@ -298,7 +298,7 @@
   margin: 0;
   font-size: 0.8125rem;
   line-height: 1.5;
-  color: var(--color-success);
+  color: var(--color-success-text);
   font-weight: 500;
 }
 .vf-save-tmpl-done i { margin-top: 0.15rem; }

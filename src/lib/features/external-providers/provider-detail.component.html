@@ -1,0 +1,113 @@
+@if (connection(); as conn) {
+  <header class="pd-header">
+    <a routerLink="/external-providers" class="btn-back" title="Back to External providers">
+      <i class="fa-solid fa-arrow-left"></i>
+    </a>
+    <div class="pd-title">
+      <h1>{{ conn.name }}
+        @if (needsAttention(conn)) { <span class="field-badge pill-degraded">Needs attention</span> }
+      </h1>
+      <p class="pd-sub">{{ providerLabel() }}</p>
+    </div>
+    <div class="pd-mode">
+      <span class="field-badge" [class]="conn.mode === 'observe' ? 'pill-inactive' : 'pill-active'">{{ modeLabel(conn.mode) }}</span>
+      @if (conn.mode === 'observe') {
+        <button type="button" class="btn btn-secondary btn-sm" (click)="setMode('enforce')">Start enforcing</button>
+      } @else {
+        <button type="button" class="btn btn-secondary btn-sm" (click)="setMode('observe')">Switch to observe</button>
+      }
+      <a [routerLink]="['/external-providers', conn.id, 'edit']" class="btn btn-primary btn-sm">
+        <i class="fa-solid fa-pen" aria-hidden="true"></i> Edit
+      </a>
+      <button type="button" class="btn btn-danger btn-sm" (click)="deleting.set(conn)">
+        <i class="fa-solid fa-trash" aria-hidden="true"></i> Delete
+      </button>
+    </div>
+  </header>
+
+  <nav class="tab-bar" aria-label="Provider views">
+    <a class="tab-btn" [class.tab-btn--active]="activeTab() === 'overview'"
+      [attr.aria-current]="activeTab() === 'overview' ? 'page' : null"
+      [routerLink]="[]" [queryParams]="{ tab: null }" queryParamsHandling="merge">Overview</a>
+    <a class="tab-btn" [class.tab-btn--active]="activeTab() === 'matching'"
+      [attr.aria-current]="activeTab() === 'matching' ? 'page' : null"
+      [routerLink]="[]" [queryParams]="{ tab: 'matching' }" queryParamsHandling="merge">Device matching</a>
+  </nav>
+
+  @if (activeTab() === 'matching') {
+    <app-device-matching-overview [id]="conn.id" />
+  } @else {
+    <div class="pd-body">
+      <div class="pd-column">
+        @if (needsAttention(conn)) {
+          <div class="pd-warning" role="status">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            <div>
+              <strong>Needs attention.</strong>
+              {{ conn.lastVerifiedAt ? 'This connection is failing verification' : 'This connection has never verified successfully' }}
+              — checks using it can't evaluate devices until it's fixed.
+            </div>
+          </div>
+        }
+
+        <section class="section-card">
+          <h2 class="pd-heading">Connection</h2>
+          <dl class="pd-fields">
+            @for (row of settings(); track row.label) {
+              <dt>{{ row.label }}</dt>
+              <dd>
+                @if (row.secret) {
+                  <span class="pd-masked" aria-label="Hidden — secrets are write-only">••••••</span>
+                } @else if (row.value) {
+                  <span class="pd-value">{{ row.value }}</span>
+                } @else {
+                  <span class="pd-empty">Not set</span>
+                }
+              </dd>
+            }
+          </dl>
+        </section>
+
+        <section class="section-card">
+          <h2 class="pd-heading">Data acquisition</h2>
+          <p class="pd-text">{{ acquisition() }}</p>
+          @if (conn.acquisition === 'event' && conn.eventEndpoint) {
+            <label class="form-label pd-label" for="pd-event">EVENT ENDPOINT</label>
+            <app-copy-field inputId="pd-event" describedBy="pd-event-hint" [value]="conn.eventEndpoint" />
+            <p class="pd-text pd-hint" id="pd-event-hint">Point your provider at this URL to receive posture events.</p>
+          }
+        </section>
+
+        <section class="section-card">
+          <h2 class="pd-heading">Matching</h2>
+          <p class="pd-text pd-cap">
+            {{ matchSummary(conn) }} ·
+            <a [routerLink]="[]" [queryParams]="{ tab: 'matching' }">Device matching <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+          </p>
+        </section>
+
+        <section class="section-card">
+          <h2 class="pd-heading">Used by</h2>
+          @if (usedBy().length) {
+            <ul class="pd-checks">
+              @for (check of usedBy(); track check.id) {
+                <li><a [routerLink]="['/posture-checks', check.id, 'edit']">{{ check.name }}</a></li>
+              }
+            </ul>
+          } @else {
+            <p class="pd-text pd-empty">Not used by any posture check</p>
+          }
+        </section>
+      </div>
+    </div>
+  }
+} @else {
+  <app-empty-state icon="fa-solid fa-plug-circle-xmark" title="Provider not found"
+    [message]="'No provider connection with id “' + id() + '”. It may have been deleted.'">
+    <a routerLink="/external-providers" class="btn btn-secondary">Back to External providers</a>
+  </app-empty-state>
+}
+
+@if (deleting(); as conn) {
+  <app-delete-provider-dialog [connection]="conn" (deleted)="onDeleted()" (closed)="deleting.set(null)" />
+}

@@ -1,0 +1,45 @@
+:host { display: block; }
+
+.ut-hdr { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 0.75rem; }
+.ut-actions { display: flex; gap: 0.5rem; }
+.ut-heading { margin: 0; font-size: 0.9375rem; font-weight: 600; color: var(--color-text); }
+.ut-count { font-size: 0.875rem; color: var(--color-text-3); }
+.ut-hint { margin: 0.5rem 0 1rem; font-size: 0.875rem; color: var(--color-text-3); }
+
+.ut-wrap { overflow-x: auto; border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+.ut-wrap td { padding: 0.5rem 1rem; }
+.ut-wrap tbody tr:last-child td { border-bottom: none; }
+
+.ut-name { font-weight: 500; }
+.ut-kind { margin-left: 0.5rem; font-size: 0.8125rem; color: var(--color-text-3); }
+.ut-reason {
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  font-size: 0.875rem;
+  color: var(--color-text-2);
+  white-space: nowrap;
+}
+.ut-muted { font-size: 0.875rem; color: var(--color-text-3); }
+
+.ut-resolve { display: flex; align-items: center; gap: 0.5rem; }
+.ut-resolve .form-control { width: 11rem; padding-block: 0.25rem; font-size: 0.8125rem; }
+/* Brand outline, so it reads as the row's action rather than another white field beside the input. */
+.ut-map { border-color: var(--brand-primary); background: transparent; color: var(--brand-primary); font-weight: 600; }
+.ut-map:hover { background: var(--brand-primary-light); }
+
+.ut-empty {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--color-success-bg);
+  border: 1px solid var(--color-success-border);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+}
+.ut-empty i { color: var(--color-success-text); margin-top: 0.1rem; }
+
+.ut-note { margin: -0.5rem 0 1rem; font-size: 0.875rem; color: var(--color-text); }
+.ut-note i { color: var(--color-success-text); }
+

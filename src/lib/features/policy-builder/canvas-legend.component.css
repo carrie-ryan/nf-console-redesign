@@ -1,0 +1,289 @@
+:host { display: block; }
+
+/* The card: white, bordered, under the assistant (z 60) and any popover on the canvas. */
+.lg {
+  display: flex;
+  flex-direction: column;
+  width: 18.5rem;
+  /* Never taller than the viewport leaves room for: the list scrolls inside. */
+  max-height: min(34rem, calc(100vh - 8rem));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-lg);
+  font-size: 0.8125rem;
+  color: var(--color-text);
+}
+
+.lg-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.5rem 0.5rem 0.875rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.lg-title {
+  flex: 1;
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-2);
+}
+
+.lg-all {
+  padding: 0.0625rem 0.5rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  font: inherit;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--color-text-2);
+  cursor: pointer;
+}
+
+.lg-all:hover { border-color: var(--brand-primary); color: var(--brand-primary); }
+.lg-all[aria-pressed='true'] { border-color: var(--brand-primary); background: var(--brand-primary-light); color: var(--brand-primary); }
+
+.lg-x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: none;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--color-text-2);
+  cursor: pointer;
+}
+
+.lg-x:hover { background: var(--color-surface-2); color: var(--color-text); }
+
+.lg-all:focus-visible,
+.lg-x:focus-visible,
+.lg-open:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--color-focus-ring); }
+
+.lg-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.lg-body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 0.875rem 0.25rem;
+  scrollbar-width: thin;
+}
+
+/* Small uppercase section headings, a rule between sections. */
+.lg-h {
+  margin: 0;
+  padding: 0.625rem 0 0.25rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-3);
+}
+
+.lg-list + .lg-h { border-top: 1px solid var(--color-border); }
+
+.lg-list,
+.lg-toggles {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A compact row: the real marker in a fixed column, then its label. */
+.lg-entry {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 0.5rem;
+  min-height: 1.625rem;
+  margin: 0 -0.375rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--radius-sm);
+  outline: none;
+  line-height: 1.3;
+  cursor: default;
+}
+
+.lg-entry:hover,
+.lg-entry:focus-visible { background: var(--brand-primary-light); }
+.lg-entry:focus-visible { box-shadow: inset 0 0 0 2px var(--color-focus-ring); }
+
+/* Listed by "Show all", not on this canvas. */
+.lg-entry.lg-off { color: var(--color-text-3); }
+.lg-entry.lg-off:hover { background: none; }
+
+.lg-sample {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.lg-sample svg { overflow: visible; }
+/* Samples sit in the row, not centred as on the service node. */
+.lg-sample .verdict,
+.lg-sample .hosting { margin: 0; padding: 0; text-align: left; white-space: nowrap; }
+.lg-sample .routers-changed { margin: 0; white-space: nowrap; }
+.lg-sample .host-mark,
+.lg-sample .host-edit { margin-left: 0; }
+.lg-sample .host-edit { opacity: 1; }
+.lg-sample .member-router { margin: 0 0 0 0.25rem; font-size: 0.75rem; }
+.lg-sample .svc-menu-btn { width: 1.375rem; height: 1.375rem; }
+.lg-sample .svc-menu-btn i { font-size: 0.75rem; }
+.lg-sample .overlap-badge { padding: 0.0625rem 0.4375rem; font-size: 0.8125rem; }
+
+/* A group card in miniature: named (white) or rule (blue), as the canvas draws them. */
+.mk-card {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 1.75rem;
+  height: 1.125rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: 0.5625rem;
+  color: var(--brand-primary);
+}
+
+.mk-card.mk-rule { border-color: var(--color-info-border); background: var(--color-info-bg); }
+.mk-card.mk-empty { border: 1px dashed var(--brand-primary); }
+.mk-card.mk-mini { width: 1.25rem; height: 0.5rem; }
+
+.mk-box {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-2);
+}
+
+.mk-band {
+  display: inline-block;
+  padding: 0 0.375rem;
+  border-radius: var(--radius-sm);
+}
+
+.mk-band .routers-line { font-size: 0.6875rem; white-space: nowrap; }
+
+.lg-label { min-width: 0; font-weight: 500; }
+
+.lg-tag {
+  padding: 0 0.3125rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-3);
+}
+
+.lg-none {
+  margin: 0.75rem 0;
+  font-size: 0.875rem;
+  color: var(--color-text-3);
+}
+
+/* ─── show on canvas ───────────────────────────────────────────────────── */
+.lg-h-show {
+  padding: 0.625rem 0.875rem 0.25rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.lg-toggles { padding: 0 0.875rem 0.625rem; }
+
+.lg-switch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 1.75rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+/* The checkbox is the switch: visually replaced by the track, still the focus target. */
+.lg-switch input {
+  position: absolute;
+  right: 0;
+  width: 2.125rem;
+  height: 1.125rem;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.lg-track {
+  position: relative;
+  flex-shrink: 0;
+  width: 2.125rem;
+  height: 1.125rem;
+  border-radius: var(--radius-full);
+  background: var(--color-border-strong);
+  pointer-events: none;
+  transition: background 150ms ease;
+}
+
+.lg-track::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: calc(1.125rem - 4px);
+  height: calc(1.125rem - 4px);
+  border-radius: 50%;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  transition: transform 150ms ease;
+}
+
+.lg-switch input:checked + .lg-track { background: var(--brand-primary); }
+.lg-switch input:checked + .lg-track::after { transform: translateX(1rem); }
+.lg-switch input:focus-visible + .lg-track { box-shadow: 0 0 0 3px var(--color-focus-ring); }
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-track,
+  .lg-track::after { transition: none; }
+}
+
+/* ─── collapsed ────────────────────────────────────────────────────────── */
+.lg-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.lg-open i { color: var(--brand-primary); }
+.lg-open:hover { border-color: var(--brand-primary); color: var(--brand-primary); }

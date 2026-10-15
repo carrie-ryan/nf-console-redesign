@@ -1,0 +1,62 @@
+@if (identity(); as i) {
+  <header class="pe-header">
+    <div class="pe-avatar" aria-hidden="true"><i class="fa-solid fa-server"></i></div>
+    <div class="pe-heading">
+      <h2 class="pe-title">Hosting defaults</h2>
+      <span class="pe-subtitle">{{ i.name }}@if (mark(); as m) { · {{ m }} in draft}</span>
+    </div>
+    <button type="button" class="pe-icon-btn" (click)="closed.emit()" aria-label="Close hosting defaults">
+      <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+    </button>
+  </header>
+
+  <div class="pe-body">
+    @if (editError(); as err) {
+      <p class="pe-error" role="alert"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> {{ err }}</p>
+    }
+    <p class="pe-hint">Applied to the terminators {{ i.name }} creates from now on, on every service it hosts.</p>
+
+    <fieldset class="pe-field sse-options">
+      <legend class="form-label">Default precedence</legend>
+      @for (p of precedences; track p) {
+        <label class="sse-option" [class.on]="precedence() === p">
+          <input type="radio" name="he-precedence" [value]="p" [checked]="precedence() === p" (change)="precedence.set(p)" />
+          <span><strong>{{ p }}</strong><span class="sse-desc">{{ help[p] }}</span></span>
+        </label>
+      }
+    </fieldset>
+
+    <div class="pe-field">
+      <label class="form-label" for="he-cost">Default cost</label>
+      <input id="he-cost" class="form-control pce-num" type="number" min="0" [max]="maxCost" step="1"
+        [value]="cost()" (input)="setCost($any($event.target).value)" [attr.aria-invalid]="!costValid()" />
+      <p class="pe-hint">0–{{ maxCost }}. Lower costs get more traffic under the smartrouting and weighted strategies.</p>
+      @if (!costValid()) {<p class="pe-error" role="alert">Enter a whole number from 0 to {{ maxCost }}.</p>}
+    </div>
+
+    <section class="pe-side" aria-labelledby="he-terms-h">
+      <h3 class="pe-side-h" id="he-terms-h">Its terminators now</h3>
+      @for (t of terminators(); track t.id) {
+        <p class="he-term">{{ t.service }} · {{ t.router }} · {{ t.precedence }} · cost {{ t.cost }}</p>
+      } @empty {
+        <p class="pe-hint">None — it isn't serving any service.</p>
+      }
+      <p class="pce-observed">
+        <i class="fa-solid fa-satellite-dish" aria-hidden="true"></i>
+        Reported by the host, not set here; these keep their values.
+      </p>
+    </section>
+
+    <div class="pe-actions">
+      <button type="button" class="btn btn-primary btn-sm" [disabled]="!dirty() || !costValid()" (click)="addToDraft()">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i> Add to draft
+      </button>
+      <button type="button" class="btn btn-secondary btn-sm" (click)="closed.emit()">Cancel</button>
+    </div>
+  </div>
+} @else {
+  <div class="pe-body">
+    <p class="pe-hint">This identity isn't in the draft any more.</p>
+    <button type="button" class="btn btn-secondary btn-sm" (click)="closed.emit()">Close</button>
+  </div>
+}

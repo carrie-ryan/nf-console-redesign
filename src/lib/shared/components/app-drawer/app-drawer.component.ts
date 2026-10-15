@@ -6,6 +6,8 @@ import { PolicyProvenanceContentComponent } from '../../../features/authorizatio
 import { SegmentProvenanceContentComponent } from '../../../features/authorization/segment-provenance-content.component';
 import { ServiceProvenanceContentComponent } from '../../../features/authorization/service-provenance-content.component';
 import { FlowDetailContentComponent } from '../../../features/discovery/flow-detail-content.component';
+import { RosterGroupContentComponent } from '../../../features/discovery/roster-group-content.component';
+import { IdentityDetailContentComponent } from '../../../features/discovery/identity-detail-content.component';
 import { ConcernListContentComponent } from '../../../features/dashboard/concern-list-content.component';
 
 /**
@@ -27,6 +29,8 @@ import { ConcernListContentComponent } from '../../../features/dashboard/concern
     SegmentProvenanceContentComponent,
     ServiceProvenanceContentComponent,
     FlowDetailContentComponent,
+    RosterGroupContentComponent,
+    IdentityDetailContentComponent,
     ConcernListContentComponent,
   ],
   templateUrl: './app-drawer.component.html',
@@ -52,6 +56,10 @@ export class AppDrawerComponent {
         return 'fa-solid fa-cube';
       case 'flow-detail':
         return 'fa-solid fa-share-nodes';
+      case 'roster-group':
+        return 'fa-solid fa-circle-nodes';
+      case 'identity-detail':
+        return 'fa-solid fa-user';
       case 'concern-list':
         return 'fa-solid fa-triangle-exclamation';
       default:

@@ -1,0 +1,73 @@
+.pce-usage {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
+  font-size: 0.8125rem;
+}
+
+.pce-num { max-width: 10rem; }
+
+.pce-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+}
+
+.pce-os {
+  display: grid;
+  grid-template-columns: 8rem 1fr auto;
+  gap: 0.375rem;
+  align-items: center;
+}
+
+.pce-add { align-self: flex-start; }
+
+/* Observed state: shown, never edited. */
+.pce-observed {
+  display: flex;
+  align-items: baseline;
+  gap: 0.375rem;
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-3);
+}
+
+.pce-delete { margin-left: auto; }
+
+/* Strategy / precedence choices: one radio row each, with its description. */
+.sse-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.sse-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.5rem 0.625rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.sse-option.on { border-color: var(--brand-primary); background: var(--brand-primary-light); }
+.sse-option input { margin-top: 0.1875rem; }
+
+.sse-desc {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--color-text-2);
+}
+
+.he-term {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--color-text-2);
+}

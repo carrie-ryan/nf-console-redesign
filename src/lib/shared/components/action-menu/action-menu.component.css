@@ -58,8 +58,8 @@
 .dropdown-item i { width: 1rem; text-align: center; font-size: 0.8125rem; color: var(--color-text-3); }
 .dropdown-item:hover { background: var(--color-surface-2); }
 
-.dropdown-item--danger { color: var(--color-danger); }
-.dropdown-item--danger i { color: var(--color-danger); }
+.dropdown-item--danger { color: var(--color-danger-text); }
+.dropdown-item--danger i { color: var(--color-danger-text); }
 .dropdown-item--danger:hover { background: var(--color-danger-bg); }
 
 /* New capability the copied pattern lacked: greyed out, non-interactive, no hover. */

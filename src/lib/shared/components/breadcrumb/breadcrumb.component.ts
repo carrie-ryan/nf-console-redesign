@@ -2,6 +2,7 @@ import { Component, computed, inject } from '@angular/core';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
+import { MockDataService } from '../../services/mock-data.service';
 
 interface Crumb {
   label: string;
@@ -19,6 +20,7 @@ interface Crumb {
 })
 export class BreadcrumbComponent {
   private router = inject(Router);
+  private data = inject(MockDataService);
 
   private url = toSignal(
     this.router.events.pipe(
@@ -36,9 +38,10 @@ export class BreadcrumbComponent {
     let cumulativePath = '';
     parts.forEach((part, i) => {
       cumulativePath += '/' + part;
-      const isLong = part.length > 12;
+      const named = this.namedLabel(parts, i);
+      const isLong = !named && part.length > 12;
       result.push({
-        label: isLong ? part.slice(0, 12) + '…' : this.prettify(part),
+        label: named ?? (isLong ? part.slice(0, 12) + '…' : this.prettify(part)),
         tooltip: isLong ? part : null,
         path: cumulativePath,
         isLast: i === parts.length - 1,
@@ -46,6 +49,16 @@ export class BreadcrumbComponent {
     });
     return result;
   });
+
+  /** A segment whose crumb isn't its prettified text: a fixed label, or an id resolved to its name. */
+  private namedLabel(parts: string[], i: number): string | null {
+    if (parts[i] === 'external-providers') return 'External providers';
+    if (parts[i - 1] === 'external-providers') {
+      if (parts[i] === 'new') return 'New provider';
+      return this.data.providerConnections().find(c => c.id === parts[i])?.name ?? null;
+    }
+    return null;
+  }
 
   private prettify(s: string): string {
     return s.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');

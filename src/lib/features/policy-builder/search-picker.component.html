@@ -1,0 +1,43 @@
+<input #field class="sp-input" type="text" role="combobox" autocomplete="off" aria-autocomplete="list"
+  [id]="inputId()" [placeholder]="placeholder()" [attr.aria-expanded]="open()" [attr.aria-controls]="listId"
+  [attr.aria-activedescendant]="open() && active() >= 0 ? optionId(active()) : null"
+  (input)="onInput(field.value)" (focus)="open.set(true)" (click)="open.set(true)" (keydown)="onKeydown($event)" (blur)="onBlur($event)" />
+@if (open()) {
+  <div class="sp-pop" [id]="listId + '-pop'">
+    @if (hasRouters()) {
+      <div class="sp-filters">
+        <button type="button" class="sp-filter" [class.on]="routersOnly()" [attr.aria-pressed]="routersOnly()"
+          (mousedown)="$event.preventDefault()" (click)="toggleRouters()" (blur)="onBlur($event)">
+          <i class="fa-solid fa-tower-broadcast" aria-hidden="true"></i> Routers only
+        </button>
+      </div>
+    }
+    <ul class="sp-list" role="listbox" [id]="listId" [attr.aria-label]="'Matching ' + noun()">
+      @for (it of results().shown; track it.value; let i = $index) {
+        <li class="sp-option" role="option" [id]="optionId(i)" [class.active]="i === active()" [class.chosen]="isSelected(it)"
+          [attr.aria-selected]="i === active()" [attr.aria-disabled]="isSelected(it) ? 'true' : null"
+          (mousedown)="$event.preventDefault()" (mouseenter)="active.set(i)" (click)="choose(it)">
+          @if (it.kind === 'router') {
+            <i class="fa-solid fa-tower-broadcast sp-kind" aria-hidden="true"></i>
+          }
+          <span class="sp-label">{{ it.label }}</span>
+          @if (it.kind === 'router') {
+            <span class="sp-tag">router</span>
+          }
+          @if (it.attributes.length) {
+            <span class="sp-attrs">{{ it.attributes.join(' ') }}</span>
+          }
+          @if (it.meta) {
+            <span class="sp-meta">{{ it.meta }}</span>
+          }
+          @if (isSelected(it)) {
+            <span class="sp-chosen"><i class="fa-solid fa-check" aria-hidden="true"></i> added</span>
+          }
+        </li>
+      }
+    </ul>
+    @if (status(); as s) {
+      <p class="sp-status" role="status">{{ s }}</p>
+    }
+  </div>
+}

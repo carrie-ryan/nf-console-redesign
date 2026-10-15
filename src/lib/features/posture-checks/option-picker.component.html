@@ -1,0 +1,33 @@
+<div class="cp" [class.cp--inline]="inline()" (focusout)="onFocusOut($event)">
+  <button #trigger type="button" class="form-control cp-trigger" [id]="triggerId()"
+    aria-haspopup="true" [attr.aria-expanded]="open()" [attr.aria-label]="ariaLabel()"
+    (click)="toggle($event)" (keydown)="onTriggerKeydown($event)">
+    @if (selected(); as o) {
+      <span class="cp-trigger-name">{{ o.label }}</span>
+    } @else {
+      <span class="cp-placeholder">{{ placeholder() }}</span>
+    }
+    <i class="fa-solid fa-chevron-down cp-chevron" aria-hidden="true"></i>
+  </button>
+
+  @if (open()) {
+    <div class="cp-panel" role="group" [attr.aria-label]="panelLabel()" (keydown)="onPanelKeydown($event)">
+      <ul class="cp-list">
+        @for (o of items(); track o.value) {
+          @let on = o.value === value();
+          <li class="cp-row" [class.cp-row--selected]="on">
+            <button type="button" class="cp-pick" data-cp-pick
+              [attr.aria-current]="on ? 'true' : null" (click)="pick(o.value)">
+              <span class="cp-row-top">
+                <span class="cp-name">{{ o.label }}</span>
+                @if (on) {
+                  <i class="fa-solid fa-check cp-check" aria-hidden="true"></i>
+                }
+              </span>
+            </button>
+          </li>
+        }
+      </ul>
+    </div>
+  }
+</div>

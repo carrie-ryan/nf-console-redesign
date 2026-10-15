@@ -1,0 +1,37 @@
+<div class="ita">
+  <i class="fa-solid fa-magnifying-glass ita-icon" aria-hidden="true"></i>
+  <input #field class="form-control ita-input" type="text"
+    role="combobox" aria-autocomplete="both"
+    [attr.aria-label]="ariaLabel()"
+    [attr.aria-expanded]="open()"
+    [attr.aria-controls]="listboxId"
+    [attr.aria-activedescendant]="open() && matches().length ? optionId(activeIndex()) : null"
+    [value]="selectedName()"
+    [placeholder]="placeholder()"
+    (focus)="onFocus()" (input)="onInput($event)" (keydown)="onKeydown($event)" (blur)="onBlur()"
+    autocomplete="off" spellcheck="false" />
+
+  @if (open()) {
+    <!-- mousedown preventDefault: keep focus in the field so blur doesn't commit before the click lands -->
+    <ul class="ita-menu" role="listbox" [id]="listboxId" [attr.aria-label]="ariaLabel() + ' suggestions'"
+      (mousedown)="$event.preventDefault()"
+      [style.top.px]="menuTop()" [style.left.px]="menuLeft()"
+      [style.width.px]="menuWidth()" [style.maxHeight.px]="menuMaxHeight()">
+      @for (m of matches(); track m.id; let i = $index) {
+        @let p = parts(m.name);
+        <li class="ita-opt" role="option" [id]="optionId(i)"
+          [class.ita-opt--active]="i === activeIndex()"
+          [attr.aria-selected]="m.id === identityId()"
+          (mouseenter)="activeIndex.set(i)" (click)="pick(m)">
+          <span class="ita-name">{{ p.pre }}<mark>{{ p.hit }}</mark>{{ p.post }}</span>
+          <span class="ita-kind">{{ m.type }}</span>
+          @if (m.id === identityId()) {
+            <i class="fa-solid fa-check ita-check" aria-hidden="true"></i>
+          }
+        </li>
+      } @empty {
+        <li class="ita-empty" role="presentation">No identities match “{{ query() }}”.</li>
+      }
+    </ul>
+  }
+</div>

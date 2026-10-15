@@ -37,13 +37,13 @@
 .fd-row dt { flex: 0 0 auto; font-size: 0.8125rem; color: var(--color-text-2); }
 .fd-row dd { margin: 0; flex: 1 1 auto; min-width: 0; text-align: right; font-size: 0.8125rem; color: var(--color-text); word-break: break-word; overflow-wrap: anywhere; }
 .fd-mono { font-family: var(--font-mono, monospace); font-size: 0.75rem; }
-.fd-empty { margin: 0.25rem 0 0; font-size: 0.8125rem; font-style: italic; color: var(--color-text-3); }
-.fd-sub { font-size: 0.75rem; color: var(--color-text-2); }
-.fd-footnote { margin: 0.5rem 0 0; font-size: 0.75rem; font-style: italic; color: var(--color-text-3); }
+.fd-empty { margin: 0.25rem 0 0; font-size: 0.875rem; font-style: italic; color: var(--color-text-3); }
+.fd-sub { font-size: 0.875rem; color: var(--color-text-2); }
+.fd-footnote { margin: 0.5rem 0 0; font-size: 0.875rem; font-style: italic; color: var(--color-text-3); }
 
 /* ─── History tab — event timeline ────────────────────────────────── */
 /* Derived logs must NOT look like real ones: a tinted, bordered callout. */
-.tl-derived-banner { display: flex; align-items: flex-start; gap: 0.5rem; margin-bottom: 1rem; padding: 0.625rem 0.75rem; border: 1px solid var(--color-warning-border, #C2861B); border-left-width: 3px; border-radius: var(--radius-sm); background: var(--color-warning-bg, rgba(194, 134, 27, 0.1)); font-size: 0.75rem; line-height: 1.4; color: var(--color-text-2); }
+.tl-derived-banner { display: flex; align-items: flex-start; gap: 0.5rem; margin-bottom: 1rem; padding: 0.625rem 0.75rem; border: 1px solid var(--color-warning-border, #C2861B); border-left-width: 3px; border-radius: var(--radius-sm); background: var(--color-warning-bg, rgba(194, 134, 27, 0.1)); font-size: 0.875rem; line-height: 1.4; color: var(--color-text-2); }
 .tl-derived-banner i { margin-top: 0.1rem; color: var(--color-warning-border, #C2861B); }
 
 .tl-list { list-style: none; margin: 0; padding: 0; }
@@ -54,5 +54,5 @@
 .tl-item:not(:last-child) .tl-dot::after { content: ''; position: absolute; left: 0.1875rem; top: 0.8125rem; bottom: 0.125rem; width: 1px; background: var(--color-border); }
 .tl-content { min-width: 0; }
 .tl-event { font-size: 0.8125rem; font-weight: 600; color: var(--color-text); }
-.tl-time { font-size: 0.75rem; color: var(--color-text-3); }
-.tl-actor { font-size: 0.75rem; color: var(--color-text-2); }
+.tl-time { font-size: 0.875rem; color: var(--color-text-3); }
+.tl-actor { font-size: 0.875rem; color: var(--color-text-2); }

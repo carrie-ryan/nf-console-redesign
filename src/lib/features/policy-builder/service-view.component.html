@@ -1,0 +1,481 @@
+@if (showHint()) {
+  <p class="hover-hint" role="note">
+    <i class="fa-solid fa-arrow-pointer" aria-hidden="true"></i>
+    Hover a policy to see its connections
+    <button type="button" class="hover-hint-close" aria-label="Dismiss hint" (click)="dismissHint()">
+      <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+    </button>
+  </p>
+}
+
+<p class="sr-only" role="status" aria-live="polite">{{ liveAnnouncement() }}</p>
+
+<div class="sv-scroll">
+  <!-- DOM order is Bind → services → Dial, so Tab follows the lanes. -->
+  <div class="canvas" #canvas [class.isolating]="isolation()" [class.compact]="compact()">
+    <svg class="edges" [attr.width]="svgSize().w" [attr.height]="svgSize().h">
+      <defs>
+        @for (tone of ['ok', 'warn', 'bad', 'none']; track tone) {
+          <marker [id]="'sv-arrow-' + tone" [attr.class]="'tone-' + tone" viewBox="0 0 10 10" refX="10" refY="5"
+            markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto">
+            <path d="M 0 0 L 10 5 L 0 10 z" />
+          </marker>
+          <!-- The raised (hovered/focused) edge's larger arrowhead. -->
+          <marker [id]="'sv-arrow-lg-' + tone" [attr.class]="'tone-' + tone" viewBox="0 0 10 10" refX="10" refY="5"
+            markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" orient="auto">
+            <path d="M 0 0 L 10 5 L 0 10 z" />
+          </marker>
+        }
+      </defs>
+      @for (e of shownEdges(); track e.id) {
+        <path [class]="'edge tone-' + e.tone" [class.hot]="isKeptEdge(e.id)" [class.faded]="fadedEdge(e.id)"
+          [class.lifted]="raisedEdge()?.id === e.id" [class.via-all]="e.viaAll" [attr.d]="e.d"
+          [attr.marker-end]="'url(#sv-arrow-' + e.tone + ')'" aria-hidden="true" />
+        <!-- A wider, invisible stroke to hover and focus; non-green edges are buttons. -->
+        <path class="edge-hit" [class.clickable]="e.gap" [attr.d]="e.d" tabindex="0"
+          [attr.role]="e.gap ? 'button' : 'img'" [attr.aria-label]="e.gap ? e.text + ' — show why' : e.text"
+          (mouseenter)="hoverIn({ kind: 'edge', id: e.id }); showTip(e, $event)" (mousemove)="showTip(e, $event)"
+          (mouseleave)="hoverOut({ kind: 'edge', id: e.id }); hideTip(e)"
+          (focus)="focusIn({ kind: 'edge', id: e.id }); showTip(e, $event)"
+          (blur)="focusOut({ kind: 'edge', id: e.id }, $event); hideTip(e)"
+          (click)="openEdge(e)" (keydown.enter)="openEdge(e, $event)" (keydown.space)="openEdge(e, $event)" />
+      }
+      @if (raisedEdge(); as r) {
+        <path [class]="'edge raised tone-' + r.tone" [attr.d]="r.d" [attr.marker-end]="'url(#sv-arrow-lg-' + r.tone + ')'"
+          aria-hidden="true" />
+      }
+    </svg>
+    @if (tip(); as t) {
+      <p class="edge-tip" role="tooltip" [class.flip]="t.flip" [style.left.px]="t.x" [style.top.px]="t.y">{{ t.text }}</p>
+    }
+
+    <section class="lane lane-bind" role="group" [attr.aria-label]="laneLabel('bind')">
+      <header class="lane-head">
+        <h3>{{ laneName.bind }}</h3>
+        @if (!isMulti()) {
+          <p class="lane-total">{{ bindTotal() }}</p>
+        }
+      </header>
+      <div class="lane-body">
+        @if (compactLanes().bind) {
+          <ng-container *ngTemplateOutlet="compactBody; context: { $implicit: 'bind' }" />
+        } @else {
+        @for (b of blocks().bind; track b.policyId; let last = $last) {
+          <ng-container *ngTemplateOutlet="policyBlock; context: { $implicit: b }" />
+          @if (!last) {
+            <div class="or" aria-hidden="true">OR</div>
+          }
+        } @empty {
+          @if (dialHasMembers()) {
+            <div class="empty no-host" tabindex="0" role="group"
+              [attr.aria-label]="layout().bind.summary + ' · ' + noHostWarning()">
+              <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+              <span class="empty-summary" aria-hidden="true">{{ layout().bind.summary }}</span>
+              <span aria-hidden="true">{{ noHostWarning() }}</span>
+            </div>
+          } @else {
+            <div class="empty" tabindex="0" role="group" [attr.aria-label]="layout().bind.summary">
+              <i class="fa-solid fa-ban" aria-hidden="true"></i>
+              <span>{{ layout().bind.summary }}</span>
+            </div>
+          }
+        }
+        }
+        @for (e of layout().bind.emptyPolicies; track e.policyId) {
+          <button type="button" class="empty-rule" [class.kept]="keptRule(e.policyId)" [class.selected]="e.policyId === selectedPolicyId()"
+            [attr.aria-pressed]="e.policyId === selectedPolicyId()"
+            [attr.aria-label]="emptyRuleText(e.policyId) + ' · edit policy ' + e.policyName"
+            (click)="editPolicy.emit(e.policyId)">
+            <span class="empty-rule-name">{{ e.policyName }}</span>
+            <span class="empty-rule-text">{{ emptyRuleText(e.policyId) }}</span>
+          </button>
+        }
+        @if (!locked()) {
+        <button type="button" class="btn btn-secondary btn-sm add-rule" (click)="addRule.emit('bind')">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i> Add host rule
+          </button>
+        }
+      </div>
+    </section>
+
+    <section class="lane lane-service" role="group" [attr.aria-label]="isMulti() ? 'Services' : 'Service ' + layout().service.name">
+      <header class="lane-head">
+        <h3>{{ isMulti() ? 'Services' : 'Service' }}</h3>
+      </header>
+      <div class="lane-body service-body">
+        @for (c of cards(); track c.id) {
+          <div class="svc-card" [attr.data-service-id]="c.id" [class.faded]="fadedService(c.id)" [class.live-flash]="serviceFlash(c.id)"
+            (mouseenter)="hoverIn({ kind: 'service', id: c.id })" (mouseleave)="hoverOut({ kind: 'service', id: c.id })"
+            (focusin)="focusIn({ kind: 'service', id: c.id })" (focusout)="focusOut({ kind: 'service', id: c.id }, $event)">
+            @if (c.focused) {
+              <!-- A group, not one button: the hosting line inside it is a button of its own. A click
+                   anywhere else opens the details (a mouse shortcut); "View details" is the keyboard path. -->
+              <div class="service" role="group" [class.selected]="detailsServiceId() === c.id"
+                [attr.aria-label]="'Service: ' + c.view.service.name + attrsLabel(c) + ' · ' + nodeVerdictText(c) + waitingLabel(c) + hostingLabel(c) + trafficLabel(c) + (serviceLive(c.id) ? ' · changed in live' : '')"
+                (click)="serviceDetails.emit(c.id)">
+                <ng-container *ngTemplateOutlet="serviceInner; context: { $implicit: c }" />
+                @if (isMulti()) {
+                  <ng-container *ngTemplateOutlet="serviceMenu; context: { $implicit: c }" />
+                } @else {
+                  <button type="button" class="svc-more svc-more-btn" [attr.aria-pressed]="detailsServiceId() === c.id"
+                    [attr.aria-label]="'Show details for ' + c.view.service.name"
+                    (click)="$event.stopPropagation(); serviceDetails.emit(c.id)">View details</button>
+                  <app-export-report-button class="svc-export" [compact]="true" [scope]="{ kind: 'services', ids: [c.id] }"
+                    [slug]="c.view.service.name" [what]="c.view.service.name" />
+                }
+              </div>
+            } @else {
+              <!-- A click anywhere opens its details (a mouse shortcut); "View details" is the keyboard path. -->
+              <div class="service secondary" role="group" [class.selected]="detailsServiceId() === c.id"
+                [attr.aria-label]="'Service: ' + c.view.service.name + attrsLabel(c) + ' · ' + nodeVerdictText(c) + waitingLabel(c) + hostingLabel(c) + trafficLabel(c) + (serviceLive(c.id) ? ' · changed in live' : '')"
+                (click)="serviceDetails.emit(c.id)">
+                <ng-container *ngTemplateOutlet="serviceInner; context: { $implicit: c }" />
+                <!-- An added service only exists with several on the canvas: always the menu. -->
+                <ng-container *ngTemplateOutlet="serviceMenu; context: { $implicit: c }" />
+                <button type="button" class="svc-remove" [attr.aria-label]="'Remove ' + c.view.service.name + ' from the canvas'"
+                  title="Remove from the canvas" (click)="$event.stopPropagation(); removeService.emit(c.id)">
+                  <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+              </div>
+            }
+
+            @for (o of overlapsOf(c.id); track o.otherId) {
+              @let key = c.id + '|' + o.otherId;
+              <div class="overlap">
+                <button type="button" class="overlap-badge" [attr.aria-expanded]="overlapOpen() === key"
+                  [attr.aria-controls]="'sv-overlap-' + key" (click)="toggleOverlap(c.id, o.otherId)"
+                  (keydown.escape)="overlapOpen() === key && toggleOverlap(c.id, o.otherId)">
+                  <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> {{ o.badge }}
+                </button>
+                @if (overlapOpen() === key) {
+                  <div class="overlap-panel" role="region" [id]="'sv-overlap-' + key"
+                    [attr.aria-label]="'Intercept overlap: ' + c.view.service.name + ' and ' + o.otherName"
+                    (keydown.escape)="toggleOverlap(c.id, o.otherId)">
+                    <p class="overlap-lead">{{ c.view.service.name }} and {{ o.otherName }} intercept the same traffic. A tunneller
+                      that may dial both can't tell which service a connection means.</p>
+                    <dl class="overlap-facts">
+                      <div><dt>Other service</dt><dd>{{ o.otherName }}</dd></div>
+                      <div><dt>Shared</dt><dd class="overlap-addr">{{ o.label }}</dd></div>
+                      <div><dt>{{ c.view.service.name }} via</dt><dd>
+                        @for (p of o.thisPolicies; track p.id; let last = $last) {
+                          <button type="button" class="r-via-link" [attr.aria-label]="'Edit ' + p.name" (click)="editPolicy.emit(p.id)">{{ p.name }}</button>@if (!last) {, }
+                        }
+                      </dd></div>
+                      <div><dt>{{ o.otherName }} via</dt><dd>
+                        @for (p of o.otherPolicies; track p.id; let last = $last) {
+                          <button type="button" class="r-via-link" [attr.aria-label]="'Edit ' + p.name" (click)="editPolicy.emit(p.id)">{{ p.name }}</button>@if (!last) {, }
+                        }
+                      </dd></div>
+                    </dl>
+                    <p class="overlap-h">{{ o.identities.length }} {{ o.identities.length === 1 ? 'identity dials' : 'identities dial' }} both</p>
+                    <ul class="overlap-ids">
+                      @for (i of o.identities; track i.id) {
+                        <li><a class="overlap-id" [routerLink]="[]" [queryParams]="{ identity: i.id }" queryParamsHandling="merge">{{ i.name }}</a></li>
+                      }
+                    </ul>
+                  </div>
+                }
+              </div>
+            }
+
+            <div class="routers" role="group" [attr.aria-label]="'Routing for ' + c.view.service.name" [class.outage]="c.outage">
+              @if (c.routerRows.length) {
+                <p class="routers-head">
+                  <button type="button" class="routers-toggle" [attr.aria-expanded]="bandExpanded(c)"
+                    [attr.aria-controls]="'sv-router-list-' + c.id" (click)="toggleBand(c)">
+                    <i class="fa-solid fa-chevron-right routers-chev" [class.open]="bandExpanded(c)" aria-hidden="true"></i>
+                    <span class="routers-line">{{ c.routingLine }}</span>
+                  </button>
+                  <span class="routers-line routers-via">· via
+                    @for (v of c.viaPolicies; track v.id; let last = $last) {
+                      <button type="button" class="r-via-link" [attr.aria-label]="'Edit ' + v.name"
+                        (click)="openRouterPolicy.emit({ target: 'serviceEdgeRouterPolicy', policyId: v.id })">{{ v.name }}</button>@if (!last) {, }
+                    }
+                  </span>
+                </p>
+                @if (c.routingChanged && !bandExpanded(c)) {
+                  <p class="routers-changed">routing changed in draft</p>
+                }
+              } @else {
+                <p class="routers-line routers-empty">{{ c.routingLine }}</p>
+              }
+              @if (c.setupGap || !locked()) {
+              <p class="routers-actions">
+                @if (c.setupGap; as g) {
+                  <button type="button" class="routers-setup" (click)="routerGap.emit(g)">
+                    <i class="fa-solid fa-route" aria-hidden="true"></i> Set up routing
+                  </button>
+                }
+                @if (!locked()) {
+                  <button type="button" class="routers-edit" [attr.aria-label]="'Edit routing for ' + c.view.service.name"
+                    (click)="editRouting.emit(c.id)">
+                    <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> Edit routing
+                  </button>
+                }
+              </p>
+              }
+              @if (bandExpanded(c)) {
+                @if (c.outage) {
+                  <p class="routers-outage">
+                    <i class="fa-solid fa-plug-circle-xmark" aria-hidden="true"></i>
+                    Every eligible router is offline — this is an outage, not a policy gap.
+                  </p>
+                }
+                <ul class="router-list" [id]="'sv-router-list-' + c.id">
+                  @for (r of c.routerRows; track r.id) {
+                    <li class="router" [class.offline]="!r.isOnline" [class.removed]="r.change === 'removed'">
+                      <span class="dot" aria-hidden="true"></span>
+                      <span class="r-name">{{ r.name }}</span>
+                      @if (r.change) {
+                        <span class="r-change" [class.r-change-removed]="r.change === 'removed'"
+                          [title]="r.change + ' by the draft'" [attr.aria-label]="r.change + ' by the draft'">{{ r.change }}</span>
+                      }
+                      <span class="r-state">{{ r.isOnline ? 'online' : 'offline' }}</span>
+                      <span class="r-via">via
+                        @for (name of r.via; track $index; let last = $last) {
+                          <button type="button" class="r-via-link" [attr.aria-label]="'Edit ' + name"
+                            (click)="openRouterPolicy.emit({ target: 'serviceEdgeRouterPolicy', policyId: r.viaIds[$index] })">{{ name }}</button>@if (!last) {, }
+                        }
+                      </span>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <section class="lane lane-dial" role="group" [attr.aria-label]="laneLabel('dial')">
+      <header class="lane-head">
+        <h3>{{ laneName.dial }}</h3>
+        @if (!isMulti()) {
+          <p class="lane-total">{{ dialTotal() }}</p>
+        }
+      </header>
+      <div class="lane-body">
+        @if (compactLanes().dial) {
+          <ng-container *ngTemplateOutlet="compactBody; context: { $implicit: 'dial' }" />
+        } @else {
+        @for (b of blocks().dial; track b.policyId; let last = $last) {
+          <ng-container *ngTemplateOutlet="policyBlock; context: { $implicit: b }" />
+          @if (!last) {
+            <div class="or" aria-hidden="true">OR</div>
+          }
+        } @empty {
+          <div class="empty" tabindex="0" role="group" [attr.aria-label]="layout().dial.summary">
+            <i class="fa-solid fa-ban" aria-hidden="true"></i>
+            <span>{{ layout().dial.summary }}</span>
+          </div>
+        }
+        }
+        @for (e of layout().dial.emptyPolicies; track e.policyId) {
+          <button type="button" class="empty-rule" [class.kept]="keptRule(e.policyId)" [class.selected]="e.policyId === selectedPolicyId()"
+            [attr.aria-pressed]="e.policyId === selectedPolicyId()"
+            [attr.aria-label]="emptyRuleText(e.policyId) + ' · edit policy ' + e.policyName"
+            (click)="editPolicy.emit(e.policyId)">
+            <span class="empty-rule-name">{{ e.policyName }}</span>
+            <span class="empty-rule-text">{{ emptyRuleText(e.policyId) }}</span>
+          </button>
+        }
+        @if (!locked()) {
+        <button type="button" class="btn btn-secondary btn-sm add-rule" (click)="addRule.emit('dial')">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i> Add dial rule
+          </button>
+        }
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- The legend card: in flow after the canvas, pinned (sticky) to the bottom-left of the
+     visible canvas while it scrolls; it never rises above the canvas card, so it can't
+     reach the draft bar, and it sits under the assistant (z-index). -->
+<div class="lg-dock">
+  <app-canvas-legend [entries]="legendEntries()" [compact]="compact()"
+    (entryEnter)="legendEnter($event)" (entryLeave)="legendLeave($event)" />
+</div>
+
+<!-- Several services: a service card's View details and Export access report, behind "⋯". -->
+<ng-template #serviceMenu let-c>
+  <div class="svc-menu-wrap" (click)="$event.stopPropagation()" (keydown)="menuOpen() === c.id && menuKey(c.id, $event)">
+    <button type="button" class="svc-menu-btn" aria-haspopup="menu" [attr.aria-expanded]="menuOpen() === c.id"
+      [attr.aria-controls]="'sv-menu-' + c.id" [attr.aria-label]="'More for ' + c.view.service.name"
+      [attr.aria-busy]="exporting(c.id)" title="View details · Export access report" (click)="toggleMenu(c.id)">
+      <i [class]="exporting(c.id) ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-ellipsis'" aria-hidden="true"></i>
+    </button>
+    @if (menuOpen() === c.id) {
+      <div class="svc-menu" role="menu" [id]="'sv-menu-' + c.id" [attr.aria-label]="c.view.service.name">
+        <button type="button" role="menuitem" class="svc-menu-item svc-menu-details" tabindex="-1" (click)="menuDetails(c.id)">
+          <i class="fa-solid fa-circle-info" aria-hidden="true"></i> View details
+        </button>
+        <button type="button" role="menuitem" class="svc-menu-item svc-menu-export" tabindex="-1" [disabled]="exporting(c.id)"
+          [title]="'Download a CSV of who may dial or host ' + c.view.service.name + ', from live (not the draft)'" (click)="menuExport(c)">
+          <i class="fa-solid fa-file-csv" aria-hidden="true"></i> Export access report
+        </button>
+      </div>
+    }
+    @if (exporting(c.id)) {<span class="sr-only" role="status">Exporting the access report for {{ c.view.service.name }}…</span>}
+  </div>
+</ng-template>
+
+<!-- A compact lane (more than COMPACT_AFTER groups): a filter, then one row per group; a row expands in place. -->
+<ng-template #compactBody let-lane>
+  @let rows = rowsIn(lane);
+  @let total = rowCount(lane);
+  @let filter = filterOf(lane);
+  <div class="c-filter">
+    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+    <input type="search" class="c-filter-input" [value]="filter" (input)="setFilter(lane, $any($event.target).value)"
+      placeholder="Filter by policy, attribute or member" [attr.aria-label]="'Filter ' + laneTitle(lane) + ' groups'" />
+  </div>
+  <p class="c-count" aria-live="polite">
+    {{ filter.trim() ? rows.length + ' of ' + total + ' groups' : total + ' groups' }}
+  </p>
+  <ul class="c-rows">
+    @for (r of rows; track r.id) {
+      @if (expanded().has(r.id)) {
+        <li class="c-open" [attr.data-open-id]="r.id">
+          <button type="button" class="c-collapse" aria-expanded="true" [attr.aria-label]="'Collapse ' + r.policyName"
+            (click)="toggleRow(r.id)">
+            <i class="fa-solid fa-chevron-up" aria-hidden="true"></i> Collapse
+          </button>
+          <ng-container *ngTemplateOutlet="groupNode; context: { $implicit: r.id }" />
+        </li>
+      } @else {
+        @let mark = marks().get(r.policyId);
+        <li>
+          <button type="button" class="c-row" [attr.data-group-id]="r.id" aria-expanded="false" [attr.aria-label]="groupLive(r.id) ? r.label + ' · changed in live' : r.label"
+            [class.live-flash]="groupFlash(r.id)" [class.named]="r.kind === 'named'" [class.selected]="r.policyId === selectedPolicyId()" [class.marked]="!!mark"
+            [class.faded]="fadedGroup(r.id)" (click)="toggleRow(r.id)"
+            (mouseenter)="hoverIn({ kind: 'group', id: r.id })" (mouseleave)="hoverOut({ kind: 'group', id: r.id })"
+            (focus)="focusIn({ kind: 'group', id: r.id })" (blur)="focusOut({ kind: 'group', id: r.id }, $event)">
+            <span class="c-line">
+              <i [class]="r.kind === 'named' ? 'fa-solid fa-user' : 'fa-solid fa-hashtag'" aria-hidden="true"></i>
+              <span class="c-name">{{ r.policyName }}</span>
+              @if (mark) {
+                <span class="c-mark" [class.c-mark-new]="mark === 'new'">{{ mark }}</span>
+              }
+              @if (groupLive(r.id)) {
+                <span class="c-mark c-mark-live">changed in live</span>
+              }
+              <span class="c-tag">{{ r.tag }}</span>
+              @if (layers.posture() && r.checks) {
+                <span class="c-checks" [title]="r.checks + ' posture checks'"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i>{{ r.checks }}</span>
+              }
+              @if (badgeOf(r); as p) {
+                <span [class]="'c-badge c-badge-' + p.kind">{{ p.text }}</span>
+              }
+            </span>
+            <span class="c-line c-sub">
+              <span class="c-summary" [title]="r.summary">{{ r.summary }}</span>
+              <span class="c-members">{{ r.members }}</span>
+              @if (r.swatches.length) {
+                <span class="c-swatches">
+                  @for (w of r.swatches; track w.serviceId) {
+                    <svg class="c-swatch" width="16" height="6" [attr.aria-hidden]="true"><title>{{ w.serviceName }}</title>
+                      <line [attr.class]="'edge tone-' + w.tone" x1="1" y1="3" x2="15" y2="3" /></svg>
+                  }
+                </span>
+              }
+            </span>
+          </button>
+        </li>
+      }
+    } @empty {
+      <li class="c-none">No groups match “{{ filter.trim() }}”.</li>
+    }
+  </ul>
+</ng-template>
+
+<!-- One policy: a single group as itself, or 2+ groups in a container under its name. -->
+<ng-template #policyBlock let-b>
+  @if (b.groupIds.length > 1) {
+    @let boxFaded = blockFaded(b);
+    @let mark = marks().get(b.policyId);
+    @let live = blockLive(b);
+    <div class="policy-box" role="group" [attr.aria-label]="'Policy ' + b.policyName + (mark ? ' · ' + mark : '') + (live ? ' · changed in live' : '')"
+      [class.selected]="b.policyId === selectedPolicyId()" [class.marked]="!!mark" [class.faded]="boxFaded">
+      <div class="policy-box-hdr">
+        <button type="button" class="policy-box-name" [title]="b.policyName + ' (' + b.policyId + ')'"
+          [attr.aria-label]="'Edit policy ' + b.policyName" [attr.aria-pressed]="b.policyId === selectedPolicyId()"
+          (click)="editPolicy.emit(b.policyId)">{{ b.policyName }}</button>
+        @if (mark) {
+          <span class="policy-box-mark" [class.policy-box-mark-new]="mark === 'new'"
+            [class.policy-box-mark-proposed]="mark === 'proposed'" aria-hidden="true">{{ mark }}</span>
+        }
+        @if (live) {
+          <span class="live-mark" aria-hidden="true">changed in live</span>
+        }
+        @if (layers.expiry() && expiries().get(b.policyId)?.at; as at) {<app-expiry-pill class="policy-box-expiry" [expiresAt]="at" />}
+      </div>
+      @for (gid of b.groupIds; track gid; let last = $last) {
+        <ng-container *ngTemplateOutlet="groupNode; context: { $implicit: gid, inBox: true, boxFaded: boxFaded }" />
+        @if (!last) {
+          <div class="or" aria-hidden="true">OR</div>
+        }
+      }
+    </div>
+  } @else {
+    <ng-container *ngTemplateOutlet="groupNode; context: { $implicit: b.groupIds[0] }" />
+  }
+</ng-template>
+
+<ng-template #groupNode let-gid let-inBox="inBox" let-boxFaded="boxFaded">
+  @let n = nodes().get(gid)!;
+  <app-service-view-group [group]="n.group" [mark]="marks().get(n.group.policyId) ?? null" [inContainer]="!!inBox"
+    [liveChanged]="groupLive(gid)" [flash]="groupFlash(gid)" [routerIds]="routerIds()" [locked]="locked()" [expiry]="expiries().get(n.group.policyId) ?? null"
+    [selected]="!inBox && n.group.policyId === selectedPolicyId()" [statusShown]="n.onFocus" [statusRows]="statusRows().get(gid) ?? []" [hotServiceId]="hotServiceId()"
+    [serviceName]="n.serviceName" [serviceNames]="serviceNames()" [hostState]="hostStateFor(n.group)"
+    [coverage]="n.coverage" [canvasIds]="ids()" [focusId]="serviceId()" [canvasFull]="full()"
+    (activate)="editPolicy.emit(n.group.policyId)" (addService)="addService.emit($event)" (removeService)="removeService.emit($event)"
+    [class.faded]="!boxFaded && fadedGroup(gid)"
+    (mouseenter)="hoverIn({ kind: 'group', id: gid })" (mouseleave)="hoverOut({ kind: 'group', id: gid })"
+    (focusin)="focusIn({ kind: 'group', id: gid })" (focusout)="focusOut({ kind: 'group', id: gid }, $event)"
+    (gap)="groupGap(gid, $event)" (rowGap)="routerGap.emit({ groupId: gid, kind: $event.kind, serviceId: $event.serviceId })"
+    (posture)="postureOpen.emit({ groupId: gid, serviceId: $event ?? n.serviceId })"
+    (viewCheck)="viewCheck.emit($event)" (editHost)="editHost.emit($event)" (members)="openMembers.emit(gid)"
+    (routers)="groupRouters.emit({ groupId: gid, serviceId: n.serviceId })" />
+</ng-template>
+
+<ng-template #serviceInner let-c>
+  <i class="fa-solid fa-server" aria-hidden="true"></i>
+  <span class="svc-name" [class.hot]="isHotTarget(c.id, 'name')">{{ c.view.service.name }}</span>
+  <span class="svc-id">{{ c.view.service.id }}</span>
+  @if (serviceLive(c.id)) {
+    <span class="live-mark svc-live" aria-hidden="true">changed in live</span>
+  }
+  @if (c.view.service.attributes.length) {
+    <span class="svc-chips" aria-hidden="true">
+      @for (a of c.view.service.attributes; track a) {
+        <span class="svc-chip" [attr.data-chip]="a" [class.hot]="isHotTarget(c.id, a)">{{ a }}</span>
+      }
+    </span>
+  }
+  @let wait = waitingOf(c);
+  <span class="verdict" [class.verdict-none]="c.view.serviceVerdict.tone === 'bad'"
+    [class.verdict-warn]="c.view.serviceVerdict.tone === 'warn' && wait?.kind !== 'ready'"
+    [class.verdict-ready]="wait?.kind === 'ready'" [attr.title]="wait?.title ?? null"
+    [class.verdict-blank]="c.view.serviceVerdict.notSetUp" aria-hidden="true">
+    {{ nodeVerdictText(c) }}
+  </span>
+  @if (c.hosting.authorized) {
+    <button type="button" class="hosting hosting-btn" (click)="$event.stopPropagation(); editStrategy.emit(c.id)"
+      [attr.aria-label]="hostingText(c) + ' · terminator strategy ' + c.strategy + ' — edit how traffic is shared'"
+      title="Terminator strategy: how traffic is shared among active hosts">
+      {{ hostingText(c) }} <i class="fa-solid fa-sliders" aria-hidden="true"></i>
+    </button>
+  }
+  @if (c.traffic; as t) {
+    <span class="traffic" aria-hidden="true" title="The strategy is set in the service's configuration">
+      {{ trafficText(c) }}
+    </span>
+    @if (t.policies > 1) {
+      <span class="traffic-policies" aria-hidden="true"
+        [title]="'The active hosts are authorized by ' + t.policies + ' different Bind policies, and share this service\'s traffic'">
+        <i class="fa-solid fa-code-branch" aria-hidden="true"></i> from {{ t.policies }} policies
+      </span>
+    }
+  }
+</ng-template>

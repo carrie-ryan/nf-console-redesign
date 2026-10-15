@@ -87,7 +87,7 @@
 }
 
 .ob-roadmap-title { font-size: 0.875rem; font-weight: 600; color: var(--color-text); }
-.ob-roadmap-desc { font-size: 0.75rem; line-height: 1.4; color: var(--color-text-2); }
+.ob-roadmap-desc { font-size: 0.875rem; line-height: 1.4; color: var(--color-text-2); }
 
 .ob-roadmap-arrow {
   display: flex;
